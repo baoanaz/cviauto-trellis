@@ -1,5 +1,5 @@
 {
-  "name": "@mindfoldhq/trellis",
+  "name": "@baoanaz/cviauto",
   "version": "0.6.5",
   "description": "Cviauto internal AI workflow toolkit for Claude Code, Codex, and OpenCode",
   "type": "module",
@@ -9,7 +9,8 @@
     "cviauto": "./bin/trellis.js"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "build": "pnpm run clean && tsc && pnpm run copy-templates",
@@ -51,7 +52,7 @@
   "author": "Mindfold LLC",
   "license": "AGPL-3.0-only",
   "dependencies": {
-    "@mindfoldhq/cviauto-core": "workspace:*",
+    "@baoanaz/cviauto-core": "workspace:*",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "figlet": "^1.9.4",

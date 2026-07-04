@@ -17,7 +17,7 @@ import {
   DEFAULT_INBOX_POLICY,
   matchesInboxPolicy,
   type InboxPolicy,
-} from "@mindfoldhq/cviauto-core/channel";
+} from "@baoanaz/cviauto-core/channel";
 
 import type { WorkerAdapter } from "../adapters/index.js";
 import { appendEvent } from "../store/events.js";

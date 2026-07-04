@@ -20,8 +20,8 @@
 </p>
 
 <p align="center">
-<a href="https://www.npmjs.com/package/@mindfoldhq/trellis"><img src="https://img.shields.io/npm/v/@mindfoldhq/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
-<a href="https://www.npmjs.com/package/@mindfoldhq/trellis"><img src="https://img.shields.io/npm/dw/@mindfoldhq/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
+<a href="https://www.npmjs.com/package/@baoanaz/cviauto"><img src="https://img.shields.io/npm/v/@baoanaz/cviauto.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
+<a href="https://www.npmjs.com/package/@baoanaz/cviauto"><img src="https://img.shields.io/npm/dw/@baoanaz/cviauto?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
 <a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
 <a href="https://github.com/mindfold-ai/Trellis/stargazers"><img src="https://img.shields.io/github/stars/mindfold-ai/Trellis?style=flat-square&color=eab308" alt="stars" /></a>
 <a href="https://docs.trytrellis.app/zh"><img src="https://img.shields.io/badge/docs-trytrellis.app-0f766e?style=flat-square" alt="docs" /></a>
@@ -54,14 +54,14 @@
 ## 快速开始
 
 ```bash
-# 1. 安装 Trellis
-npm install -g @mindfoldhq/trellis@latest
+# 1. 安装 Cviauto
+npm install -g @baoanaz/cviauto@latest
 
 # 2. 在仓库中初始化
-trellis init -u your-name
+cviauto init -u your-name
 
 # 3. 或仅初始化你实际使用的平台
-trellis init --cursor --opencode --codex -u your-name
+cviauto init --cursor --opencode --codex -u your-name
 ```
 
 查看 [快速开始](https://docs.trytrellis.app/zh/start/install-and-first-task) 与 [支持平台](https://docs.trytrellis.app/zh/advanced/multi-platform) 指南以了解详细配置步骤。

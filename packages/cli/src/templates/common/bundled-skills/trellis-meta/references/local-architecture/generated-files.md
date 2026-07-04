@@ -72,7 +72,7 @@ Editable by default:
 Do not edit by default:
 
 - Global npm install directory
-- `node_modules/@mindfoldhq/trellis`
+- `node_modules/@baoanaz/cviauto`
 - Cviauto GitHub repository source code
 - Concrete state files under `.cviauto/.runtime/**`
 - Hash contents inside `.cviauto/.template-hashes.json`

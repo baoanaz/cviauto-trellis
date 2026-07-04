@@ -36,10 +36,10 @@ describe("upgrade command", () => {
       buildUpgradeCommand({ tag: "beta" }, "0.5.12", "darwin"),
     ).toMatchObject({
       command: "npm",
-      args: ["install", "-g", "github:baoanaz/cviauto-trellis#beta"],
+      args: ["install", "-g", "@baoanaz/cviauto@beta"],
       spawnOptions: { stdio: "inherit", shell: false },
-      displayCommand: "npm install -g github:baoanaz/cviauto-trellis#beta",
-      target: "github:baoanaz/cviauto-trellis#beta",
+      displayCommand: "npm install -g @baoanaz/cviauto@beta",
+      target: "@baoanaz/cviauto@beta",
       tag: "beta",
       binaryCheckCommand: "which cviauto",
     });
@@ -54,11 +54,11 @@ describe("upgrade command", () => {
         "/d",
         "/s",
         "/c",
-        "npm install -g github:baoanaz/cviauto-trellis#beta",
+        "npm install -g @baoanaz/cviauto@beta",
       ],
       spawnOptions: { stdio: "inherit", shell: false },
-      displayCommand: "npm install -g github:baoanaz/cviauto-trellis#beta",
-      target: "github:baoanaz/cviauto-trellis#beta",
+      displayCommand: "npm install -g @baoanaz/cviauto@beta",
+      target: "@baoanaz/cviauto@beta",
       tag: "beta",
       binaryCheckCommand: "where cviauto",
     });
@@ -72,9 +72,7 @@ describe("upgrade command", () => {
 
     expect(runner).not.toHaveBeenCalled();
     expect(log).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "Run: npm install -g github:baoanaz/cviauto-trellis",
-      ),
+      expect.stringContaining("Run: npm install -g @baoanaz/cviauto@latest"),
     );
 
     log.mockRestore();
@@ -88,7 +86,7 @@ describe("upgrade command", () => {
 
     expect(runner).toHaveBeenCalledWith(
       "npm",
-      ["install", "-g", "github:baoanaz/cviauto-trellis"],
+      ["install", "-g", "@baoanaz/cviauto@latest"],
       { stdio: "inherit", shell: false },
     );
     expect(log).toHaveBeenCalledWith(
@@ -104,7 +102,7 @@ describe("upgrade command", () => {
     const runner = vi.fn(() => ({ status: 1, signal: null }));
 
     await expect(upgrade({ tag: "latest" }, runner)).rejects.toThrow(
-      /npm install failed with exit code 1\.[\s\S]*Troubleshooting:[\s\S]*Manual command: npm install -g github:baoanaz\/cviauto-trellis[\s\S]*npm config get prefix[\s\S]*which cviauto/,
+      /npm install failed with exit code 1\.[\s\S]*Troubleshooting:[\s\S]*Manual command: npm install -g @baoanaz\/cviauto@latest[\s\S]*npm config get prefix[\s\S]*which cviauto/,
     );
 
     log.mockRestore();

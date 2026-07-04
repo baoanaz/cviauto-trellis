@@ -1,5 +1,5 @@
 /**
- * End-to-end tests for the public `@mindfoldhq/cviauto-core/mem` API against a
+ * End-to-end tests for the public `@baoanaz/cviauto-core/mem` API against a
  * small Claude fixture tree under a mocked $HOME.
  */
 

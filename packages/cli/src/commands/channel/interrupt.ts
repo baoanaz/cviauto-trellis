@@ -1,7 +1,7 @@
 import {
   requestInterrupt,
   type ChannelScope,
-} from "@mindfoldhq/cviauto-core/channel";
+} from "@baoanaz/cviauto-core/channel";
 
 import { parseChannelScope } from "./store/schema.js";
 import { resolveChannelTextBody } from "./text-body.js";

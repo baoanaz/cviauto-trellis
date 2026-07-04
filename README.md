@@ -7,12 +7,8 @@ It installs a project-local workflow directory, platform commands, hooks, agent 
 ## Quick Start
 
 ```bash
-# Install from the internal GitHub repository
-git clone https://github.com/baoanaz/cviauto-trellis.git
-cd cviauto-trellis
-pnpm install
-pnpm build
-npm install -g ./packages/cli
+# Install from npm
+npm install -g @baoanaz/cviauto@latest
 
 # Initialize in your repo
 cviauto init -u your-name
@@ -45,5 +41,6 @@ After initialization, Cviauto writes runtime files under `.cviauto/` and platfor
 
 - The runtime directory is `.cviauto/`.
 - The public command is `cviauto`.
+- The public npm packages are `@baoanaz/cviauto` and `@baoanaz/cviauto-core`.
 - Generated user-facing commands use the `cviauto` namespace, such as `/cviauto:continue`, `/cviauto:finish-work`, and `/cviauto-start`.
 - Personal workflow artifacts can stay local through the generated `.cviauto/.gitignore`; work commits should contain only the meaningful code changes.

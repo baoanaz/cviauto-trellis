@@ -38,7 +38,7 @@ This directory is for local AI working in a user project where Cviauto was insta
 ## Things Not To Do By Default
 
 - Do not edit the global npm install directory.
-- Do not edit `node_modules/@mindfoldhq/trellis`.
+- Do not edit `node_modules/@baoanaz/cviauto`.
 - Do not assume the user has the Cviauto GitHub repository.
 - Do not overwrite local files already modified by the user with default templates.
 - Do not put team project rules into public `cviauto-meta`; project rules belong in `.cviauto/spec/` or a local skill.

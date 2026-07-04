@@ -1,12 +1,12 @@
 /**
- * Public surface for `@mindfoldhq/cviauto-core/mem` — reusable retrieval and
+ * Public surface for `@baoanaz/cviauto-core/mem` — reusable retrieval and
  * dialogue-context extraction over persisted Claude Code / Codex / OpenCode
  * sessions.
  *
  * This subpackage is intentionally NOT re-exported from the root
- * `@mindfoldhq/cviauto-core` barrel. Import it explicitly:
+ * `@baoanaz/cviauto-core` barrel. Import it explicitly:
  *
- *   import { searchMemSessions } from "@mindfoldhq/cviauto-core/mem";
+ *   import { searchMemSessions } from "@baoanaz/cviauto-core/mem";
  *
  * v1 scope: persisted-session search and context extraction only. It does not
  * read channel / forum / thread event logs and has no cursor / pagination.

@@ -7,7 +7,7 @@ import {
   listChannelContext,
   listThreadContext,
   type ChannelScope,
-} from "@mindfoldhq/cviauto-core/channel";
+} from "@baoanaz/cviauto-core/channel";
 
 import { parseChannelScope } from "./store/schema.js";
 

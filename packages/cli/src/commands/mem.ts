@@ -1,5 +1,5 @@
 /**
- * mem.ts — CLI wrapper over `@mindfoldhq/cviauto-core/mem`.
+ * mem.ts — CLI wrapper over `@baoanaz/cviauto-core/mem`.
  *
  * The reusable retrieval / context-extraction logic lives in core; this file
  * owns only CLI concerns: argument parsing, terminal rendering, the OpenCode
@@ -25,14 +25,14 @@ import {
   MemSessionNotFoundError,
   readMemContext,
   searchMemSessions,
-} from "@mindfoldhq/cviauto-core/mem";
+} from "@baoanaz/cviauto-core/mem";
 import type {
   MemFilter,
   MemPhase,
   MemSessionInfo,
   MemSourceFilter,
   MemSourceKind,
-} from "@mindfoldhq/cviauto-core/mem";
+} from "@baoanaz/cviauto-core/mem";
 
 // ---------- argv ----------
 

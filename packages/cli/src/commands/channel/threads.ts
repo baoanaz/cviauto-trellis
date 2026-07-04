@@ -8,7 +8,7 @@ import {
   type ChannelScope,
   type ContextChannelEvent,
   type ThreadChannelEvent,
-} from "@mindfoldhq/cviauto-core/channel";
+} from "@baoanaz/cviauto-core/channel";
 
 import {
   parseChannelScope,

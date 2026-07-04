@@ -2,14 +2,14 @@ export {
   reduceThreads,
   buildThreadAliasResolver,
   collectThreadTimeline,
-} from "@mindfoldhq/cviauto-core/channel";
+} from "@baoanaz/cviauto-core/channel";
 
 export type {
   ThreadState,
   ThreadAliasResolver,
-} from "@mindfoldhq/cviauto-core/channel";
+} from "@baoanaz/cviauto-core/channel";
 
-import type { ThreadState } from "@mindfoldhq/cviauto-core/channel";
+import type { ThreadState } from "@baoanaz/cviauto-core/channel";
 
 export function formatThreadBoard(states: ThreadState[]): string[] {
   if (states.length === 0) return ["(no threads)"];

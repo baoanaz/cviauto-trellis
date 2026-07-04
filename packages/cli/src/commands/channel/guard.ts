@@ -21,7 +21,7 @@ import {
   reduceWorkerRegistry,
   type ChannelEvent,
   type WorkerState,
-} from "@mindfoldhq/cviauto-core/channel";
+} from "@baoanaz/cviauto-core/channel";
 
 import { DIR_NAMES } from "../../constants/paths.js";
 

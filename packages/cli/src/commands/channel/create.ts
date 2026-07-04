@@ -4,7 +4,7 @@ import {
   resolveChannelRef,
   type ChannelScope,
   type ChannelType,
-} from "@mindfoldhq/cviauto-core/channel";
+} from "@baoanaz/cviauto-core/channel";
 
 import {
   parseChannelScope,

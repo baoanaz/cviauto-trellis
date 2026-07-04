@@ -1,11 +1,11 @@
-# `trellis upgrade` Command
+# `cviauto upgrade` Command
 
-How `trellis upgrade` upgrades the globally installed Trellis CLI package.
+How `cviauto upgrade` upgrades the globally installed Cviauto CLI package.
 
-This command is intentionally separate from `trellis update`:
+This command is intentionally separate from `cviauto update`:
 
-- `trellis upgrade` updates the **CLI binary** by running npm's global install.
-- `trellis update` updates a **project's bundled Trellis files** under `.trellis/`
+- `cviauto upgrade` updates the **CLI binary** by running npm's global install.
+- `cviauto update` updates a **project's bundled Cviauto files** under `.cviauto/`
   and platform directories.
 
 ---
@@ -13,12 +13,12 @@ This command is intentionally separate from `trellis update`:
 ## User-facing contract
 
 ```text
-trellis upgrade [--tag <tag-or-version>] [--dry-run]
+cviauto upgrade [--tag <tag-or-version>] [--dry-run]
 ```
 
 Behavior:
 
-- Builds and runs `npm install -g @mindfoldhq/trellis@<tag>`.
+- Builds and runs `npm install -g @baoanaz/cviauto@<tag>`.
 - POSIX execution must spawn `npm` directly without shell execution.
 - Windows execution must route through `cmd.exe /d /s /c npm install -g ...`
   instead of directly spawning `npm.cmd`.
@@ -30,7 +30,7 @@ Behavior:
   dist-tags or versions such as `latest`, `beta`, `rc`, or `0.6.0-beta.8`.
 - `--dry-run` prints the exact npm command and exits without changing anything.
 
-The implementation does not detect or preserve the original installer. Trellis
+The implementation does not detect or preserve the original installer. Cviauto
 is published as an npm package, so npm is the upgrade backend even when the user
 installed Node through pnpm, Homebrew, Volta, proto, or another manager.
 
@@ -53,18 +53,18 @@ installed Node through pnpm, Homebrew, Volta, proto, or another manager.
 After npm reports success, print both:
 
 ```text
-trellis --version
+cviauto --version
 ```
 
 and a platform-specific binary-resolution check:
 
 ```text
-which trellis   # POSIX
-where trellis   # Windows
+which cviauto   # POSIX
+where cviauto   # Windows
 ```
 
 This catches the common case where npm installed into one global prefix while
-the user's shell still resolves an older `trellis` binary earlier on PATH.
+the user's shell still resolves an older `cviauto` binary earlier on PATH.
 
 ---
 
@@ -73,16 +73,16 @@ the user's shell still resolves an older `trellis` binary earlier on PATH.
 Any user-facing hint that previously said:
 
 ```text
-npm install -g @mindfoldhq/trellis@latest
+npm install -g @baoanaz/cviauto@latest
 ```
 
 should now prefer:
 
 ```text
-trellis upgrade
+cviauto upgrade
 ```
 
-This applies to CLI startup warnings, `trellis update` downgrade guidance, and
+This applies to CLI startup warnings, `cviauto update` downgrade guidance, and
 session-start update hints.
 
 ---

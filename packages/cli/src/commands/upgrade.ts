@@ -35,7 +35,7 @@ export interface UpgradeCommandPlan {
 }
 
 const NPM_TAG_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
-const CVIAUTO_GIT_PACKAGE = "github:baoanaz/cviauto-trellis";
+const CVIAUTO_NPM_PACKAGE = "@baoanaz/cviauto";
 
 export function resolveUpgradeTag(
   currentVersion: string = VERSION,
@@ -62,9 +62,7 @@ function binaryCheckCommand(
 }
 
 function installTarget(tag: string): string {
-  return tag === "latest"
-    ? CVIAUTO_GIT_PACKAGE
-    : `${CVIAUTO_GIT_PACKAGE}#${tag}`;
+  return `${CVIAUTO_NPM_PACKAGE}@${tag}`;
 }
 
 export function buildUpgradeCommand(

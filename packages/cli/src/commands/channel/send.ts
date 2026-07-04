@@ -2,7 +2,7 @@ import {
   parseDeliveryMode,
   sendMessage as coreSendMessage,
   type ChannelScope,
-} from "@mindfoldhq/cviauto-core/channel";
+} from "@baoanaz/cviauto-core/channel";
 
 import { parseChannelScope, parseCsv } from "./store/schema.js";
 import { resolveChannelTextBody } from "./text-body.js";
