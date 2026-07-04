@@ -1,0 +1,5 @@
+{"path":"packages/cli/test/configurators/index.test.ts","reason":"Covers full internal platform registry and the new public init allow-list."}
+{"path":"packages/cli/test/commands/init.integration.test.ts","reason":"Verifies default init, explicit public platforms, Cviauto default specs, and ignored old platform options."}
+{"path":"packages/cli/test/commands/mem-helpers.test.ts","reason":"Verifies the public mem platform helper no longer exposes Pi."}
+{"path":"packages/cli/test/commands/mem-integration.test.ts","reason":"Verifies mem command help and accepted public platform values."}
+{"path":"packages/cli/test/templates/trellis.test.ts","reason":"Verifies generated workflow guidance no longer advertises unsupported platform groups."}

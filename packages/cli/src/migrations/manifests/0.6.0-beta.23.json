@@ -1,0 +1,88 @@
+{
+  "version": "0.6.0-beta.23",
+  "description": "Beta patch: dispatch channel runtime agent definitions, refresh registry-backed spec via update, add Reasonix platform support, ship trellis-session-insight bundled skill, and rename trellis-spec-bootstarp → trellis-spec-bootstrap.",
+  "breaking": false,
+  "recommendMigrate": true,
+  "changelog": "**Enhancements:**\n- feat(cli): `cviauto init` and `cviauto update` now ship `.cviauto/agents/{check,implement}.md`, so switching to a channel-driven workflow no longer fails with \"Agent 'check' not found\" (#323).\n- feat(cli): `cviauto update` refreshes registry-backed `.cviauto/spec` templates through the existing hash/conflict flow. `cviauto init --template <id>` persists the spec source/template in `.cviauto/config.yaml` so subsequent updates can re-fetch it. Supports direct spec registries and marketplace-style registries (#324).\n- feat(platform): add **Reasonix** (DeepSeek-Reasonix) as the 15th supported AI coding tool via `cviauto init --reasonix`. Subagent skills (`trellis-implement`, `trellis-check`) carry `runAs: subagent` frontmatter so Reasonix spawns them as isolated subagent loops (#301).\n- feat(skills): bundle `trellis-session-insight` skill that teaches the AI how and when to reach for `cviauto mem` to recall past conversations across Claude Code and Codex sessions. Auto-dispatched to every supported platform on init/update.\n- feat(workflow): `cviauto workflow --template <id>` and `cviauto init --workflow <id>` print a stderr warning when the resolved workflow references `.cviauto/agents/<name>.md` files that are missing on disk, pointing the user at `cviauto update`.\n\n**Bug Fixes:**\n- fix(skills): rename bundled `trellis-spec-bootstarp` → `trellis-spec-bootstrap` (typo). `cviauto update --migrate` ships a `rename-dir` migration that renames the installed directory across 13 platform skill roots; missing roots are silently skipped. Historical migration manifests `0.5.17.json` and `0.6.0-beta.18.json` keep the typoed text because they describe what already shipped to users on those versions (#296).",
+  "migrations": [
+    {
+      "type": "rename-dir",
+      "from": ".claude/skills/cviauto-spec-bootstarp",
+      "to": ".claude/skills/cviauto-spec-bootstrap",
+      "description": "Claude Code: rename installed bundled skill directory from typoed name to corrected name."
+    },
+    {
+      "type": "rename-dir",
+      "from": ".cursor/skills/cviauto-spec-bootstarp",
+      "to": ".cursor/skills/cviauto-spec-bootstrap",
+      "description": "Cursor: rename installed bundled skill directory from typoed name to corrected name."
+    },
+    {
+      "type": "rename-dir",
+      "from": ".opencode/skills/cviauto-spec-bootstarp",
+      "to": ".opencode/skills/cviauto-spec-bootstrap",
+      "description": "OpenCode: rename installed bundled skill directory from typoed name to corrected name."
+    },
+    {
+      "type": "rename-dir",
+      "from": ".agents/skills/cviauto-spec-bootstarp",
+      "to": ".agents/skills/cviauto-spec-bootstrap",
+      "description": "Codex / Gemini CLI (shared): rename installed bundled skill directory from typoed name to corrected name."
+    },
+    {
+      "type": "rename-dir",
+      "from": ".kiro/skills/cviauto-spec-bootstarp",
+      "to": ".kiro/skills/cviauto-spec-bootstrap",
+      "description": "Kiro: rename installed bundled skill directory from typoed name to corrected name."
+    },
+    {
+      "type": "rename-dir",
+      "from": ".qoder/skills/cviauto-spec-bootstarp",
+      "to": ".qoder/skills/cviauto-spec-bootstrap",
+      "description": "Qoder: rename installed bundled skill directory from typoed name to corrected name."
+    },
+    {
+      "type": "rename-dir",
+      "from": ".codebuddy/skills/cviauto-spec-bootstarp",
+      "to": ".codebuddy/skills/cviauto-spec-bootstrap",
+      "description": "CodeBuddy: rename installed bundled skill directory from typoed name to corrected name."
+    },
+    {
+      "type": "rename-dir",
+      "from": ".github/skills/cviauto-spec-bootstarp",
+      "to": ".github/skills/cviauto-spec-bootstrap",
+      "description": "GitHub Copilot: rename installed bundled skill directory from typoed name to corrected name."
+    },
+    {
+      "type": "rename-dir",
+      "from": ".factory/skills/cviauto-spec-bootstarp",
+      "to": ".factory/skills/cviauto-spec-bootstrap",
+      "description": "Droid: rename installed bundled skill directory from typoed name to corrected name."
+    },
+    {
+      "type": "rename-dir",
+      "from": ".pi/skills/cviauto-spec-bootstarp",
+      "to": ".pi/skills/cviauto-spec-bootstrap",
+      "description": "Pi Agent: rename installed bundled skill directory from typoed name to corrected name."
+    },
+    {
+      "type": "rename-dir",
+      "from": ".agent/skills/cviauto-spec-bootstarp",
+      "to": ".agent/skills/cviauto-spec-bootstrap",
+      "description": "Antigravity: rename installed bundled skill directory from typoed name to corrected name."
+    },
+    {
+      "type": "rename-dir",
+      "from": ".windsurf/skills/cviauto-spec-bootstarp",
+      "to": ".windsurf/skills/cviauto-spec-bootstrap",
+      "description": "Windsurf: rename installed bundled skill directory from typoed name to corrected name."
+    },
+    {
+      "type": "rename-dir",
+      "from": ".kilocode/skills/cviauto-spec-bootstarp",
+      "to": ".kilocode/skills/cviauto-spec-bootstrap",
+      "description": "Kilo: rename installed bundled skill directory from typoed name to corrected name."
+    }
+  ],
+  "notes": "Beta patch on top of 0.6.0-beta.22. Run `cviauto update --migrate` to rename installed `trellis-spec-bootstarp/` skill directories to `trellis-spec-bootstrap/` across every platform you have configured (silently skips ones you do not). Plain `cviauto update` also installs the new `trellis-session-insight` bundled skill and the `.cviauto/agents/{check,implement}.md` channel runtime files."
+}

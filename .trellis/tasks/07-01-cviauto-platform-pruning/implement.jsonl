@@ -1,0 +1,4 @@
+{"path":"packages/cli/src/cli/index.ts","reason":"Public init flags are the user-facing platform entry points."}
+{"path":"packages/cli/src/configurators/index.ts","reason":"Public init platform allow-list is defined here while the internal registry remains intact."}
+{"path":"packages/cli/src/commands/init.ts","reason":"Initial init and re-init must use the public allow-list instead of the full platform registry."}
+{"path":"packages/cli/src/commands/mem.ts","reason":"User-facing mem platform selection should only list Cviauto-supported platforms."}

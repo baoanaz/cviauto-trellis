@@ -1,0 +1,9 @@
+{
+  "version": "0.5.12",
+  "description": "Patch: update workflow.md as a whole runtime template during cviauto update.",
+  "breaking": false,
+  "recommendMigrate": false,
+  "changelog": "**Bug Fixes:**\n- fix(update): update `.cviauto/workflow.md` as a whole hash-tracked template so runtime phase routing markers, including Codex `codex-inline` / `codex-sub-agent` blocks, refresh during `cviauto update`.",
+  "migrations": [],
+  "notes": "Run `cviauto update` to refresh hash-tracked workflow templates. No migration required."
+}

@@ -1,0 +1,8 @@
+{
+  "id": "07-01-cviauto-platform-pruning",
+  "title": "Hide Unsupported Cviauto Platform Entries",
+  "status": "in_progress",
+  "created": "2026-07-01",
+  "updated": "2026-07-01",
+  "description": "Expose only Claude Code, Codex, and OpenCode in user-facing init and mem flows while retaining legacy internals for compatibility."
+}

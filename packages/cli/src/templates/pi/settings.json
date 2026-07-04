@@ -1,0 +1,6 @@
+{
+  "enableSkillCommands": true,
+  "extensions": ["./extensions/cviauto/index.ts"],
+  "skills": ["./skills"],
+  "prompts": ["./prompts"]
+}
