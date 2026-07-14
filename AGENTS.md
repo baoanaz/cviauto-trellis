@@ -1,65 +1,65 @@
 <!-- TRELLIS:START -->
-# Trellis Instructions
+# Trellis 指令
 
-These instructions are for AI assistants working in this project.
+这些指令面向在此项目中工作的 AI 助手。
 
-This project is managed by Trellis. The working knowledge you need lives under `.trellis/`:
+本项目由 Trellis 管理。你需要的工作知识位于 `.trellis/` 下：
 
-- `.trellis/workflow.md` — development phases, when to create tasks, skill routing
-- `.trellis/spec/` — package- and layer-scoped coding guidelines (read before writing code in a given layer)
-- `.trellis/workspace/` — per-developer journals and session traces
-- `.trellis/tasks/` — active and archived tasks (PRDs, research, jsonl context)
+- `.trellis/workflow.md` — 开发阶段、何时创建任务、skill 路由
+- `.trellis/spec/` — 按 package 和 layer 划分的编码指南（在特定 layer 编写代码前阅读）
+- `.trellis/workspace/` — 每个开发者的日志和会话记录
+- `.trellis/tasks/` — 活动和已归档的任务（PRD、研究、jsonl 上下文）
 
-If a Trellis command is available on your platform (e.g. `/trellis:finish-work`, `/trellis:continue`), prefer it over manual steps. Not every platform exposes every command.
+如果你的平台支持 Trellis 命令（如 `/trellis:finish-work`、`/trellis:continue`），优先使用它们而非手动步骤。并非每个平台都暴露所有命令。
 
-If you're using Codex or another agent-capable tool, additional project-scoped helpers may live in:
-- `.agents/skills/` — reusable Trellis skills
-- `.codex/agents/` — optional custom subagents
+如果你使用 Codex 或其他支持 Agent 的工具，额外的项目范围辅助工具可能位于：
+- `.agents/skills/` — 可复用的 Trellis 技能
+- `.codex/agents/` — 可选的自定义 subagent
 
-Managed by Trellis. Edits outside this block are preserved; edits inside may be overwritten by a future `trellis update`.
+由 Trellis 管理。此块之外的编辑会被保留；此块之内的编辑可能会被未来的 `trellis update` 覆盖。
 
 <!-- TRELLIS:END -->
 
 <!-- gitnexus:start -->
-# GitNexus — Code Intelligence
+# GitNexus — 代码智能
 
-This project is indexed by GitNexus as **Trellis** (14336 symbols, 20870 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+本项目已被 GitNexus 索引为 **Trellis**（14336 个符号，20870 条关系，300 条执行流）。使用 GitNexus MCP 工具来理解代码、评估影响并安全导航。
 
-> Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
+> 索引过期？从项目根目录运行 `node .gitnexus/run.cjs analyze`——它会自动选择可用的运行器。还没有 `.gitnexus/run.cjs`？运行 `npx gitnexus analyze`（npm 11 崩溃 → `npm i -g gitnexus`；#1939）。
 
-## Always Do
+## 始终要做
 
-- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
-- **MUST run `detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows. For regression review, compare against the default branch: `detect_changes({scope: "compare", base_ref: "main"})`.
-- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
-- When exploring unfamiliar code, use `query({query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
-- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `context({name: "symbolName"})`.
+- **编辑任何符号前必须运行影响分析。** 在修改函数、类或方法之前，运行 `impact({target: "symbolName", direction: "upstream"})` 并向用户报告影响范围（直接调用者、受影响的流程、风险等级）。
+- **提交前必须运行 `detect_changes()`**，以验证你的变更只影响预期的符号和执行流。对于回归审查，对比默认分支：`detect_changes({scope: "compare", base_ref: "main"})`。
+- **必须警告用户**，如果影响分析返回 HIGH 或 CRITICAL 风险，然后再继续编辑。
+- 在探索不熟悉的代码时，使用 `query({query: "concept"})` 来查找执行流，而非 grep。它返回按相关度排序的按流程分组的结果。
+- 当你需要某个特定符号的完整上下文——调用者、被调用者、参与哪些执行流——使用 `context({name: "symbolName"})`。
 
-## Never Do
+## 绝对不要
 
-- NEVER edit a function, class, or method without first running `impact` on it.
-- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
-- NEVER rename symbols with find-and-replace — use `rename` which understands the call graph.
-- NEVER commit changes without running `detect_changes()` to check affected scope.
+- 绝对不要在没有先运行 `impact` 的情况下编辑函数、类或方法。
+- 绝对不要忽略影响分析中的 HIGH 或 CRITICAL 风险警告。
+- 绝对不要用查找替换来重命名符号——使用能理解调用图的 `rename`。
+- 绝对不要在没有运行 `detect_changes()` 检查受影响范围的情况下提交更改。
 
-## Resources
+## 资源
 
-| Resource | Use for |
+| 资源 | 用途 |
 |----------|---------|
-| `gitnexus://repo/Trellis/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/Trellis/clusters` | All functional areas |
-| `gitnexus://repo/Trellis/processes` | All execution flows |
-| `gitnexus://repo/Trellis/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/Trellis/context` | 代码库概览，检查索引新鲜度 |
+| `gitnexus://repo/Trellis/clusters` | 所有功能区域 |
+| `gitnexus://repo/Trellis/processes` | 所有执行流 |
+| `gitnexus://repo/Trellis/process/{name}` | 逐步执行追踪 |
 
 ## CLI
 
-| Task | Read this skill file |
+| 任务 | 阅读此 skill 文件 |
 |------|---------------------|
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+| 理解架构 / "X 是如何工作的？" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
+| 影响范围 / "改了 X 会破坏什么？" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| 追踪 bug / "为什么 X 失败了？" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
+| 重命名 / 提取 / 拆分 / 重构 | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
+| 工具、资源、schema 参考 | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
+| 索引、状态、清理、wiki CLI 命令 | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->

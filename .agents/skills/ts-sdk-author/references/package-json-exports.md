@@ -1,34 +1,34 @@
-# `package.json` `exports` — Designing Dual-Format, Multi-Runtime Entry Maps
+# `package.json` `exports` — 设计双格式、多运行时入口映射
 
-Audience: TypeScript SDK authors shipping a single package to Node (ESM + CJS), browsers, edge workers, React Native, Bun, and Deno — with one or more subpath entries for plugins/adapters.
+目标读者：发布单个包到 Node（ESM + CJS）、浏览器、边缘 Worker、React Native、Bun 和 Deno 的 TypeScript SDK 作者——具有一个或多个用于插件/适配器的子路径入口。
 
-This reference covers field design only. For *generating* the matching `dist/` artifacts, see `tsdown-bundling.md`. For *validating* the shape (`publint`, `attw --pack`), see `verification-and-publishing.md`.
+本文档仅涵盖字段设计。关于*生成*匹配的 `dist/` 产物，请参阅 `tsdown-bundling.md`。关于*验证*形状（`publint`、`attw --pack`），请参阅 `verification-and-publishing.md`。
 
 ---
 
-## 1. Why `exports` Matters
+## 1. 为什么 `exports` 很重要
 
-Before Node 12 / TypeScript 4.7, package entry resolution was a mess: `main` for CJS, `module` for bundlers, `browser` for browser bundlers, `types` for TypeScript, plus `typesVersions` for subpaths. Each tool implemented a slightly different fallback chain. A consumer's import could land on the wrong file silently, leading to duplicate React copies, missing source maps, or "ReferenceError: require is not defined."
+在 Node 12 / TypeScript 4.7 之前，包的入口解析是一团乱麻：`main` 用于 CJS，`module` 用于打包器，`browser` 用于浏览器打包器，`types` 用于 TypeScript，再加上 `typesVersions` 用于子路径。每个工具都实现了稍有不同的回退链。消费者的导入可能静默地落在错误的文件上，导致重复的 React 副本、缺失的源码映射，或 "ReferenceError: require is not defined"。
 
-The `exports` field, defined by [Node's resolution spec](https://nodejs.org/api/packages.html#conditional-exports), is now the single source of truth:
+`exports` 字段，由 [Node 的解析规范](https://nodejs.org/api/packages.html#conditional-exports)定义，现在是唯一的真相来源：
 
-| Consumer / tool | What it reads from `exports` |
+| 消费者 / 工具 | 从 `exports` 中读取什么 |
 | --- | --- |
-| Node ESM (`import`)          | `"import"` branch (or `"node"` then `"import"`) |
-| Node CJS (`require`)         | `"require"` branch (or `"node"` then `"require"`) |
-| TypeScript (`moduleResolution: bundler`, `node16`, `nodenext`) | `"types"` key — but **only inside the matching `import`/`require` branch** |
-| Webpack / Rollup / Vite / esbuild | `"browser"` / `"import"` / custom user-configured conditions |
-| Cloudflare Workers, Vercel Edge | `"workerd"`, `"worker"`, `"edge-light"` |
+| Node ESM（`import`）          | `"import"` 分支（或 `"node"` 然后 `"import"`） |
+| Node CJS（`require`）         | `"require"` 分支（或 `"node"` 然后 `"require"`） |
+| TypeScript（`moduleResolution: bundler`、`node16`、`nodenext`） | `"types"` 键——但**仅在匹配的 `import`/`require` 分支内部** |
+| Webpack / Rollup / Vite / esbuild | `"browser"` / `"import"` / 自定义用户配置的条件 |
+| Cloudflare Workers、Vercel Edge | `"workerd"`、`"worker"`、`"edge-light"` |
 | React Native / Metro          | `"react-native"` |
-| Deno                          | `"deno"` then `"import"` |
-| Bun                           | `"bun"` then `"import"` |
-| [`publint`](https://publint.dev) / [`@arethetypeswrong/cli`](https://arethetypeswrong.github.io) | Walks the entire tree and validates every leaf |
+| Deno                          | `"deno"` 然后 `"import"` |
+| Bun                           | `"bun"` 然后 `"import"` |
+| [`publint`](https://publint.dev) / [`@arethetypeswrong/cli`](https://arethetypeswrong.github.io) | 遍历整个树并验证每个叶子节点 |
 
-If `exports` exists, Node **ignores** `main`, `module`, and `browser` for resolution (they remain only as fallbacks for legacy tooling that hasn't implemented `exports` yet). It also blocks deep imports: consumers can only import what `exports` whitelists. This is a feature — it gives you a real public API surface.
+如果 `exports` 存在，Node 会**忽略** `main`、`module` 和 `browser` 进行解析（它们仅作为尚未实现 `exports` 的旧工具的回退保留）。它还会阻止深层导入：消费者只能导入 `exports` 白名单中的内容。这是一个特性——它为你提供了一个真正的公共 API 对外接口。
 
 ---
 
-## 2. Anatomy of an `exports` Entry
+## 2. `exports` 条目的结构
 
 ```jsonc
 "exports": {
@@ -39,54 +39,54 @@ If `exports` exists, Node **ignores** `main`, `module`, and `browser` for resolu
 }
 ```
 
-- **Subpath** — a string starting with `"."`. `"."` is the package root; `"./client"` is `pkg-name/client`; `"./package.json"` exposes the manifest itself; `"./adapters/*"` is a wildcard. Subpaths cannot resolve outside the package.
-- **Condition** — a string key matched against the consumer's *condition set*. Conditions include `"import"`, `"require"`, `"types"`, `"node"`, `"browser"`, `"deno"`, `"bun"`, `"worker"`, `"workerd"`, `"edge-light"`, `"react-native"`, `"react-server"`, `"development"`, `"production"`, `"module-sync"`, and an always-matching `"default"`.
-- **Fallthrough rule** — within a single object, conditions are tried *in declaration order*. The **first match wins**, and the resolver does not look further once a leaf string is returned. This is the most important behavioural fact about the `exports` field.
+- **子路径（Subpath）** — 一个以 `"."` 开头的字符串。`"."` 是包根目录；`"./client"` 是 `pkg-name/client`；`"./package.json"` 暴露清单本身；`"./adapters/*"` 是通配符。子路径不能解析到包外部。
+- **条件（Condition）** — 一个字符串键，与消费者的*条件集（condition set）*匹配。条件包括 `"import"`、`"require"`、`"types"`、`"node"`、`"browser"`、`"deno"`、`"bun"`、`"worker"`、`"workerd"`、`"edge-light"`、`"react-native"`、`"react-server"`、`"development"`、`"production"`、`"module-sync"`，以及一个始终匹配的 `"default"`。
+- **回退规则** — 在单个对象内部，条件按*声明顺序*尝试。**第一个匹配的获胜**，一旦返回叶子字符串，解析器就不再继续查找。这是关于 `exports` 字段最重要的行为事实。
 
-A leaf is either a string (a relative file path inside the package) or `null` (explicitly forbid a target — e.g. block CJS from accidentally getting an ESM file).
+叶子节点可以是一个字符串（包内的相对文件路径）或 `null`（显式禁止一个目标——例如阻止 CJS 意外获取 ESM 文件）。
 
 ---
 
-## 3. The Five Rules That Catch 90% of `exports` Bugs
+## 3. 捕获 90% `exports` Bug 的五条规则
 
-These are non-negotiable invariants. Linters (`publint`, `attw`) will flag violations.
+这些是不可协商的不变式。Linter（`publint`、`attw`）会标记违规。
 
-### 3.1. Rule 1 — `"types"` MUST come first inside each branch
+### 3.1. 规则 1 — `"types"` 必须在每个分支中放在最前面
 
 ```jsonc
-// CORRECT
+// 正确
 "import": {
-  "types": "./dist/index.d.mts",   // <-- first
+  "types": "./dist/index.d.mts",   // <-- 最前面
   "default": "./dist/index.mjs"
 }
 ```
 
 ```jsonc
-// BROKEN — TypeScript may resolve `default` before seeing `types`,
-// leading to a missing-types error in strict resolvers.
+// 错误 — TypeScript 可能在看到 `types` 之前解析 `default`，
+// 导致在严格解析器中缺失类型错误。
 "import": {
   "default": "./dist/index.mjs",
   "types": "./dist/index.d.mts"
 }
 ```
 
-Because first-match-wins, if a runtime condition matches before `types`, the resolver returns a `.js` path and the TS-aware fallback is never consulted. (`publint` rule [`types-should-be-first-in-conditional-exports`](https://publint.dev/rules).)
+因为第一个匹配的获胜，如果运行时条件在 `types` 之前匹配，解析器返回一个 `.js` 路径，而 TS 感知的回退永远不会被咨询。（`publint` 规则 [`types-should-be-first-in-conditional-exports`](https://publint.dev/rules)。）
 
-### 3.2. Rule 2 — `"default"` MUST be last
+### 3.2. 规则 2 — `"default"` 必须在最后
 
-`"default"` matches every condition set. Anything declared after it is unreachable.
+`"default"` 匹配每个条件集。任何在其之后声明的内容都是不可达的。
 
 ```jsonc
-// BROKEN — the `node` branch will never be selected
+// 错误 — `node` 分支永远不会被选中
 "import": {
   "default": "./dist/index.mjs",
-  "node": "./dist/index.node.mjs"  // unreachable
+  "node": "./dist/index.node.mjs"  // 不可达
 }
 ```
 
-### 3.3. Rule 3 — Separate `.d.mts` and `.d.cts` for dual packages (TS 5.0+)
+### 3.3. 规则 3 — 双包使用独立的 `.d.mts` 和 `.d.cts`（TS 5.0+）
 
-A single `.d.ts` file cannot accurately describe both ESM and CJS shapes — they differ on `export =`, `import.meta`, and default-export interop. Emit two declaration files and reference them from the matching branch:
+一个单一的 `.d.ts` 文件无法准确描述 ESM 和 CJS 两种形状——它们在 `export =`、`import.meta` 和默认导出互操作上存在差异。产出两个声明文件，并从匹配的分支引用它们：
 
 ```jsonc
 ".": {
@@ -95,32 +95,32 @@ A single `.d.ts` file cannot accurately describe both ESM and CJS shapes — the
 }
 ```
 
-TypeScript needs `moduleResolution: "node16" | "nodenext" | "bundler"` on the consumer side to honour these. `publint` flags the [`types-resolved-through-fallback`](https://publint.dev/rules) issue when one declaration file is reused across both formats incorrectly.
+TypeScript 在消费者端需要 `moduleResolution: "node16" | "nodenext" | "bundler"` 才能遵循这一点。`publint` 在单个声明文件被错误地跨两种格式重用时，会标记 [`types-resolved-through-fallback`](https://publint.dev/rules) 问题。
 
-### 3.4. Rule 4 — Include `"./package.json": "./package.json"`
+### 3.4. 规则 4 — 包含 `"./package.json": "./package.json"`
 
-Many tools (Yarn PnP, Rollup, the TypeScript `pkg-pr-new` flow, `attw`) read your own `package.json` at runtime to introspect `version`, `peerDependencies`, etc. Without an explicit entry, those reads fail with `ERR_PACKAGE_PATH_NOT_EXPORTED`. The cost of including it is one line.
+许多工具（Yarn PnP、Rollup、TypeScript `pkg-pr-new` 流程、`attw`）在运行时读取你自己的 `package.json` 以检查 `version`、`peerDependencies` 等。没有显式条目，这些读取会失败并报 `ERR_PACKAGE_PATH_NOT_EXPORTED`。包含它的成本是一行。
 
-### 3.5. Rule 5 — If you use the `"module"` condition, it must precede `"require"`
+### 3.5. 规则 5 — 如果你使用 `"module"` 条件，它必须在 `"require"` 之前
 
-`"module"` is a non-standard bundler condition (used by Webpack/Rollup) that means "give me the ESM build even though I would normally use `require`". Put it before `"require"` so bundlers see it first; Node ignores `"module"` and falls through to `"require"`. Most modern SDKs skip `"module"` entirely now that `"import"` is universally supported.
+`"module"` 是一个非标准的打包器条件（由 Webpack/Rollup 使用），意思是"即使我通常使用 `require`，也给我 ESM 构建"。将其放在 `"require"` 之前，以便打包器先看到它；Node 忽略 `"module"` 并回退到 `"require"`。现在大多数现代 SDK 完全跳过 `"module"`，因为 `"import"` 已得到普遍支持。
 
 ---
 
-## 4. The Standard Dual Shape — tRPC Pattern
+## 4. 标准双形状 — tRPC 模式
 
-This is the canonical shape for a Node-first SDK that ships both ESM and CJS with separate declaration files for each.
+这是面向 Node 的 SDK 的规范形状，同时提供 ESM 和 CJS，并为每种格式提供独立的声明文件。
 
 ```jsonc
-// from trpc/trpc @ packages/server/package.json
+// 来自 trpc/trpc @ packages/server/package.json
 // https://github.com/trpc/trpc/blob/main/packages/server/package.json
 {
   "name": "@trpc/server",
   "type": "module",
   "sideEffects": false,
-  "main":    "./dist/index.cjs",       // legacy fallback for non-exports-aware tools
-  "module":  "./dist/index.mjs",       // legacy fallback for older bundlers
-  "types":   "./dist/index.d.cts",     // legacy fallback for TS pre-4.7
+  "main":    "./dist/index.cjs",       // 不支持 exports 的旧工具的回退
+  "module":  "./dist/index.mjs",       // 旧打包器的回退
+  "types":   "./dist/index.d.cts",     // TS 4.7 之前的回退
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -193,21 +193,21 @@ This is the canonical shape for a Node-first SDK that ships both ESM and CJS wit
 }
 ```
 
-Why it's the gold standard:
+为什么它是黄金标准：
 
-- `"type": "module"` makes bare `.js` files inside the package ESM by default; `.cjs` / `.mjs` extensions explicitly disambiguate the dual outputs.
-- Every entry obeys Rules 1–5: `types` first, `default` last, separate `.d.mts` / `.d.cts`, `./package.json` exported, no `module` condition.
-- Top-level `main` / `module` / `types` remain as a *belt-and-braces* fallback for tools that haven't implemented `exports` (Jest pre-29, some IDEs).
-- An "unstable-" prefixed subpath signals private API while still being importable for monorepo siblings.
+- `"type": "module"` 使包内的裸 `.js` 文件默认为 ESM；`.cjs` / `.mjs` 扩展名显式区分双输出。
+- 每个条目都遵守规则 1-5：`types` 在最前，`default` 在最后，独立的 `.d.mts` / `.d.cts`，`./package.json` 已导出，没有 `module` 条件。
+- 顶层 `main` / `module` / `types` 保留为*双保险*回退，供尚未实现 `exports` 的工具（Jest 29 之前、某些 IDE）使用。
+- "unstable-" 前缀的子路径表示私有 API，同时对 monorepo 内的同级包仍然可导入。
 
 ---
 
-## 5. The Minimal ESM-Only Shape — Vercel AI v7 Pattern
+## 5. 最小 ESM 专用形状 — Vercel AI v7 模式
 
-If you're targeting Node 20+ and modern bundlers exclusively, you can skip CJS entirely. This drops half the build steps and half the declaration files.
+如果你只面向 Node 20+ 和现代打包器，可以完全跳过 CJS。这将减少一半的构建步骤和一半的声明文件。
 
 ```jsonc
-// from vercel/ai @ packages/ai/package.json
+// 来自 vercel/ai @ packages/ai/package.json
 // https://github.com/vercel/ai/blob/main/packages/ai/package.json
 {
   "name": "ai",
@@ -238,23 +238,23 @@ If you're targeting Node 20+ and modern bundlers exclusively, you can skip CJS e
 }
 ```
 
-Annotations:
+注解：
 
-- No `require` branch — consumers in CJS land get a clear `ERR_REQUIRE_ESM` instead of a broken require-of-ESM. Node 22.12+ supports `require(esm)` natively, so the friction is decreasing.
-- A single `.d.ts` is fine because there's only one runtime format. The `types` key sits next to `import` at the same depth (not nested) since both branches resolve to the same artifact.
-- `"./internal"` is a deliberate escape hatch — semver-volatile but importable.
-- `"./test"` ships test doubles (mock streams, fixtures); consumers' tests can `import { simulateReadableStream } from 'ai/test'`.
+- 没有 `require` 分支 — CJS 环境中的消费者会得到一个清晰的 `ERR_REQUIRE_ESM`，而不是一个损坏的 ESM require。Node 22.12+ 原生支持 `require(esm)`，所以摩擦正在减少。
+- 单个 `.d.ts` 就可以了，因为只有一种运行时格式。`types` 键与 `import` 在同一深度（非嵌套），因为两个分支解析到相同的产物。
+- `"./internal"` 是一个有意的逃生阀——semver 不稳定但可导入。
+- `"./test"` 提供测试替身（mock streams、fixtures）；消费者的测试可以 `import { simulateReadableStream } from 'ai/test'`。
 
 ---
 
-## 6. Subpath Exports for Plugin Entry Points
+## 6. 用于插件入口点的子路径导出
 
-When your SDK has framework adapters, optional plugins, or per-runtime entry files, each gets its own subpath. There are three patterns:
+当你的 SDK 有框架适配器、可选插件或按运行时划分的入口文件时，每个都有自己的子路径。有三种模式：
 
-### 6.1. Flat enumerated subpaths (Inngest)
+### 6.1. 扁平枚举子路径（Inngest）
 
 ```jsonc
-// from inngest/inngest-js @ packages/inngest/package.json
+// 来自 inngest/inngest-js @ packages/inngest/package.json
 // https://github.com/inngest/inngest-js/blob/main/packages/inngest/package.json
 "exports": {
   ".": {
@@ -273,18 +273,18 @@ When your SDK has framework adapters, optional plugins, or per-runtime entry fil
   "./remix":      { "types": { "import": "./remix.d.ts",      "require": "./remix.d.cts" },      "import": "./remix.js",      "require": "./remix.cjs" },
   "./sveltekit":  { "types": { "import": "./sveltekit.d.ts",  "require": "./sveltekit.d.cts" },  "import": "./sveltekit.js",  "require": "./sveltekit.cjs" },
   "./hono":       { "types": { "import": "./hono.d.ts",       "require": "./hono.d.cts" },       "import": "./hono.js",       "require": "./hono.cjs" }
-  // ... 20+ more adapters
+  // ... 20+ 个更多适配器
 }
 ```
 
-Why interesting: Inngest demonstrates the "types-by-condition" inverted layout — `types` is the *outer* key, with `import`/`require` nested *inside* it. This shape is equivalent to the tRPC shape (TS sees the right `.d.ts` per consumer mode) but reads top-down by concern (types | runtime). Both are valid; `publint` accepts either as long as `types` is encountered first in any matching chain.
+为什么有趣：Inngest 展示了"按条件分类的类型"倒置布局——`types` 是*外层*键，`import`/`require` 嵌套在*内部*。这种形状与 tRPC 形状等效（TS 按消费者模式看到正确的 `.d.ts`），但自上而下按关注点（类型 | 运行时）阅读。两者都是有效的；`publint` 接受任何一种，只要 `types` 在任何匹配链中首先被遇到。
 
-Hono follows the same flat-enumeration approach with even more entries (~120 subpaths) — every middleware (`./cors`, `./jwt`, `./logger`, `./cache`, `./csrf`, ...) and every preset is its own importable entry. Each plugin gets a dedicated `dist/cjs/...` mirror so the require branch always lands on a `.js` file (not `.cjs` — Hono uses extension-less ESM with sibling `dist/cjs/` for require). See `tsdown-bundling.md` for the matching build-side configuration.
+Hono 遵循相同的扁平枚举方法，具有更多条目（约 120 个子路径）——每个中间件（`./cors`、`./jwt`、`./logger`、`./cache`、`./csrf`……）和每个预设都是其自己的可导入条目。每个插件获得一个专用的 `dist/cjs/...` 镜像，以便 require 分支始终落在 `.js` 文件上（不是 `.cjs`——Hono 使用无扩展名 ESM，并为 require 提供同级 `dist/cjs/`）。参见 `tsdown-bundling.md` 了解匹配的构建端配置。
 
-### 6.2. Wildcard subpath (Zustand)
+### 6.2. 通配符子路径（Zustand）
 
 ```jsonc
-// from pmndrs/zustand @ package.json
+// 来自 pmndrs/zustand @ package.json
 // https://github.com/pmndrs/zustand/blob/main/package.json
 "exports": {
   "./package.json": "./package.json",
@@ -301,25 +301,25 @@ Hono follows the same flat-enumeration approach with even more entries (~120 sub
 }
 ```
 
-The `"./*"` pattern lets consumers `import { shallow } from 'zustand/shallow'` without enumerating every middleware. The `*` on the left captures one path segment; the `*` on the right is substituted into each target. This is great for libraries with many small modules, but has tradeoffs:
+`"./*"` 模式允许消费者 `import { shallow } from 'zustand/shallow'` 而无需枚举每个中间件。左侧的 `*` 捕获一个路径段；右侧的 `*` 被替换到每个目标中。这对具有许多小模块的库来说很棒，但有一些权衡：
 
-- Every file inside `dist/` becomes publicly importable — your private internals leak unless you exclude them via `files` or a more constrained pattern (`./middleware/*` rather than `./*`).
-- `attw --pack` cannot enumerate wildcard entries, so coverage of the validator is partial.
+- `dist/` 内的每个文件都变为可公开导入——你的私有内部实现会泄露，除非你通过 `files` 或更受约束的模式（`./middleware/*` 而不是 `./*`）排除它们。
+- `attw --pack` 无法枚举通配符条目，因此验证器的覆盖率是部分的。
 
-Most SDK authors prefer enumeration (Inngest, tRPC, Hono) over wildcards (Zustand) for these reasons.
+出于这些原因，大多数 SDK 作者更喜欢枚举（Inngest、tRPC、Hono）而不是通配符（Zustand）。
 
-### 6.3. Per-runtime subpath split
+### 6.3. 按运行时拆分子路径
 
-When a single plugin needs different code per runtime (e.g. `./cloudflare` uses `caches.default`, `./node` uses `node:fs`), give each its own subpath and let the user pick. Don't try to express runtime forking *inside* a single subpath unless the implementations are tiny shims — see §7 for when runtime conditions are appropriate.
+当单个插件需要按运行时使用不同的代码时（例如 `./cloudflare` 使用 `caches.default`，`./node` 使用 `node:fs`），每个都赋予自己的子路径，让用户选择。不要试图在*单个子路径内部*表达运行时分支，除非实现是微小的垫片（shim）——关于何时使用运行时条件，请参见第 7 节。
 
 ---
 
-## 7. Isomorphic Conditions — Sanity Client Pattern
+## 7. 同构条件 — Sanity Client 模式
 
-When the *same* import (`@sanity/client`) must resolve to different code per runtime — browser uses `fetch`, Node uses `http`, edge uses Fetch-with-no-keepalive — use runtime conditions inside a single subpath:
+当*相同*的导入（`@sanity/client`）必须按运行时解析到不同的代码时——浏览器使用 `fetch`，Node 使用 `http`，边缘使用无 keepalive 的 Fetch——在单个子路径内使用运行时条件：
 
 ```jsonc
-// from sanity-io/client @ package.json
+// 来自 sanity-io/client @ package.json
 // https://github.com/sanity-io/client/blob/main/package.json
 "exports": {
   ".": {
@@ -371,47 +371,47 @@ When the *same* import (`@sanity/client`) must resolve to different code per run
 }
 ```
 
-Reading order — for the root entry `.`, with first-match-wins semantics:
+对于根条目 `.`，以第一个匹配获胜的语义，读取顺序如下：
 
-1. A bundler with `"source"` in its condition set (some plugin pipelines) sees raw TS.
-2. A browser bundler matches `"browser"` — nested `import`/`require` picks ESM vs CJS within the browser build.
-3. React Native's Metro matches `"react-native"`.
-4. Sanity Functions runtime matches `"sanity-function"`.
-5. React Server Components match `"react-server"` (the same browser bundle works because RSC has no Node-only APIs).
-6. Bun, Deno, Edge (Vercel/Cloudflare), Workers all match their respective conditions and get the browser bundle.
-7. Only after *every* alternate runtime has been ruled out does Node ESM (`import`) get `./dist/index.js`, and Node CJS (`require`) get `./dist/index.cjs`.
+1. 条件集中带有 `"source"` 的打包器（某些插件管道）看到原始 TS。
+2. 浏览器打包器匹配 `"browser"`——嵌套的 `import`/`require` 在浏览器构建中选择 ESM 还是 CJS。
+3. React Native 的 Metro 匹配 `"react-native"`。
+4. Sanity Functions 运行时匹配 `"sanity-function"`。
+5. React Server Components 匹配 `"react-server"`（相同的浏览器包可以工作，因为 RSC 没有仅 Node 的 API）。
+6. Bun、Deno、Edge（Vercel/Cloudflare）、Workers 都匹配各自的相应条件并获得浏览器包。
+7. 只有在*每个*备用运行时被排除后，Node ESM（`import`）才获得 `./dist/index.js`，Node CJS（`require`）获得 `./dist/index.cjs`。
 
-This is the canonical *isomorphic* shape. A few discipline points:
+这是规范的*同构（isomorphic）*形状。几个纪律要点：
 
-- **Most-specific runtimes go first.** `"react-server"` and `"workerd"` are more specific than `"browser"`; put them earlier. `"node"` is the catch-all for backend and goes near the end.
-- **`"default"` is always last.** Note that Sanity uses `"./dist/index.js"` for `default` (matching ESM `import`) — this guards Deno-style consumers that send no specific condition.
-- **`"source"` is unofficial** but widely used by Metro, some Vite plugins, and `tsup`'s dev pipeline to map back to TS. Safe to include; safe to omit.
+- **最具体的运行时放在最前面。** `"react-server"` 和 `"workerd"` 比 `"browser"` 更具体；将它们放在更前面。`"node"` 是后端的总括，放在接近末尾。
+- **`"default"` 始终在最后。** 注意 Sanity 对 `default` 使用 `"./dist/index.js"`（匹配 ESM `import`）——这保护了不发送特定条件的 Deno 风格消费者。
+- **`"source"` 是非官方的**，但被 Metro、一些 Vite 插件和 `tsup` 的开发管道广泛用于映射回 TS。包含是安全的；省略也是安全的。
 
-### 7.1. Condition matching cheat-sheet
+### 7.1. 条件匹配速查表
 
-| Runtime / tool | Conditions presented (in order) |
+| 运行时 / 工具 | 呈现的条件（按顺序） |
 | --- | --- |
-| Node 20+ ESM        | `node`, `import`, `module-sync`*, `default` |
-| Node 20+ CJS        | `node`, `require`, `default` |
-| Cloudflare Workers (Wrangler) | `workerd`, `worker`, `browser`, `import`, `default` |
-| Vercel Edge Runtime | `edge-light`, `worker`, `browser`, `import`, `default` |
-| Bun                 | `bun`, `node`, `import`, `default` |
-| Deno (npm:)         | `deno`, `node`, `import`, `default` |
-| React Native (Metro)| `react-native`, `browser`, `import`, `default` |
-| Vite (SSR)          | `node`, `import`, `default` |
-| Vite (client)       | `browser`, `import`, `default` |
-| Webpack 5 (web)     | `browser`, `module`, `import`, `default` |
-| Webpack 5 (node)    | `node`, `module`, `import`, `default` |
-| Next.js RSC server  | `react-server`, `node`, `import`, `default` |
-| TypeScript          | `types` (plus the matching runtime conditions per `module` setting) |
+| Node 20+ ESM        | `node`、`import`、`module-sync`*、`default` |
+| Node 20+ CJS        | `node`、`require`、`default` |
+| Cloudflare Workers（Wrangler） | `workerd`、`worker`、`browser`、`import`、`default` |
+| Vercel Edge Runtime | `edge-light`、`worker`、`browser`、`import`、`default` |
+| Bun                 | `bun`、`node`、`import`、`default` |
+| Deno（npm:）         | `deno`、`node`、`import`、`default` |
+| React Native（Metro）| `react-native`、`browser`、`import`、`default` |
+| Vite（SSR）          | `node`、`import`、`default` |
+| Vite（client）       | `browser`、`import`、`default` |
+| Webpack 5（web）     | `browser`、`module`、`import`、`default` |
+| Webpack 5（node）    | `node`、`module`、`import`、`default` |
+| Next.js RSC server  | `react-server`、`node`、`import`、`default` |
+| TypeScript          | `types`（加上根据 `module` 设置匹配的运行时条件） |
 
-\* `module-sync` is presented only when the consumer is CJS and the package opts in — see §8.
+\* `module-sync` 仅在消费者是 CJS 且包选择加入时呈现——参见第 8 节。
 
 ---
 
-## 8. `module-sync` and Other Modern Conditions
+## 8. `module-sync` 和其他现代条件
 
-Node 22.10 introduced [`module-sync`](https://nodejs.org/api/packages.html#conditional-exports), a condition designed to let a CJS consumer synchronously `require()` an ESM module if (and only if) that module has no top-level `await`. Pattern:
+Node 22.10 引入了 [`module-sync`](https://nodejs.org/api/packages.html#conditional-exports)，这个条件旨在让 CJS 消费者同步 `require()` 一个 ESM 模块，当且仅当该模块没有顶层 `await`。模式：
 
 ```jsonc
 ".": {
@@ -421,27 +421,27 @@ Node 22.10 introduced [`module-sync`](https://nodejs.org/api/packages.html#condi
 }
 ```
 
-Should you adopt it? In late 2026, the equation is:
+你应该采用它吗？在 2026 年底，这个公式是：
 
-- **Yes, if** you ship dual ESM+CJS already and your ESM build has no top-level `await`. It costs one extra key and lets Node 22.12+ consumers skip a CJS round-trip — important for cold-start-sensitive workloads.
-- **No, if** you're ESM-only — `require(esm)` works without `module-sync` on Node 22.12+, and earlier versions can't use the feature anyway.
-- **Skip if uncertain** — the rest of the ecosystem (bundlers, older Node) ignores `module-sync` gracefully.
+- **是的，如果**你已经同时提供 ESM+CJS，并且你的 ESM 构建没有顶层 `await`。它多花费一个额外的键，让 Node 22.12+ 消费者跳过 CJS 往返——对冷启动敏感的工作负载很重要。
+- **不，如果**你是纯 ESM——`require(esm)` 在 Node 22.12+ 上无需 `module-sync` 即可工作，更早的版本也无法使用该功能。
+- **如果不确定则跳过**——生态系统的其余部分（打包器、旧版 Node）会优雅地忽略 `module-sync`。
 
-Other modern conditions worth knowing:
+其他值得了解的现代条件：
 
-- `"development"` / `"production"` — gated builds; React, Preact, MobX use these for dev-only warnings. Less common in SDKs.
-- `"react-server"` — Next.js / React 19 RSC marker. Set this if your package has a server-only entry that uses `React.cache`, `next/headers`, etc.
-- `"workerd"` — Cloudflare Workers' V8 isolate runtime (specifically `workerd`, the open-source runtime under Wrangler). More specific than `"worker"`.
-- `"edge-light"` — Vercel's flag for Edge Functions and Edge Middleware. Used by `next/server`, `vercel`.
+- `"development"` / `"production"` — 门控构建；React、Preact、MobX 使用这些进行仅限开发环境的警告。在 SDK 中较少见。
+- `"react-server"` — Next.js / React 19 RSC 标记。如果你的包有一个使用 `React.cache`、`next/headers` 等的仅服务器入口，则设置此项。
+- `"workerd"` — Cloudflare Workers 的 V8 隔离运行时（特别是 `workerd`，Wrangler 下的开源运行时）。比 `"worker"` 更具体。
+- `"edge-light"` — Vercel 用于 Edge Functions 和 Edge Middleware 的标志。由 `next/server`、`vercel` 使用。
 
 ---
 
-## 9. Common Mistakes — Bad → Fixed → Why
+## 9. 常见错误 — 糟糕 → 修复 → 原因
 
-### 9.1. Wrong condition order
+### 9.1. 错误的条件顺序
 
 ```jsonc
-// BAD
+// 糟糕
 ".": {
   "default": "./dist/index.mjs",
   "node":    "./dist/index.node.mjs",
@@ -450,7 +450,7 @@ Other modern conditions worth knowing:
 ```
 
 ```jsonc
-// FIXED
+// 修复后
 ".": {
   "browser": "./dist/index.browser.mjs",
   "node":    "./dist/index.node.mjs",
@@ -458,76 +458,76 @@ Other modern conditions worth knowing:
 }
 ```
 
-Why: First-match-wins means `default` short-circuits everything declared after it. Place specific runtimes first, `default` last.
+原因：第一个匹配获胜意味着 `default` 短路了在其之后声明的所有内容。将特定运行时放在最前面，`default` 放在最后。
 
-### 9.2. Masquerading ESM (`.js` containing ESM in a CJS package)
+### 9.2. 伪装 ESM（CJS 包中的 `.js` 包含 ESM）
 
 ```jsonc
-// BAD — package without "type": "module" but ESM contents in .js
+// 糟糕 — 没有 "type": "module" 的包，但 .js 中包含 ESM 内容
 {
-  "exports": { ".": { "import": "./dist/index.js" } }   // <-- .js, not .mjs
-  // "type" missing, defaults to "commonjs"
+  "exports": { ".": { "import": "./dist/index.js" } }   // <-- .js，不是 .mjs
+  // "type" 缺失，默认为 "commonjs"
 }
-// Result: Node treats ./dist/index.js as CJS, parser fails on `import` statements.
+// 结果：Node 将 ./dist/index.js 视为 CJS，解析器在 `import` 语句上失败。
 ```
 
 ```jsonc
-// FIXED — either:
+// 修复后 — 要么：
 { "type": "module", "exports": { ".": { "import": "./dist/index.js" } } }
-// or:
+// 或者：
 { "exports": { ".": { "import": "./dist/index.mjs" } } }
 ```
 
-Why: Node's parser mode is determined by the *nearest `package.json`'s `"type"` field*, not by the file path inside `exports`. `attw` flags this as `FalseESM` / `FalseCJS`.
+原因：Node 的解析器模式由*最近的 `package.json` 的 `"type"` 字段*决定，而不是由 `exports` 内的文件路径决定。`attw` 将此标记为 `FalseESM` / `FalseCJS`。
 
-### 9.3. Missing `node10` types fallback
+### 9.3. 缺少 `node10` 类型回退
 
 ```jsonc
-// BAD — TS with `moduleResolution: "node"` (old style) sees no types
+// 糟糕 — 使用 `moduleResolution: "node"`（旧风格）的 TS 看不到类型
 {
   "exports": { ".": { "import": { "types": "./dist/index.d.mts", "default": "./dist/index.mjs" } } }
 }
-// Result: consumer on `moduleResolution: node` gets "Could not find a declaration file."
+// 结果：使用 `moduleResolution: node` 的消费者得到 "Could not find a declaration file."
 ```
 
 ```jsonc
-// FIXED — add top-level `types` as the legacy fallback
+// 修复后 — 添加顶层 `types` 作为旧版回退
 {
   "types":   "./dist/index.d.ts",
   "exports": { ".": { "import": { "types": "./dist/index.d.mts", "default": "./dist/index.mjs" } } }
 }
 ```
 
-Why: `moduleResolution: "node"` (TS pre-4.7 default) doesn't read `exports`; it falls back to the top-level `types`/`typings` field. Keep both — the `exports` types for modern TS, the top-level `types` for legacy.
+原因：`moduleResolution: "node"`（TS 4.7 之前的默认值）不读取 `exports`；它回退到顶层 `types`/`typings` 字段。同时保留两者——`exports` types 用于现代 TS，顶层 `types` 用于旧版。
 
-### 9.4. Stale `typesVersions` from the pre-`exports` era
+### 9.4. 来自 `exports` 前时代的过时 `typesVersions`
 
 ```jsonc
-// BAD — typesVersions duplicates and contradicts exports
+// 糟糕 — typesVersions 重复并矛盾于 exports
 {
   "exports": { "./plugin": { "types": "./dist/plugin.d.ts", "import": "./dist/plugin.js" } },
-  "typesVersions": { "*": { "plugin": ["./dist/plugin/legacy.d.ts"] } }   // contradicts!
+  "typesVersions": { "*": { "plugin": ["./dist/plugin/legacy.d.ts"] } }   // 矛盾！
 }
 ```
 
 ```jsonc
-// FIXED — delete typesVersions once exports covers every subpath
+// 修复后 — 一旦 exports 覆盖了每个子路径，就删除 typesVersions
 {
   "exports": { "./plugin": { "types": "./dist/plugin.d.ts", "import": "./dist/plugin.js" } }
 }
 ```
 
-Why: `typesVersions` was the pre-4.7 workaround for "TypeScript can't find types for subpath imports." It's now redundant if your `exports` types are correctly placed. Keep `typesVersions` only if you must support TS < 4.7.
+原因：`typesVersions` 是 4.7 之前的变通方案，用于解决"TypeScript 无法找到子路径导入的类型"。如果你的 `exports` types 放置正确，它现在是多余的。仅当你必须支持 TS < 4.7 时才保留 `typesVersions`。
 
-### 9.5. Forgetting `./package.json`
+### 9.5. 忘记 `./package.json`
 
 ```jsonc
-// BAD — Yarn PnP, attw, pkg-pr-new all fail with ERR_PACKAGE_PATH_NOT_EXPORTED
+// 糟糕 — Yarn PnP、attw、pkg-pr-new 都失败并报 ERR_PACKAGE_PATH_NOT_EXPORTED
 { "exports": { ".": { ... } } }
 ```
 
 ```jsonc
-// FIXED
+// 修复后
 {
   "exports": {
     "./package.json": "./package.json",
@@ -536,11 +536,11 @@ Why: `typesVersions` was the pre-4.7 workaround for "TypeScript can't find types
 }
 ```
 
-Why: Any tool that programmatically reads your `package.json` (to print the version, lint peer deps, etc.) needs the entry. Cost: one line. Benefit: avoids cryptic resolution errors in CI for downstream consumers.
+原因：任何以编程方式读取你的 `package.json` 的工具（打印版本、lint peer deps 等）都需要该条目。成本：一行。收益：避免下游消费者在 CI 中出现神秘的解析错误。
 
-### 9.6. `null` to block accidental matches
+### 9.6. 使用 `null` 阻止意外匹配
 
-Subtle case: if your package has *no* CJS at all, explicitly null-out the `require` branch so a CJS consumer gets a clean error instead of the ESM file (which would then fail to parse):
+微妙的情况：如果你的包完全*没有* CJS，显式将 `require` 分支置为 null，以便 CJS 消费者获得清晰的错误，而不是获得 ESM 文件（然后解析失败）：
 
 ```jsonc
 ".": {
@@ -549,26 +549,26 @@ Subtle case: if your package has *no* CJS at all, explicitly null-out the `requi
 }
 ```
 
-`attw` flags this as `MissingExportEquals` if you do this *and* still have a top-level `main`. Decide: either ESM-only with no `main`, or dual with both branches.
+如果你这样做*并且*仍然有顶层 `main`，`attw` 会将其标记为 `MissingExportEquals`。决定：要么纯 ESM 且没有 `main`，要么双格式且两个分支都有。
 
 ---
 
-## 10. Validation Workflow
+## 10. 验证工作流
 
-Three local checks should pass before every publish:
+每次发布前应通过三项本地检查：
 
-1. **Resolve manually with Node** — fast smoke test, no install needed:
+1. **使用 Node 手动解析** — 快速冒烟测试，无需安装：
 
    ```bash
-   # Inside the package root (or after `npm pack && cd <extracted>`):
+   # 在包根目录内（或 `npm pack && cd <extracted>` 之后）：
    node --conditions=import --print "require.resolve('./dist/index.mjs')"
    node --input-type=module -e "import('./dist/index.mjs').then(m => console.log(Object.keys(m)))"
    node -e "console.log(Object.keys(require('./dist/index.cjs')))"
    ```
 
-   If any of those throws `ERR_PACKAGE_PATH_NOT_EXPORTED` or `ERR_REQUIRE_ESM`, your `exports` map is wrong.
+   如果其中任何一个抛出 `ERR_PACKAGE_PATH_NOT_EXPORTED` 或 `ERR_REQUIRE_ESM`，你的 `exports` 映射是错误的。
 
-2. **Pack-and-unpack test in a sandbox** — confirms the *published tarball* (not just your workspace) resolves correctly:
+2. **在沙箱中进行打包和解包测试** — 确认*已发布的 tarball*（而不仅仅是你的工作区）正确解析：
 
    ```bash
    npm pack
@@ -578,16 +578,16 @@ Three local checks should pass before every publish:
    node --input-type=module -e "import('your-pkg').then(m => console.log(m))"
    ```
 
-3. **Run `publint` and `attw --pack`** — these tools walk every leaf of `exports`, run a TS type-resolution simulation per module mode, and report violations against the rules in §3 and §9. See `verification-and-publishing.md` for the exact flags, CI integration, and how to interpret each diagnostic.
+3. **运行 `publint` 和 `attw --pack`** — 这些工具遍历 `exports` 的每个叶子节点，按模块模式运行 TS 类型解析模拟，并报告违反第 3 节和第 9 节中规则的违规行为。关于确切的标志、CI 集成以及如何解释每个诊断，请参阅 `verification-and-publishing.md`。
 
 ---
 
-## Further Reading
+## 延伸阅读
 
-- Node.js docs — Conditional exports: https://nodejs.org/api/packages.html#conditional-exports
-- `publint` rule index: https://publint.dev/rules
-- Are The Types Wrong? FAQ: https://arethetypeswrong.github.io/?p=faq
-- Modern Guide to Packaging JS Libraries: https://github.com/frehner/modern-guide-to-packaging-js-library
-- TypeScript 4.7 release notes (the `exports` `types` condition): https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-7.html#packagejson-exports-imports-and-self-referencing
+- Node.js 文档 — 条件导出：https://nodejs.org/api/packages.html#conditional-exports
+- `publint` 规则索引：https://publint.dev/rules
+- Are The Types Wrong? FAQ：https://arethetypeswrong.github.io/?p=faq
+- 打包 JS 库的现代指南：https://github.com/frehner/modern-guide-to-packaging-js-library
+- TypeScript 4.7 发布说明（`exports` `types` 条件）：https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-7.html#packagejson-exports-imports-and-self-referencing
 
-For matching the `exports` map to actual `dist/` artifacts, including how to emit paired `.mjs`/`.cjs` and `.d.mts`/`.d.cts`, see `tsdown-bundling.md`. For pre-publish validation, see `verification-and-publishing.md`.
+关于将 `exports` 映射匹配到实际的 `dist/` 产物，包括如何产出配对的 `.mjs`/`.cjs` 和 `.d.mts`/`.d.cts`，请参阅 `tsdown-bundling.md`。关于发布前验证，请参阅 `verification-and-publishing.md`。

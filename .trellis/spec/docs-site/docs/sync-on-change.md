@@ -1,33 +1,28 @@
-# Docs-Site Sync Matrix
+# Docs-Site 同步矩阵（Sync Matrix）
 
-> When Trellis changes **workflow**, **platforms**, **commands**, or **skills**, which docs-site pages must update in lockstep. A concrete "Audit ALL Writers" checklist for documentation.
+> 当 Trellis 的**工作流（workflow）**、**平台（platforms）**、**命令（commands）**或**技能（skills）**发生变更时，哪些 docs-site 页面必须同步更新。这是一份面向文档的具体"审计所有写入者（Audit ALL Writers）"检查清单。
 
 ---
 
-## Why This Exists
+## 为什么需要此文档
 
-Docs-site is a submodule that lags behind template code. Missing a doc-update on a shipping change produces false claims (docs say "run `init-context`" when the command has been removed). This has happened — see the init-context-removal task (2026-04-23) where 8 MDX pages still referenced the removed command after one implementation pass.
+Docs-site 是一个落后于模板代码的 submodule。在发布变更时遗漏文档更新会产生虚假声明（文档说"运行 `init-context`"，而该命令已被移除）。这已经发生过——参见 init-context-removal 任务（2026-04-23），其中在一次实现之后仍有 8 个 MDX 页面引用了已删除的命令。
 
-Rule of thumb: **if the change touches `packages/cli/src/templates/` or `packages/cli/src/migrations/`, grep the matrix below before merging.**
+经验法则：**如果变更涉及 `packages/cli/src/templates/` 或 `packages/cli/src/migrations/`，在合并前 grep 以下矩阵。**
 
-## Version Scope Gate
+## 版本范围门禁（Version Scope Gate）
 
-Before applying any trigger below, decide whether the changed behavior belongs
-to stable, beta, or RC docs. The file path must match that decision:
+在应用以下任何触发器之前，确定变更行为属于稳定版、beta 还是 RC 文档。文件路径必须与该决策匹配：
 
-- Stable / GA content: root versioned paths such as `start/**`, `advanced/**`,
-  and their `zh/**` mirrors.
-- Beta content: `beta/**` and `zh/beta/**` only.
-- RC content: `rc/**` and `zh/rc/**` only.
+- 稳定版 / GA 内容：root 版本化路径，如 `start/**`、`advanced/**` 及其 `zh/**` 镜像。
+- Beta 内容：仅 `beta/**` 和 `zh/beta/**`。
+- RC 内容：仅 `rc/**` 和 `zh/rc/**`。
 
-Never copy a beta workflow, artifact model, platform contract, or install
-instruction into the root versioned paths before GA promotion. Root is what the
-Release selector serves.
+永远不要将 beta 工作流、产物模型、平台契约或安装说明复制到 root 版本化路径中，直到 GA 推广。Root 是 Release 选择器所服务的内容。
 
-### Required opposite-tree grep
+### 必需的反向目录树 grep
 
-For version-specific changes, grep the tree that should **not** contain the new
-behavior before committing. For example, after a beta-only workflow change:
+对于版本特定的变更，在提交前 grep 不应包含新行为的目录树。例如，在 beta 专用工作流变更之后：
 
 ```bash
 cd docs-site
@@ -35,85 +30,84 @@ rg -n "task-creation consent|codex-mode|<trellis-workflow>|planning artifact|`de
   start advanced guides zh/start zh/advanced zh/guides -g "*.mdx"
 ```
 
-If this finds the new beta terms in root release docs, stop and move the change
-to `beta/**` / `zh/beta/**` instead.
+如果在 root release 文档中发现了新的 beta 术语，停止并将变更移至 `beta/**` / `zh/beta/**`。
 
 ---
 
-## Trigger 1: Phase Structure Changes
+## 触发器 1：阶段结构变更（Phase Structure Changes）
 
-Scope: any edit to `packages/cli/src/templates/trellis/workflow.md` that adds/removes a step, renames a phase, or changes required/optional/once tags.
+范围：任何对 `packages/cli/src/templates/trellis/workflow.md` 的编辑，包括添加/删除步骤、重命名阶段、或更改 required/optional/once 标签。
 
-| File (en + zh)                      | What to sync                                                                                                                        |
+| 文件（en + zh） | 需同步的内容 |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `start/install-and-first-task.mdx`  | Phase 1/2/3 walkthrough block (around line 215-240 in en) — keep step numbers + action verbs in sync with `workflow.md` phase index |
-| `start/everyday-use.mdx`            | Task lifecycle ASCII diagram + any per-phase bash examples                                                                          |
-| `advanced/architecture.mdx`         | Phase overview diagrams (if present)                                                                                                |
-| `concepts/workflow.mdx` (if exists) | Phase definition sections                                                                                                           |
+| `start/install-and-first-task.mdx` | Phase 1/2/3 演练块（英文版约第 215-240 行）——使步骤编号 + 动作动词与 `workflow.md` 的阶段索引保持同步 |
+| `start/everyday-use.mdx` | 任务生命周期 ASCII 图 + 按阶段的 bash 示例 |
+| `advanced/architecture.mdx` | 阶段概览图（如有） |
+| `concepts/workflow.mdx`（如存在） | 阶段定义章节 |
 
-### Grep command (docs-site)
+### Grep 命令（docs-site）
 
 ```bash
 cd docs-site && grep -rln "Phase 1\|Phase 2\|Phase 3\|phase-1\|phase-2\|phase-3\|workflow\.md" \
   --include="*.mdx" | grep -v "release/\|changelog/\|blog/"
 ```
 
-### In-template routing references (CRITICAL — grep bare step numbers, not just "Phase N.N")
+### 模板内路由引用（关键——grep 原始步骤编号，而不仅仅是"Phase N.N"）
 
-When a step is deleted/renumbered, references to it live in MORE than `workflow.md`. They use **bare-number routing syntax** that a `"Phase 3.1"` grep misses. Past drift: 0.6.1 deleted Phase 3.1 but left `continue.md` routing `check passed → **3.1**` (caught by a user, fixed in 0.6.2).
+当某个步骤被删除/重新编号时，对它的引用存在于**不止于** `workflow.md` 中。它们使用**原始编号路由语法**，而 `"Phase 3.1"` 的 grep 会遗漏它们。过往漂移：0.6.1 删除了 Phase 3.1 但 `continue.md` 仍保留了 `check passed → **3.1**` 的路由（被用户发现，在 0.6.2 中修复）。
 
-Audit ALL of these, in BOTH the source and any independent copies:
+审计**所有这些文件**，包括源码和所有独立副本：
 
-| File | Reference form |
+| 文件（File） | 引用形式 |
 | --- | --- |
-| `packages/cli/src/templates/common/commands/continue.md` | resume-routing table: `status=... → **<step>**` |
-| `packages/cli/src/templates/common/bundled-skills/trellis-meta/references/customize-local/change-workflow.md` | resume-at status-transition table: `Phase <step> (...)` |
-| `packages/cli/src/templates/copilot/prompts/finish-work.prompt.md` | Phase 3 ASCII flow list |
-| `marketplace/workflows/{native,tdd,channel-driven-subagent-dispatch}/workflow.md` | full independent workflow copies — same step body + Phase Index + breadcrumb scope ranges |
+| `packages/cli/src/templates/common/commands/continue.md` | resume-routing 表格：`status=... → **<step>**` |
+| `packages/cli/src/templates/common/bundled-skills/trellis-meta/references/customize-local/change-workflow.md` | resume-at 状态转换表格：`Phase <step> (...)` |
+| `packages/cli/src/templates/copilot/prompts/finish-work.prompt.md` | Phase 3 ASCII 流程列表 |
+| `marketplace/workflows/{native,tdd,channel-driven-subagent-dispatch}/workflow.md` | 完整的独立工作流副本——相同的步骤正文 + Phase Index + breadcrumb 范围 |
 
-Grep patterns that catch bare-number routing (run from repo root):
+能捕获原始编号路由的 grep 模式（从仓库根目录运行）：
 
 ```bash
-# bare-number routing arrows / bold step refs / step-N.N anywhere in templates + marketplace
+# 原始编号路由箭头 / 加粗步骤引用 / step-N.N 在模板 + marketplace 中的所有位置
 grep -rnE "→ \*\*[0-9]\.[0-9]+\*\*|-> \*\*[0-9]\.[0-9]+\*\*|step [0-9]\.[0-9]+|Phase [0-9]\.[0-9]+|\*\*[0-9]\.[0-9]+\*\*" \
   packages/cli/src/templates/ marketplace/ \
   --include="*.md" --include="*.toml" --include="*.prompt.md" \
   | grep -v "/dist/"
 ```
 
-Also verify the script tolerates a now-missing step: `python3 .trellis/scripts/get_context.py --mode phase --step <deleted>` must return a friendly "Step not found", not crash.
+同时验证脚本能容忍当前不存在的步骤：`python3 .trellis/scripts/get_context.py --mode phase --step <deleted>` 必须返回友好的"Step not found"，而不是崩溃。
 
 ---
 
-## Trigger 2: Platform Add / Remove / Rename
+## 触发器 2：平台新增/删除/重命名（Platform Add / Remove / Rename）
 
-Scope: any edit to `AI_TOOLS` in `packages/cli/src/types/ai-tools.ts`, `_SUBAGENT_CONFIG_DIRS` in `task_store.py`, or platform-tagged blocks in `workflow.md`.
+范围：任何对 `packages/cli/src/types/ai-tools.ts` 中 `AI_TOOLS`、`task_store.py` 中 `_SUBAGENT_CONFIG_DIRS`，或 `workflow.md` 中平台标记块的编辑。
 
-### Add a new platform
+### 新增平台
 
-| File (en + zh)                              | What to sync                                                                        |
+| 文件（en + zh） | 需同步的内容 |
 | ------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `ai-tools/<platform>.mdx`                   | **NEW FILE** — platform-specific setup + quirks page                                |
-| `ai-tools/index.mdx` (if exists)            | List entry for the new platform                                                     |
-| `docs.json`                                 | Add navigation entry to **both** `languages[0]` (en) and `languages[1]` (zh) groups |
-| `start/install-and-first-task.mdx`          | Platform table (hook-inject vs pull-based vs agent-less)                            |
-| `advanced/multi-platform.mdx`               | Class-1 / Class-2 / agent-less grouping table                                       |
-| `advanced/appendix-d.mdx` (platform quirks) | Add quirks row if any                                                               |
-| `release/` mirror copies                    | Release-frozen copies update on next release-cut, not immediately                   |
+| `ai-tools/<platform>.mdx` | **新文件**——平台特定的设置 + 注意事项页面 |
+| `ai-tools/index.mdx`（如存在） | 新平台的列表条目 |
+| `docs.json` | 在 `languages[0]`（en）和 `languages[1]`（zh）分组中都添加导航条目 |
+| `start/install-and-first-task.mdx` | 平台表格（hook-inject vs pull-based vs agent-less） |
+| `advanced/multi-platform.mdx` | Class-1 / Class-2 / agent-less 分组表格 |
+| `advanced/appendix-d.mdx`（平台注意事项/quirks） | 如有则添加注意事项行 |
+| `release/` 镜像副本 | Release 冻结副本在下次 release-cut 时更新，而非立刻 |
 
-### Remove a platform
+### 删除平台
 
-| File                                                                                         | What to sync                               |
+| 文件（File） | 需同步的内容 |
 | -------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `ai-tools/<platform>.mdx`                                                                    | Delete the page                            |
-| `ai-tools/index.mdx`                                                                         | Remove list entry                          |
-| `docs.json`                                                                                  | Delete navigation entries (both languages) |
-| `start/install-and-first-task.mdx`, `advanced/multi-platform.mdx`, `advanced/appendix-d.mdx` | Remove references                          |
-| `changelog/<version>.mdx`                                                                    | Changelog entry documenting the removal    |
+| `ai-tools/<platform>.mdx` | 删除该页面 |
+| `ai-tools/index.mdx` | 删除列表条目 |
+| `docs.json` | 删除导航条目（两种语言） |
+| `start/install-and-first-task.mdx`、`advanced/multi-platform.mdx`、`advanced/appendix-d.mdx` | 删除引用 |
+| `changelog/<version>.mdx` | 记录删除的 changelog 条目 |
 
-### Rename (e.g. "iFlow" removed) — same as remove + migration note in changelog.
+### 重命名（如"iFlow"被移除）——等同于删除 + changelog 中的迁移说明。
 
-### Grep command
+### Grep 命令
 
 ```bash
 cd docs-site && grep -rln "<platform-name>" --include="*.mdx" --include="*.json"
@@ -121,21 +115,21 @@ cd docs-site && grep -rln "<platform-name>" --include="*.mdx" --include="*.json"
 
 ---
 
-## Trigger 3: `task.py` Command Add / Remove / Rename
+## 触发器 3：`task.py` 命令新增/删除/重命名
 
-Scope: any edit to `task.py` subparser registrations or the split modules it dispatches to (`task_store.py`, `task_context.py`).
+范围：任何对 `task.py` 子解析器注册或其分派的拆分模块（`task_store.py`、`task_context.py`）的编辑。
 
-| File (en + zh)            | What to sync                                                     |
+| 文件（en + zh） | 需同步的内容 |
 | ------------------------- | ---------------------------------------------------------------- |
-| `advanced/appendix-b.mdx` | **`task.py` subcommand reference table** — add/remove row        |
-| `start/everyday-use.mdx`  | Task lifecycle flow arrow + per-step bash examples               |
-| `advanced/appendix-c.mdx` | If the change affects `task.json` fields, update schema comments |
+| `advanced/appendix-b.mdx` | **`task.py` 子命令参考表格**——添加/删除行 |
+| `start/everyday-use.mdx` | 任务生命周期流程箭头 + 按步骤的 bash 示例 |
+| `advanced/appendix-c.mdx` | 如果变更影响 `task.json` 字段，更新 schema 注释 |
 
-### Evidence of past drift
+### 过往漂移的证据
 
-The `init-context` removal (2026-04-23) touched all three files above; the first-pass sweep missed them. Only a follow-up review question ("哪些文档站地方需要更新") caught them.
+`init-context` 的移除（2026-04-23）涉及了以上三个文件；第一轮扫视遗漏了它们。只有后续审查问题（"哪些文档站地方需要更新"）才捕获了它们。
 
-### Grep command
+### Grep 命令
 
 ```bash
 cd docs-site && grep -rln "task\.py <subcommand-name>\|`<subcommand-name>`" --include="*.mdx" \
@@ -144,18 +138,18 @@ cd docs-site && grep -rln "task\.py <subcommand-name>\|`<subcommand-name>`" --in
 
 ---
 
-## Trigger 4: Skill Add / Remove / Rename
+## 触发器 4：Skill 新增/删除/重命名
 
-Scope: any edit to `packages/cli/src/templates/common/skills/` or `packages/cli/src/templates/{platform}/skills/`.
+范围：任何对 `packages/cli/src/templates/common/skills/` 或 `packages/cli/src/templates/{platform}/skills/` 的编辑。
 
-| File (en + zh)                           | What to sync                                                                   |
+| 文件（en + zh） | 需同步的内容 |
 | ---------------------------------------- | ------------------------------------------------------------------------------ |
-| `start/everyday-use.mdx`                 | Skill table at top (around line 15-18) + individual skill description sections |
-| `advanced/appendix-b.mdx`                | Skill reference table (if present)                                             |
-| `start/install-and-first-task.mdx`       | Phase walkthrough skill names                                                  |
-| Skill Routing table across workflow docs | Must match `workflow.md` Skill Routing per-platform splits                     |
+| `start/everyday-use.mdx` | 顶部 skill 表格（约第 15-18 行）+ 每个 skill 的描述章节 |
+| `advanced/appendix-b.mdx` | Skill 参考表格（如有） |
+| `start/install-and-first-task.mdx` | Phase 演练中的 skill 名称 |
+| 跨工作流文档的 Skill Routing 表格 | 必须匹配 `workflow.md` 中按平台拆分的 Skill Routing |
 
-### Grep command
+### Grep 命令
 
 ```bash
 cd docs-site && grep -rln "trellis-<skill-name>" --include="*.mdx" \
@@ -164,52 +158,52 @@ cd docs-site && grep -rln "trellis-<skill-name>" --include="*.mdx" \
 
 ---
 
-## Trigger 5: JSONL / Task Metadata Schema Changes
+## 触发器 5：JSONL / 任务元数据 Schema 变更
 
-Scope: any edit to `implement.jsonl` / `check.jsonl` seed format, `task.json` schema, or consumer contracts (hook / prelude / `read_jsonl_entries`).
+范围：任何对 `implement.jsonl` / `check.jsonl` 种子格式、`task.json` schema 或消费者契约（hook / prelude / `read_jsonl_entries`）的编辑。
 
-| File (en + zh)              | What to sync                                                                                        |
-| --------------------------- | --------------------------------------------------------------------------------------------------- |
-| `advanced/appendix-c.mdx`   | `task.json` schema block — every field has a comment; keep in sync with `task_store.py`             |
-| `start/everyday-use.mdx`    | "Seeded on Create, AI Curates in Phase 1.3" section (or whatever replaces it) + sample JSONL blocks |
-| `advanced/architecture.mdx` | Context injection diagrams if present                                                               |
-| `concepts/*.mdx`            | Seed vs curated row distinction if any conceptual page explains jsonl                               |
+| 文件（en + zh） | 需同步的内容 |
+| --------------------------- | --------------------------------------------------------------------------------------------- |
+| `advanced/appendix-c.mdx` | `task.json` schema 块——每个字段有注释；与 `task_store.py` 保持同步 |
+| `start/everyday-use.mdx` | "Seeded on Create, AI Curates in Phase 1.3"章节（或其替代）+ 示例 JSONL 块 |
+| `advanced/architecture.mdx` | 上下文注入图（如有） |
+| `concepts/*.mdx` | 如果任何概念页面解释了 jsonl，则区分 seed vs curated 行 |
 
-### Contract to keep in sync
+### 需保持同步的契约
 
-- **Seed row schema**: `{"_example": "..."}` — no `file` field
-- **Curated row schema**: `{"file": "<path>", "reason": "<why>"}`
-- **Consumer behavior**: row without `file` is skipped by every consumer (hook, prelude, validate, list-context)
-- **READY gate**: jsonl with only seed row → NOT ready (must have at least one curated row)
+- **Seed 行 schema**：`{"_example": "..."}`——没有 `file` 字段
+- **Curated 行 schema**：`{"file": "<path>", "reason": "<why>"}`
+- **消费者行为**：没有 `file` 的行会被每个消费者跳过（hook、prelude、validate、list-context）
+- **READY 门禁**：仅含 seed 行的 jsonl → NOT ready（必须至少有一行 curated）
 
-See `.trellis/spec/cli/backend/platform-integration.md` → "Agent-Curated JSONL Contract (Phase 1.3)" for the code-side contract.
+参见 `.trellis/spec/cli/backend/platform-integration.md` → "Agent-Curated JSONL Contract (Phase 1.3)" 获取代码侧的契约。
 
 ---
 
-## Trigger 6: Changelog & Migration
+## 触发器 6：Changelog & 迁移
 
-Every released version must have:
+每个发布版本必须具有：
 
-| File (en + zh)             | What to sync                                                                       |
+| 文件（en + zh） | 需同步的内容 |
 | -------------------------- | ---------------------------------------------------------------------------------- |
-| `changelog/v<version>.mdx` | Release notes — list user-visible changes, breaking-change warnings, upgrade steps |
-| `docs.json`                | Navigation entry for the new changelog page (both languages)                       |
-| `release/` tree            | Release-frozen copy — only updated on release-cut, not during develop              |
+| `changelog/v<version>.mdx` | Release notes——列出用户可见的变更、breaking-change 警告、升级步骤 |
+| `docs.json` | 新 changelog 页面的导航条目（两种语言） |
+| `release/` 目录树 | Release 冻结副本——仅在 release-cut 时更新，不在开发期间更新 |
 
-Migration manifests in `packages/cli/src/migrations/manifests/` need matching changelog entries. The manifest's `changelog` + `aiInstructions` fields are the authoritative text; changelog MDX should link to or paraphrase them.
+`packages/cli/src/migrations/manifests/` 中的迁移清单需要有匹配的 changelog 条目。清单的 `changelog` + `aiInstructions` 字段是权威文本；changelog MDX 应链接到或改写它们。
 
-## Trigger 7: `.trellis/config.yaml` Template or Reader Changes
+## 触发器 7：`.trellis/config.yaml` 模板或读取器变更
 
-Scope: any edit to `packages/cli/src/templates/trellis/config.yaml`, config readers under `packages/cli/src/templates/trellis/scripts/common/`, or `configSectionsAdded` behavior in update manifests.
+范围：任何对 `packages/cli/src/templates/trellis/config.yaml`、`packages/cli/src/templates/trellis/scripts/common/` 下配置读取器，或 update 清单中 `configSectionsAdded` 行为的编辑。
 
-| File (en + zh, release + beta) | What to sync |
+| 文件（en + zh，release + beta） | 需同步的内容 |
 |---|---|
-| `advanced/configuration.mdx` | Add/remove/rename config keys, defaults, accepted values, and update behavior |
-| `advanced/appendix-a.mdx` | Update the `.trellis/config.yaml` one-line purpose if the file's responsibility changes |
-| `start/everyday-use.mdx` | Update only if the key affects day-to-day task/session operations |
-| `changelog/v<version>.mdx` | Document user-visible config behavior or migration delivery |
+| `advanced/configuration.mdx` | 添加/删除/重命名配置键、默认值、可接受值及 update 行为 |
+| `advanced/appendix-a.mdx` | 如果文件的职责发生变更，更新 `.trellis/config.yaml` 单行用途说明 |
+| `start/everyday-use.mdx` | 仅当该键影响日常任务/会话操作时更新 |
+| `changelog/v<version>.mdx` | 记录用户可见的配置行为或迁移交付 |
 
-### Grep command
+### Grep 命令
 
 ```bash
 cd docs-site && grep -rln "config.yaml\|session_auto_commit\|codex.dispatch_mode\|update.skip" \
@@ -217,50 +211,50 @@ cd docs-site && grep -rln "config.yaml\|session_auto_commit\|codex.dispatch_mode
   | grep -v "node_modules/"
 ```
 
-**Rule**: The template is the source of truth for shipped examples, but `advanced/configuration.mdx` is the user-facing reference. If a key is supported by code but intentionally absent from the current template (for example, legacy compatibility), the configuration page should say so explicitly instead of silently omitting it.
+**规则**：模板是已交付示例的真实来源，但 `advanced/configuration.mdx` 是面向用户的参考文档。如果一个键被代码支持但有意不在当前模板中（例如，遗留兼容性），配置页面应明确说明，而非静默省略。
 
 ---
 
-## Bilingual Discipline
+## 双语纪律（Bilingual Discipline）
 
-**Every update under `*.mdx` must be done in BOTH `en/` and `zh/` paths.** The zh/ tree mirrors the en tree exactly — same file names, same section headings, same order.
+**`*.mdx` 下的每次更新必须在 `en/` 和 `zh/` 路径中都执行。** zh/ 目录树完全镜像 en 目录树——相同的文件名、相同的章节标题、相同的顺序。
 
-### Common drift sources
+### 常见漂移来源
 
-1. Edited en, forgot zh → `zh/start/everyday-use.mdx` falls behind by weeks
-2. Navigation entries added to `languages[0]` only → page renders in English sidebar only
-3. Code blocks translated (don't translate code — only prose)
+1. 编辑了 en，忘记了 zh → `zh/start/everyday-use.mdx` 落后数周
+2. 导航条目仅添加到 `languages[0]` → 页面仅在英文侧边栏中渲染
+3. 代码块被翻译（不要翻译代码——只翻译叙述文字）
 
-### Detection
+### 检测
 
 ```bash
 cd docs-site
-# Find pages that exist in en but not zh (or vice versa)
+# 查找在 en 中存在但 zh 中不存在（或反之）的页面
 diff <(find . -name "*.mdx" -not -path "./zh/*" -not -path "./release/*" -not -path "./node_modules/*" | sed 's|^\./||' | sort) \
      <(find zh -name "*.mdx" | sed 's|^zh/||' | sort)
 ```
 
-Non-zero output = orphan pages. Triage before merge.
+非零输出 = 孤立页面。合并前处理。
 
 ---
 
-## Non-Triggers (Don't Update Docs)
+## 非触发器（不要更新文档）
 
-| Change                                                 | Why no doc update                              |
+| 变更 | 不更新文档的原因 |
 | ------------------------------------------------------ | ---------------------------------------------- |
-| Internal refactor with no user-visible behavior change | No user-facing contract changed                |
-| Bug fix that restores documented behavior              | Docs already describe correct behavior         |
-| Test additions                                         | Tests aren't user-facing                       |
-| Migration manifest content changes                     | Already captured by `changelog/v<version>.mdx` |
+| 不改变用户可见行为的内部重构 | 没有用户可见契约被改变 |
+| 恢复已文档化行为的 Bug 修复 | 文档已经描述正确行为 |
+| 测试新增 | 测试不是用户可见的 |
+| 迁移清单内容变更 | 已被 `changelog/v<version>.mdx` 捕获 |
 
 ---
 
-## Audit Process Before Merging
+## 合并前的审计流程
 
-1. Run the grep command from the trigger section that matches your change
-2. Open each hit — is the page still accurate after your change?
-3. For any hit that's stale: update both `en` and `zh` versions
-4. If you added/removed pages: update `docs.json` navigation in both language trees
-5. If the change impacts multiple triggers (e.g. a removed command + a removed platform), run all relevant greps
+1. 运行与你的变更匹配的触发器部分的 grep 命令
+2. 打开每个命中项——你的变更后该页面是否仍然准确？
+3. 对于任何过时的命中项：同时更新 `en` 和 `zh` 版本
+4. 如果你添加/删除了页面：在两种语言树的 `docs.json` 导航中更新
+5. 如果变更影响多个触发器（例如，删除命令 + 删除平台），运行所有相关的 grep
 
-Mechanical > heroic. Don't rely on memory or review to catch drift.
+机械化优于英雄主义。不要依赖记忆或审查来捕获漂移。

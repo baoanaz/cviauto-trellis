@@ -1,37 +1,37 @@
-# Claude Code Scripts
+# Claude Code 脚本
 
-Scripts that require Claude Code CLI and hook system.
+需要 Claude Code CLI 和钩子系统的脚本。
 
 ---
 
-## Overview
+## 概述
 
-These scripts require:
-- `claude` CLI command
-- Hook system for context injection
-- `--resume` for session persistence
+这些脚本需要：
+- `claude` CLI 命令
+- 用于上下文注入的钩子系统
+- `--resume` 用于会话持久化
 
 ```
 .trellis/scripts/
 ├── common/
-│   ├── worktree.py         # Worktree utilities
-│   └── registry.py         # Agent registry
+│   ├── worktree.py         # Worktree 工具
+│   └── registry.py         # Agent 注册表
 │
-└── multi_agent/            # Multi-Session scripts
-    ├── plan.py             # Launch Plan agent
-    ├── start.py            # Start worktree agent
-    ├── status.py           # Monitor agents
-    ├── create_pr.py        # Create pull request
-    └── cleanup.py          # Cleanup worktree
+└── multi_agent/            # 多会话（Multi-Session）脚本
+    ├── plan.py             # 启动 Plan agent
+    ├── start.py            # 启动 worktree agent
+    ├── status.py           # 监控 agent
+    ├── create_pr.py        # 创建 Pull Request
+    └── cleanup.py          # 清理 worktree
 ```
 
 ---
 
-## Multi-Session Scripts
+## 多会话脚本
 
 ### `multi_agent/plan.py`
 
-Launch Plan Agent to create task configuration.
+启动 Plan Agent 来创建任务配置。
 
 ```bash
 python3 .trellis/scripts/multi_agent/plan.py \
@@ -40,38 +40,38 @@ python3 .trellis/scripts/multi_agent/plan.py \
   --requirement "<requirement text>"
 ```
 
-**Options:**
-- `--name` - Task slug
-- `--type` - `frontend`, `backend`, `fullstack`
-- `--requirement` - Task description
+**选项：**
+- `--name` - 任务标识（slug）
+- `--type` - `frontend`、`backend`、`fullstack`
+- `--requirement` - 任务描述
 
-**Actions:**
-1. Creates task directory
-2. Launches Plan Agent via `claude`
-3. Plan Agent can REJECT unclear requirements
-4. Creates `prd.md`, `task.json`, JSONL files
+**操作：**
+1. 创建任务目录
+2. 通过 `claude` 启动 Plan Agent
+3. Plan Agent 可以 REJECT 不明确的需求
+4. 创建 `prd.md`、`task.json`、JSONL 文件
 
 ---
 
 ### `multi_agent/start.py`
 
-Start agent in a new worktree.
+在新 worktree 中启动 agent。
 
 ```bash
 python3 .trellis/scripts/multi_agent/start.py <task-dir>
 ```
 
-**Actions:**
-1. Read `task.json` for branch name
-2. Create git worktree:
+**操作：**
+1. 读取 `task.json` 获取分支名称
+2. 创建 git worktree：
    ```bash
    git worktree add -b <branch> ../worktrees/<branch>
    ```
-3. Copy files from `worktree.yaml` copy list
-4. Copy task directory to worktree
-5. Run `post_create` commands
-6. Set the session-scoped active task
-7. Start Claude Dispatch Agent:
+3. 从 `worktree.yaml` 的 copy 列表中复制文件
+4. 将任务目录复制到 worktree
+5. 运行 `post_create` 命令
+6. 设置会话级活动任务
+7. 启动 Claude Dispatch Agent：
    ```bash
    claude -p --agent dispatch \
      --session-id <uuid> \
@@ -79,32 +79,32 @@ python3 .trellis/scripts/multi_agent/start.py <task-dir>
      --output-format stream-json \
      "Start the pipeline"
    ```
-8. Register to `registry.json`
+8. 注册到 `registry.json`
 
 ---
 
 ### `multi_agent/status.py`
 
-Monitor running sessions.
+监控运行中的会话。
 
 ```bash
-# Overview of all sessions
+# 所有会话概览
 python3 .trellis/scripts/multi_agent/status.py
 
-# Detailed view
+# 详细视图
 python3 .trellis/scripts/multi_agent/status.py --detail <task-name>
 
-# Watch mode (auto-refresh)
+# 监视模式（自动刷新）
 python3 .trellis/scripts/multi_agent/status.py --watch <task-name>
 
-# View logs
+# 查看日志
 python3 .trellis/scripts/multi_agent/status.py --log <task-name>
 
-# Show registry
+# 显示注册表
 python3 .trellis/scripts/multi_agent/status.py --registry
 ```
 
-**Output:**
+**输出：**
 ```
 Active Sessions:
 ┌──────────────┬──────────┬────────────────┬──────────┬───────────┐
@@ -119,75 +119,75 @@ Active Sessions:
 
 ### `multi_agent/create_pr.py`
 
-Create pull request from worktree changes.
+从 worktree 的变更创建 Pull Request。
 
 ```bash
 python3 .trellis/scripts/multi_agent/create_pr.py [--dry-run]
 ```
 
-**Actions:**
-1. Stage changes: `git add -A`
-2. Exclude workspace: `git reset .trellis/workspace/`
-3. Commit with conventional format
-4. Push to remote
-5. Create Draft PR via `gh pr create --draft`
-6. Update task.json with `pr_url`
+**操作：**
+1. 暂存变更：`git add -A`
+2. 排除 workspace：`git reset .trellis/workspace/`
+3. 使用约定式提交格式提交
+4. 推送到远程
+5. 通过 `gh pr create --draft` 创建 Draft PR
+6. 用 `pr_url` 更新 task.json
 
 ---
 
 ### `multi_agent/cleanup.py`
 
-Clean up completed worktrees.
+清理已完成的 worktree。
 
 ```bash
-# Specific worktree
+# 指定 worktree
 python3 .trellis/scripts/multi_agent/cleanup.py <branch-name>
 
-# All merged worktrees
+# 所有已合并的 worktree
 python3 .trellis/scripts/multi_agent/cleanup.py --merged
 
-# All worktrees (with confirmation)
+# 所有 worktree（需确认）
 python3 .trellis/scripts/multi_agent/cleanup.py --all
 ```
 
-**Actions:**
-1. Archive task to `.trellis/tasks/archive/YYYY-MM/`
-2. Remove from registry
-3. Remove worktree: `git worktree remove <path>`
-4. Optionally delete branch
+**操作：**
+1. 归档任务到 `.trellis/tasks/archive/YYYY-MM/`
+2. 从注册表中移除
+3. 删除 worktree：`git worktree remove <path>`
+4. 可选删除分支
 
 ---
 
-## Common Utilities
+## 通用工具
 
 ### `common/worktree.py`
 
-Worktree management utilities.
+Worktree 管理工具。
 
 ```python
 from common.worktree import (
-    read_worktree_config,  # Read worktree.yaml
-    get_worktree_path,     # Get path for branch
-    create_worktree,       # Create new worktree
-    remove_worktree,       # Remove worktree
+    read_worktree_config,  # 读取 worktree.yaml
+    get_worktree_path,     # 获取分支路径
+    create_worktree,       # 创建新 worktree
+    remove_worktree,       # 删除 worktree
 )
 ```
 
 ### `common/registry.py`
 
-Agent registry for tracking running sessions.
+用于跟踪运行中会话的 Agent 注册表。
 
 ```python
 from common.registry import (
-    registry_add_agent,       # Add agent to registry
-    registry_remove_by_id,    # Remove by agent ID
-    registry_remove_by_worktree,  # Remove by path
-    registry_search_agent,    # Search by pattern
-    registry_list_agents,     # List all agents
+    registry_add_agent,       # 添加 agent 到注册表
+    registry_remove_by_id,    # 按 agent ID 移除
+    registry_remove_by_worktree,  # 按路径移除
+    registry_search_agent,    # 按模式搜索
+    registry_list_agents,     # 列出所有 agent
 )
 ```
 
-**Registry file:** `.trellis/workspace/<developer>/.agents/registry.json`
+**注册表文件：** `.trellis/workspace/<developer>/.agents/registry.json`
 
 ```json
 {
@@ -205,33 +205,33 @@ from common.registry import (
 
 ---
 
-## Claude CLI Usage
+## Claude CLI 用法
 
-### Agent Mode
+### Agent 模式
 
 ```bash
 claude --agent dispatch "Start the pipeline"
 ```
 
-### Print Mode (non-interactive)
+### Print 模式（非交互）
 
 ```bash
 claude -p "Do something"
 ```
 
-### Session Resume
+### 会话恢复
 
 ```bash
 claude --resume <session-id>
 ```
 
-### Automation Mode
+### 自动化模式
 
 ```bash
 claude --dangerously-skip-permissions -p "..."
 ```
 
-### JSON Output
+### JSON 输出
 
 ```bash
 claude --output-format stream-json -p "..."
@@ -239,13 +239,13 @@ claude --output-format stream-json -p "..."
 
 ---
 
-## Resuming Stopped Sessions
+## 恢复已停止的会话
 
 ```bash
-# Find session info
+# 查找会话信息
 python3 .trellis/scripts/multi_agent/status.py --detail <task-name>
 
-# Resume in worktree
+# 在 worktree 中恢复
 cd ../worktrees/feature/task-name
 claude --resume <session-id>
 ```

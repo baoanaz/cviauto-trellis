@@ -25,248 +25,248 @@ metadata:
     - https://www.reddit.com/r/PromptEngineering/comments/1ma7f00/
 ---
 
-# First Principles Thinking
+# 第一性原理思维
 
-A systematic approach to decomposing complex problems into irreducible truths and reasoning upward from there — avoiding the trap of reasoning by analogy, convention, or "best practice".
+一种系统性的方法，将复杂问题分解为不可再简化的真理，并从此基础上向上推理——避免陷入类比、惯例或"最佳实践"的陷阱。
 
-## When to Use
+## 何时使用
 
-- Evaluating whether an architecture, design, or strategy is truly optimal
-- Questioning "best practices" that may not fit the current context
-- Breaking through when conventional solutions feel inadequate
-- Making foundational decisions with long-term impact
-- Challenging inherited assumptions in legacy systems or legacy thinking
-- Any moment where "we've always done it this way" is the primary justification
+- 评估架构、设计或策略是否真正最优
+- 质疑可能不适合当前上下文的"最佳实践"
+- 当传统方案感觉不够好时寻找突破
+- 做出具有长期影响的基础性决策
+- 挑战遗留系统或遗留思维中的继承假设
+- 任何以"我们一直这样做"为主要理由的时刻
 
-## When NOT to Use
+## 何时不使用
 
-- Trivial decisions (use Occam's Razor instead — just pick the simplest)
-- Time-critical emergencies (act first, analyze later)
-- Well-validated problems with proven solutions (don't reinvent the wheel)
-- When you lack domain expertise AND can't acquire it (first principles without knowledge = naive solutions)
+- 琐碎决策（改用奥卡姆剃刀——直接选最简单的）
+- 时间紧迫的紧急情况（先行动，后分析）
+- 已被充分验证且有成熟方案的问题（不要重新发明轮子）
+- 当你缺乏领域专业知识且无法获取时（没有知识的第一性原理 = 天真的方案）
 
 ---
 
-## Core Methodology: 6 Phases
+## 核心方法论：6 个阶段
 
-### Phase 0: Frame the Question — Establish Axioms
+### 阶段 0：框定问题——建立公理
 
-Before analyzing anything, define the irreducible truths that constrain this domain.
+在分析任何内容之前，定义约束此领域的不可再简化的事实。
 
-**Axioms** = facts that are independently verifiable, cannot be further decomposed, and violating them definitely causes failure.
+**公理** = 可独立验证、不可进一步分解、违反它必定导致失败的事实。
 
-**How to identify axioms:**
-- Ask: "Can this be further decomposed?" — If yes, it's not an axiom yet.
-- Ask: "Is this provably true, not just commonly believed?" — If uncertain, it's an assumption.
-- Ask: "Would violating this definitely cause failure?" — If maybe, it's a preference.
+**如何识别公理：**
+- 问："这还能进一步分解吗？"——如果能，它还不足够根本。
+- 问："这是可证明为真的，而不仅仅是普遍相信的吗？"——如果不确定，它仍是假设。
+- 问："违反它是否必定导致失败？"——如果可能不会，它只是偏好。
 
-**Gate**: Must produce ≥3 axioms before proceeding. Each axiom stated in one sentence with a "why irreducible" justification.
+**门禁**：继续之前必须产出 ≥3 条公理。每条公理用一句话陈述，并附上"为什么不可再简化"的理由。
 
 ```markdown
-### Axioms
-1. [Axiom] — [Why this cannot be further decomposed]
-2. [Axiom] — [Why this is provably true]
-3. [Axiom] — [Why violating this causes failure]
+### 公理
+1. [公理] — [为什么这不能进一步分解]
+2. [公理] — [为什么这是可证明为真的]
+3. [公理] — [为什么违反它会导致失败]
 ```
 
-> Deep methodology: `references/axiom-based-reasoning.md`
+> 深入方法论：`references/axiom-based-reasoning.md`
 
-### Phase 1: Identify the Problem's Essence
+### 阶段 1：识别问题本质
 
-Strip away implementation details to find the core problem.
+剥离实现细节，找到核心问题。
 
-1. **State the problem clearly** — What exactly needs to be solved?
-2. **Separate symptoms from causes** — Is this the real problem or a manifestation?
-3. **Define success criteria** — What would a perfect solution achieve? (Measurable.)
+1. **清晰地陈述问题** — 到底需要解决什么？
+2. **分离症状和原因** — 这是真正的问题还是表现？
+3. **定义成功标准** — 完美的解决方案应达成什么？（可衡量。）
 
-**Key questions:**
-- What is the fundamental job to be done here?
-- If this system/process didn't exist, what would we actually need?
-- What outcome matters, independent of how we get there?
+**关键问题：**
+- 这里最基本的任务是什么？
+- 如果这个系统/流程不存在，我们真正需要什么？
+- 什么结果才是重要的，与我们如何达成无关？
 
-**Gate**: Must produce a one-sentence problem statement + measurable success criteria.
+**门禁**：必须产出一句话问题陈述 + 可衡量的成功标准。
 
-### Phase 2: Surface and Challenge All Assumptions
+### 阶段 2：暴露并挑战所有假设
 
-This is the highest-leverage phase. Most "best practices" are assumptions disguised as facts.
+这是杠杆效应最高的阶段。大多数"最佳实践"是伪装成事实的假设。
 
-1. **List explicit assumptions** — What are we taking as given?
-2. **Surface implicit assumptions** — What conventions are we following without questioning?
-3. **Test each against axioms** — Is this actually a constraint (traces to axiom), or just how it's always been done?
+1. **列出显性假设** — 我们在把什么当作既定的前提？
+2. **暴露隐性假设** — 我们在不加质疑地遵循哪些惯例？
+3. **对照公理检验每一项** — 这真的是约束（可追溯到公理），还是仅仅因为一直这样做？
 
-**Minimum**: Produce an assumption table with ≥5 rows.
+**最低要求**：产出一张 ≥5 行的假设表格。
 
-| Assumption | Why Question It | Axiom(s) Used | Verdict |
+| 假设 | 为什么质疑它 | 使用的公理 | 裁决 |
 |------------|----------------|---------------|---------|
-| "We need X" | [Challenge] | A1, A2 | Keep / Discard / Modify |
+| "我们需要 X" | [质疑理由] | A1, A2 | 保留 / 丢弃 / 修改 |
 
-**Red flags (likely false assumptions):**
-- "We've always done it this way"
-- "Industry standard says..."
-- "Everyone uses X for this"
-- "That's too simple to work"
+**红旗信号（可能是错误假设）：**
+- "我们一直这样做"
+- "行业标准说……"
+- "大家都用 X 做这个"
+- "这太简单了，不可能有效"
 
-**Depth standard**: Each row must include *why* you're questioning it and *which axiom* informs the verdict. "Maybe not needed" without reasoning = not deep enough.
+**深度标准**：每行必须包含*为什么*质疑它以及*哪个公理*支撑裁决。"也许不需要"且没有推理 = 不够深入。
 
-**Gate**: ≥5 assumptions challenged with verdicts. Each verdict must reference at least one axiom.
+**门禁**：≥5 条假设被挑战并有裁决。每条裁决必须引用至少一条公理。
 
-> Deep methodology: `references/axiom-based-reasoning.md` § "Identify and Challenge Assumptions"
+> 深入方法论：`references/axiom-based-reasoning.md` § "Identify and Challenge Assumptions"
 
-### Phase 3: Establish Ground Truths
+### 阶段 3：确立基本事实
 
-From the wreckage of challenged assumptions, identify what IS irreducibly true for this specific problem.
+从被挑战假设的废墟中，识别出对此特定问题确实不可再简化的事实。
 
-**Ground Truth test:**
-- Can this be further decomposed? → If yes, decompose it.
-- Is this provably true, not just commonly believed? → If unsure, it's still an assumption.
-- Would violating this definitely cause failure? → If not, it's a preference.
+**基本事实检验：**
+- 这还能进一步分解吗？→ 如果能，分解它。
+- 这是可证明为真的，而不仅仅是普遍相信的吗？→ 如果不确定，它仍是假设。
+- 违反它是否必定导致失败？→ 如果不是，它只是偏好。
 
-**Gate**: Must produce ≥3 ground truths. Each must be specific and falsifiable — not generic truisms.
-
-```
-❌ "Users need fast response times" (too vague)
-✅ "P99 latency must be < 200ms per SLA contract §3.2" (specific, verifiable)
-
-❌ "The team is small" (relative)
-✅ "Team is 3 engineers, no new hires possible before Q3" (concrete constraint)
-```
-
-### Phase 4: Reason Upward
-
-Build solutions from ground truths only. Each layer must justify its existence.
+**门禁**：必须产出 ≥3 条基本事实。每条必须具体且可证伪——而非泛泛的老生常谈。
 
 ```
-Ground Truth → Minimal Solution → Justified Additions → Final Design
+❌ "用户需要快速响应时间"（太模糊）
+✅ "P99 延迟必须 < 200ms，依据 SLA 合同 §3.2"（具体，可验证）
+
+❌ "团队很小"（相对的）
+✅ "团队只有 3 名工程师，Q3 前无法新增人员"（具体约束）
+```
+
+### 阶段 4：向上推理
+
+从基本事实出发构建方案。每一层都必须证明其存在的合理性。
+
+```
+基本事实 → 最小方案 → 有理由的添加 → 最终设计
      ↑              ↑                    ↑
-  (proven)     (sufficient)        (each defended)
+  （已证明）     （充分）            （每项都经辩护）
 ```
 
-1. **Start minimal** — What's the simplest thing that satisfies all ground truths?
-2. **Add only what's necessary** — Each addition must reference a ground truth or axiom.
-3. **Challenge each layer** — Does this layer earn its complexity?
+1. **从最小开始** — 满足所有基本事实的最简单方案是什么？
+2. **仅添加必要的** — 每项添加必须引用基本事实或公理。
+3. **挑战每一层** — 这一层的复杂性是否有价值？
 
-**Gate**: Must produce a reasoning chain where every step traces to a ground truth.
+**门禁**：必须产出推理链条，每一步都可追溯到基本事实。
 
 ```markdown
-### Reasoning Chain
-GT#1 (latency < 200ms) + GT#3 (3-person team) → Eliminate distributed architecture
-GT#2 (read-heavy 95%) + GT#1 → Add read cache with 30s TTL
-→ Conclusion: Monolith + in-memory cache
+### 推理链条
+GT#1（延迟 < 200ms）+ GT#3（3 人团队）→ 排除分布式架构
+GT#2（读操作占 95%）+ GT#1 → 添加 30s TTL 读缓存
+→ 结论：单体 + 内存缓存
 ```
 
-### Phase 5: Validate and Stress-Test
+### 阶段 5：验证与压力测试
 
-Ensure the reasoning is sound before acting.
+在行动之前确保推理是可靠的。
 
-**Three validation questions (Completion Gate):**
+**三个验证问题（完成门禁）：**
 
-| # | Question | What Failure Means |
+| # | 问题 | 失败意味着什么 |
 |---|---------|-------------------|
-| 1 | Can every conclusion trace back to a ground truth? (**Traceability**) | You've introduced unjustified assumptions in Phase 4 |
-| 2 | Is every ground truth covered by at least one conclusion? (**Completeness**) | Your solution ignores a constraint — it will fail there |
-| 3 | Were any phases skipped or done shallowly? (**Honesty**) | Go back and finish them |
+| 1 | 每个结论都能追溯到基本事实吗？（**可追溯性**） | 你在阶段 4 中引入了无根据的假设 |
+| 2 | 每个基本事实都有至少一个结论覆盖吗？（**完整性**） | 你的方案忽略了一个约束——会在那里失败 |
+| 3 | 是否有任何阶段被跳过或做得肤浅？（**诚实性**） | 回去完成它们 |
 
-**Stress-test with complementary models:**
+**使用互补模型进行压力测试：**
 
-| Model | Question to Ask | When It Adds Value |
+| 模型 | 要问的问题 | 何时有价值 |
 |-------|----------------|-------------------|
-| **Pre-Mortem** | "It's 12 months later and this failed. Why?" | When you're excited about the solution |
-| **Second-Order** | "If this works, what happens next? And after that?" | When solution has systemic effects |
-| **Inversion** | "What would guarantee failure? Are we doing any of that?" | When you need to find blind spots |
-| **OODA Act** | "What's the smallest test we can run right now?" | When analysis paralysis sets in |
+| **事前验尸** | "12 个月后这个方案失败了。为什么？" | 当你对方案感到兴奋时 |
+| **二阶效应** | "如果这成功了，接下来会发生什么？再之后呢？" | 当方案有系统性影响时 |
+| **逆向思考** | "什么能保证失败？我们在做其中任何一项吗？" | 当你需要发现盲点时 |
+| **OODA 行动** | "我们现在能跑的最小测试是什么？" | 当分析瘫痪时 |
 
-> Full model toolkit: `references/thinking-models-toolkit.md`
+> 完整模型工具箱：`references/thinking-models-toolkit.md`
 
-**Gate**: All 3 validation questions answered "yes". At least one stress-test model applied.
+**门禁**：3 个验证问题全部回答"是"。至少应用了一种压力测试模型。
 
 ---
 
-## Reasoning Discipline Protocol
+## 推理纪律协议
 
-**Problem**: AI tends to skip steps, get distracted mid-analysis, or do each step shallowly.
+**问题**：AI 倾向于跳过步骤、在分析中间分心，或每个步骤做得肤浅。
 
-### Phase Gates (Mandatory Artifacts)
+### 阶段门禁（强制产出物）
 
-| Phase | Must Produce | Min Depth |
+| 阶段 | 必须产出 | 最低深度 |
 |-------|-------------|-----------|
-| 0: Frame | ≥3 axioms with justifications | Each axiom: 1 sentence + why irreducible |
-| 1: Essence | Problem statement + success criteria | Specific and measurable |
-| 2: Assumptions | Assumption table ≥5 rows | Each row: challenge + axiom reference + verdict |
-| 3: Ground Truths | ≥3 ground truths | Each: specific, falsifiable, not a truism |
-| 4: Reason Up | Reasoning chain with GT references | Every step traces to a GT |
-| 5: Validate | 3 validation answers + 1 stress test | All answers = "yes" |
+| 0：框定 | ≥3 条公理及其理由 | 每条公理：1 句话 + 为什么不可再简化 |
+| 1：本质 | 问题陈述 + 成功标准 | 具体且可衡量 |
+| 2：假设 | 假设表格 ≥5 行 | 每行：质疑 + 公理引用 + 裁决 |
+| 3：基本事实 | ≥3 条基本事实 | 每条：具体、可证伪、非老生常谈 |
+| 4：向上推理 | 带 GT 引用的推理链条 | 每一步都可追溯到 GT |
+| 5：验证 | 3 个验证答案 + 1 项压力测试 | 所有答案 = "是" |
 
-**No artifact → no next phase.** If a gate is not met, stop and complete it.
+**没有产出物 → 不能进入下一阶段。** 如果门禁未满足，停下来完成它。
 
-### Progress Tracker (Anti-Drift)
+### 进度追踪器（防偏离）
 
-Maintain a running checklist throughout the analysis. After each phase completion, output:
+在整个分析过程中维护运行中的检查清单。每完成一个阶段后，输出：
 
 ```markdown
-## 🧭 FP Progress
-- [x] Phase 0: Frame — ✅ 3 axioms
-- [x] Phase 1: Essence — ✅ "..."
-- [→] Phase 2: Assumptions — 3/6 checked
-- [ ] Phase 3: Ground Truths
-- [ ] Phase 4: Reason Upward
-- [ ] Phase 5: Validate
+## 🧭 FP 进度
+- [x] 阶段 0：框定 — ✅ 3 条公理
+- [x] 阶段 1：本质 — ✅ "..."
+- [→] 阶段 2：假设 — 3/6 已检查
+- [ ] 阶段 3：基本事实
+- [ ] 阶段 4：向上推理
+- [ ] 阶段 5：验证
 ```
 
-**If conversation drifts** (user asks a tangent, discussion expands on a side topic), after addressing it, immediately output:
+**如果对话偏离**（用户问了无关问题、讨论扩展到旁支话题），在回应之后立即输出：
 
-> 📍 Returning to FP analysis: Phase N has M items remaining. Continuing.
+> 📍 回到 FP 分析：阶段 N 还有 M 项待完成。继续。
 
-### Depth Standards (Anti-Shallow)
+### 深度标准（防肤浅）
 
-| Phase | Shallow (Fail) | Deep (Pass) |
+| 阶段 | 肤浅（失败） | 深入（通过） |
 |-------|----------------|-------------|
-| Assumptions | "Maybe we don't need this" | Table row with challenge reason + axiom reference + verdict |
-| Ground Truths | "Users want fast" | "P99 < 200ms per SLA §3.2" |
-| Reasoning | "So we should use X" | "GT#2 + GT#3 → eliminates Y → X is minimal solution" |
+| 假设 | "也许我们不需要这个" | 表格行：质疑理由 + 公理引用 + 裁决 |
+| 基本事实 | "用户想要快" | "P99 < 200ms 依据 SLA §3.2" |
+| 推理 | "所以我们应该用 X" | "GT#2 + GT#3 → 排除 Y → X 是最小方案" |
 
 ---
 
-## Trellis Integration
+## Trellis 集成
 
-When used within a Trellis-managed project, the analysis artifacts integrate with the task system.
+在 Trellis 管理的项目中使用时，分析产出物与任务系统集成。
 
-### File Placement
+### 文件放置
 
 ```
 .trellis/tasks/{MM-DD-slug}/
-├── task.json              # Existing
-├── prd.md                 # Existing — FP feeds into this
-├── fp-analysis.md         # ← FP analysis output (Phases 0-5)
-├── fp-progress.md         # ← Phase progress tracker (anti-drift)
-├── implement.jsonl        # Existing — fp-analysis.md auto-added
-├── check.jsonl            # Existing — fp-analysis.md auto-added
+├── task.json              # 已有
+├── prd.md                 # 已有 — FP 分析结果输入此处
+├── fp-analysis.md         # ← FP 分析输出（阶段 0-5）
+├── fp-progress.md         # ← 阶段进度追踪器（防偏离）
+├── implement.jsonl        # 已有 — fp-analysis.md 自动添加
+├── check.jsonl            # 已有 — fp-analysis.md 自动添加
 └── ...
 ```
 
-### Brainstorm Integration
+### Brainstorm 集成
 
-During `/trellis:brainstorm`, when the task is classified as "Complex":
+在 `/trellis:brainstorm` 期间，当任务被分类为"复杂"时：
 
-1. **Trigger**: User says "从第一性原理分析" or AI detects the problem has ≥3 unvalidated assumptions
-2. **Execute**: Run Phases 0-3, saving output to `fp-analysis.md` in task directory
-3. **Feed into PRD**:
-   - Ground Truths → PRD Requirements and Constraints
-   - Assumption Table → design.md Trade-offs
-   - Reasoning Chain → `design.md`
-4. **Continue**: Phases 4-5 inform implementation decisions
+1. **触发**：用户说"从第一性原理分析"或 AI 检测到问题有 ≥3 个未验证的假设
+2. **执行**：运行阶段 0-3，将输出保存到任务目录中的 `fp-analysis.md`
+3. **输入到 PRD**：
+   - 基本事实 → PRD 需求和约束
+   - 假设表格 → design.md 权衡
+   - 推理链条 → `design.md`
+4. **继续**：阶段 4-5 为实现决策提供依据
 
-### Context Injection
+### 上下文注入
 
-After FP analysis completes, add to context files:
+FP 分析完成后，添加到上下文文件：
 
 ```bash
-python3 ./.trellis/scripts/task.py add-context "$TASK_DIR" implement "fp-analysis.md" "Ground truths and reasoning chain"
-python3 ./.trellis/scripts/task.py add-context "$TASK_DIR" check "fp-analysis.md" "Verify implementation traces to ground truths"
+python3 ./.trellis/scripts/task.py add-context "$TASK_DIR" implement "fp-analysis.md" "基本事实和推理链条"
+python3 ./.trellis/scripts/task.py add-context "$TASK_DIR" check "fp-analysis.md" "验证实现是否可追溯到基本事实"
 ```
 
-### Completion Recording
+### 完成记录
 
-After Phase 5, update `task.json`:
+阶段 5 之后，更新 `task.json`：
 
 ```json
 {
@@ -282,122 +282,122 @@ After Phase 5, update `task.json`:
 
 ---
 
-## Output Format
+## 输出格式
 
-When applying first principles thinking, structure the final output as:
+应用第一性原理思维时，将最终输出结构化为：
 
 ```markdown
-## First Principles Analysis: [Topic]
+## 第一性原理分析：[主题]
 
-### Axioms
-1. [Axiom 1] — [Why irreducible]
-2. [Axiom 2] — [Why irreducible]
-3. [Axiom 3] — [Why irreducible]
+### 公理
+1. [公理 1] — [为什么不可再简化]
+2. [公理 2] — [为什么不可再简化]
+3. [公理 3] — [为什么不可再简化]
 
-### Problem Essence
-**Core problem:** [One sentence]
-**Success criteria:** [Measurable outcomes]
+### 问题本质
+**核心问题：** [一句话]
+**成功标准：** [可衡量的结果]
 
-### Assumptions Challenged
-| Assumption | Challenge | Axiom(s) | Verdict |
+### 被挑战的假设
+| 假设 | 质疑 | 公理 | 裁决 |
 |------------|-----------|----------|---------|
-| ... | ... | A1, A2 | Keep/Discard/Modify |
+| ... | ... | A1, A2 | 保留/丢弃/修改 |
 
-### Ground Truths
-1. [Specific, falsifiable fact]
-2. [Specific, falsifiable fact]
-3. [Specific, falsifiable fact]
+### 基本事实
+1. [具体、可证伪的事实]
+2. [具体、可证伪的事实]
+3. [具体、可证伪的事实]
 
-### Reasoning Chain
-GT#1 + GT#3 → [Inference] → [Step] → [Conclusion]
+### 推理链条
+GT#1 + GT#3 → [推论] → [步骤] → [结论]
 
-### Conclusion
-**Recommended approach:** [Description]
-**Key insight:** [What FP analysis revealed that convention missed]
-**Trade-offs acknowledged:** [What we accept and why]
+### 结论
+**推荐方案：** [描述]
+**关键洞察：** [FP 分析揭示了什么惯例遗漏的发现]
+**已知权衡：** [我们接受什么以及为什么]
 
-### Validation
-- [x] Every conclusion traces to a ground truth
-- [x] Every ground truth is covered
-- [x] No phases skipped
-- [x] Stress-tested with: [model name]
+### 验证
+- [x] 每个结论都可追溯到基本事实
+- [x] 每个基本事实都被覆盖
+- [x] 没有跳过任何阶段
+- [x] 已使用 [模型名称] 进行压力测试
 ```
 
 ---
 
-## Common Traps
+## 常见陷阱
 
-### The Complexity Trap
-**Symptom**: Solution is more complex than the problem warrants.
-**FP Check**: Remove one component — does it still solve the core problem? If yes, that component wasn't essential. Repeat.
+### 复杂性陷阱
+**症状**：方案比问题所值得的复杂得多。
+**FP 检查**：移除一个组件——它仍然能解决核心问题吗？如果能，该组件就不是必需的。重复。
 
-### The Analogy Trap
-**Symptom**: "Company X does it this way, so we should too."
-**FP Check**: What problem was Company X solving? Is ours identical in all relevant dimensions? What constraints differ?
+### 类比陷阱
+**症状**："公司 X 这样做，所以我们也应该这样做。"
+**FP 检查**：公司 X 在解决什么问题？我们的问题在所有相关维度上完全相同吗？有哪些约束不同？
 
-### The Legacy Trap
-**Symptom**: Maintaining compatibility with decisions that no longer serve us.
-**FP Check**: What was the original reason? Do those conditions still exist? What's the true cost of change vs. cost of maintaining?
+### 遗留陷阱
+**症状**：维护不再对我们有意义的决策的兼容性。
+**FP 检查**：最初的原因是什么？那些条件仍然存在吗？变更的真实成本 vs 维护成本是多少？
 
-> More patterns and case studies: `references/case-studies.md`
+> 更多模式和案例研究：`references/case-studies.md`
 
 ---
 
-## Complementary Tools Quick Reference
+## 补充工具快速参考
 
-| Tool | Key Question | Best Combined With Phase |
+| 工具 | 关键问题 | 最佳结合阶段 |
 |------|-------------|------------------------|
-| **Inversion** | "What guarantees failure?" | Phase 2 (find hidden assumptions) |
-| **Second-Order** | "Then what? And then?" | Phase 5 (stress-test conclusions) |
-| **5 Whys** | "Why? Why? Why? Why? Why?" | Phase 1 (find real problem) |
-| **Pre-Mortem** | "It failed. Why?" | Phase 5 (stress-test) |
-| **OODA Loop** | "What's the smallest test?" | Phase 5 (move to action) |
-| **Via Negativa** | "What should we remove?" | Phase 4 (simplify solution) |
-| **Bayesian Update** | "What new evidence changes this?" | Phase 3 (validate ground truths) |
-| **Reversibility Filter** | "One-way or two-way door?" | Phase 4 (calibrate decision depth) |
+| **逆向思考** | "什么能保证失败？" | 阶段 2（发现隐藏假设） |
+| **二阶效应** | "然后呢？再然后呢？" | 阶段 5（压力测试结论） |
+| **5 Whys** | "为什么？为什么？为什么？为什么？为什么？" | 阶段 1（找到真正的问题） |
+| **事前验尸** | "它失败了。为什么？" | 阶段 5（压力测试） |
+| **OODA 循环** | "最小测试是什么？" | 阶段 5（转向行动） |
+| **Via Negativa** | "我们应该移除什么？" | 阶段 4（简化方案） |
+| **贝叶斯更新** | "什么新证据会改变这一点？" | 阶段 3（验证基本事实） |
+| **可逆性过滤器** | "单行道还是双行道？" | 阶段 4（校准决策深度） |
 
-> Full toolkit with examples: `references/thinking-models-toolkit.md`
+> 完整工具箱及示例：`references/thinking-models-toolkit.md`
 
 ---
 
-## Bias Awareness
+## 偏见意识
 
-The 5 most dangerous biases for first-principles analysis:
+对第一性原理分析最危险的 5 种偏见：
 
-| Bias | How It Corrupts FP | Quick Debias |
+| 偏见 | 如何腐蚀 FP | 快速消除 |
 |------|-------------------|-------------|
-| **Confirmation** | You "find" ground truths that confirm your preferred solution | Seek disconfirming evidence first |
-| **Anchoring** | Conventional approach becomes mental anchor even when thinking "fresh" | Generate 3 alternatives before evaluating |
-| **Sunk Cost** | Legacy decisions feel like ground truths | "If starting from zero today, would we choose this?" |
-| **Status Quo** | "How it works now" feels like a constraint when it's a choice | Separate true constraints from current choices |
-| **Overconfidence** | Treat assumptions as ground truths without testing | Assign confidence % to each assumption |
+| **确认偏误** | 你"发现"的基本事实恰好确认了你偏好的方案 | 首先寻找否定性证据 |
+| **锚定效应** | 传统做法成为心理锚点，即使试图"全新"思考 | 评估前先生成 3 个替代方案 |
+| **沉没成本** | 遗留决策感觉像是基本事实 | "如果今天从零开始，我们会选择这个吗？" |
+| **现状偏见** | "现在的工作方式"感觉像是约束，实际是选择 | 将真正的约束与当前的选择分开 |
+| **过度自信** | 未经检验就把假设当作基本事实 | 为每个假设分配置信百分比 |
 
-> Full 12-bias catalog with debiasing: `references/bias-and-debiasing.md`
+> 完整 12 偏见目录及消除策略：`references/bias-and-debiasing.md`
 
 ---
 
-## Problem Decomposition
+## 问题分解
 
-Before applying FP to a complex problem, you may need to decompose it first. Quick selection:
+在对复杂问题应用 FP 之前，可能需要先分解它。快速选择：
 
-| Problem Type | Best Framework |
+| 问题类型 | 最佳框架 |
 |-------------|---------------|
-| Diagnostic (why is X happening?) | Issue Tree or Fishbone |
-| Financial (revenue/cost) | Profitability Tree |
-| Strategic (what should we do?) | Hypothesis Tree |
-| Operational (what's broken?) | Process Flow + 5 Whys |
-| Complex adaptive system | Systems Map |
+| 诊断型（为什么 X 会发生？） | Issue Tree 或 Fishbone |
+| 财务型（收入/成本） | Profitability Tree |
+| 战略型（我们应该做什么？） | Hypothesis Tree |
+| 运营型（什么出问题了？） | Process Flow + 5 Whys |
+| 复杂自适应系统 | Systems Map |
 
-> Full 15-framework catalog: `references/decomposition-frameworks.md`
+> 完整 15 框架目录：`references/decomposition-frameworks.md`
 
 ---
 
-## Reference Files
+## 参考文件
 
-| File | Content | When to Read |
+| 文件 | 内容 | 何时阅读 |
 |------|---------|-------------|
-| `references/axiom-based-reasoning.md` | Deep methodology for establishing axioms, challenging assumptions, and deriving conclusions | When you need rigorous derivation, not just analysis |
-| `references/thinking-models-toolkit.md` | 4-quadrant framework + 12 mental models + model selection guide + 5 Whys deep dive | When you need complementary thinking tools |
-| `references/case-studies.md` | 5 software engineering cases + 2 SpaceX/Tesla cases + templates | When you want concrete examples of FP in action |
-| `references/bias-and-debiasing.md` | 12 cognitive biases that corrupt FP thinking + debiasing strategies | When validating your analysis for blind spots |
-| `references/decomposition-frameworks.md` | 15 problem decomposition methods (MECE, Issue Tree, etc.) | When the problem is too big to analyze directly |
+| `references/axiom-based-reasoning.md` | 建立公理、挑战假设和推导结论的深入方法论 | 当你需要严谨推导，而非仅仅分析 |
+| `references/thinking-models-toolkit.md` | 4 象限框架 + 12 种心智模型 + 模型选择指南 + 5 Whys 深入 | 当你需要补充思维工具 |
+| `references/case-studies.md` | 5 个软件工程案例 + 2 个 SpaceX/Tesla 案例 + 模板 | 当你想看 FP 实践的具体例子 |
+| `references/bias-and-debiasing.md` | 12 种可能腐蚀 FP 思维的认知偏见 + 消除策略 | 当验证分析是否存在盲点 |
+| `references/decomposition-frameworks.md` | 15 种问题分解方法（MECE、Issue Tree 等） | 当问题太大无法直接分析 |

@@ -1,42 +1,42 @@
 # Ralph Loop
 
-Quality enforcement mechanism for Check Agent.
+针对 Check Agent 的质量强制执行机制。
 
 ---
 
-## Overview
+## 概述
 
-Ralph Loop prevents Check Agent from stopping until all verification commands pass.
+Ralph Loop 阻止 Check Agent 停止，直到所有验证命令通过。
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           RALPH LOOP                                     │
 │                                                                          │
-│  Check Agent completes                                                   │
+│  Check Agent 完成                                                        │
 │         │                                                                │
 │         ▼                                                                │
-│  SubagentStop hook fires ──► ralph-loop.py runs                         │
+│  SubagentStop hook 触发 ──► ralph-loop.py 运行                          │
 │         │                                                                │
 │         ▼                                                                │
 │  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │  Run verify commands from worktree.yaml:                         │    │
+│  │  运行来自 worktree.yaml 的验证命令：                              │    │
 │  │                                                                  │    │
-│  │    pnpm lint        → exit 0 ✓                                   │    │
-│  │    pnpm typecheck   → exit 0 ✓                                   │    │
-│  │    pnpm test        → exit 1 ✗                                   │    │
+│  │    pnpm lint        → 退出码 0 ✓                                 │    │
+│  │    pnpm typecheck   → 退出码 0 ✓                                 │    │
+│  │    pnpm test        → 退出码 1 ✗                                 │    │
 │  │                                                                  │    │
-│  │  Result: FAIL (test failed)                                      │    │
+│  │  结果：失败（test 失败）                                          │    │
 │  └─────────────────────────────────────────────────────────────────┘    │
 │         │                                                                │
 │         ▼                                                                │
 │  ┌─────────────────┐              ┌─────────────────┐                   │
-│  │   All pass?     │──── YES ────►│  Allow stop     │                   │
+│  │   全部通过？     │──── 是 ────►│  允许停止        │                   │
 │  └────────┬────────┘              └─────────────────┘                   │
-│           │ NO                                                           │
+│           │ 否                                                           │
 │           ▼                                                              │
 │  ┌─────────────────┐                                                    │
-│  │  Block stop     │ ◄─── Agent continues to fix issues                 │
-│  │  Inject errors  │                                                    │
+│  │  阻止停止        │ ◄─── Agent 继续修复问题                            │
+│  │  注入错误信息    │                                                    │
 │  └─────────────────┘                                                    │
 │                                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -44,7 +44,7 @@ Ralph Loop prevents Check Agent from stopping until all verification commands pa
 
 ---
 
-## Configuration
+## 配置
 
 ### `worktree.yaml`
 
@@ -58,21 +58,21 @@ verify:
 
 ---
 
-## Constants
+## 常量
 
-| Constant | Value | Description |
+| 常量 | 值 | 描述 |
 |----------|-------|-------------|
-| `MAX_ITERATIONS` | 5 | Maximum loop attempts |
-| `STATE_TIMEOUT_MINUTES` | 30 | State file timeout |
-| `COMMAND_TIMEOUT` | 120s | Per-command timeout |
+| `MAX_ITERATIONS` | 5 | 最大循环尝试次数 |
+| `STATE_TIMEOUT_MINUTES` | 30 | 状态文件超时 |
+| `COMMAND_TIMEOUT` | 120s | 每个命令的超时 |
 
 ---
 
-## State File
+## 状态文件
 
 ### `.trellis/.ralph-state.json`
 
-Tracks loop state across iterations.
+跨迭代跟踪循环状态。
 
 ```json
 {
@@ -84,124 +84,124 @@ Tracks loop state across iterations.
 
 ---
 
-## Flow
+## 流程
 
-### Iteration 1
+### 迭代 1
 
-1. Check Agent completes work
-2. SubagentStop hook fires
-3. `ralph-loop.py` creates state file (iteration=1)
-4. Runs verify commands
-5. If fail: block stop, inject error messages
-6. Check Agent continues fixing
+1. Check Agent 完成工作
+2. SubagentStop hook 触发
+3. `ralph-loop.py` 创建状态文件（iteration=1）
+4. 运行验证命令
+5. 如果失败：阻止停止，注入错误消息
+6. Check Agent 继续修复
 
-### Iteration 2-5
+### 迭代 2-5
 
-1. Check Agent tries to stop again
-2. Hook reads state file, increments iteration
-3. Runs verify commands again
-4. Repeat until pass or max iterations
+1. Check Agent 再次尝试停止
+2. Hook 读取状态文件，递增迭代次数
+3. 再次运行验证命令
+4. 重复直到通过或达到最大迭代次数
 
-### Max Iterations Reached
+### 达到最大迭代次数
 
-1. Iteration 5 still fails
-2. Hook allows stop (prevents infinite loop)
-3. Logs warning about unresolved issues
+1. 迭代 5 仍然失败
+2. Hook 允许停止（防止无限循环）
+3. 记录关于未解决问题的警告
 
-### Timeout
+### 超时
 
-1. State file older than 30 minutes
-2. Hook resets state (fresh start)
-3. Treats as iteration 1
+1. 状态文件超过 30 分钟
+2. Hook 重置状态（全新开始）
+3. 视为迭代 1
 
 ---
 
-## Verify Commands
+## 验证命令
 
-### Execution Order
+### 执行顺序
 
-Commands run in config order. First failure stops execution.
+命令按配置顺序运行。首次失败即停止执行。
 
 ```yaml
 verify:
-  - pnpm lint        # Runs first (fast)
-  - pnpm typecheck   # Runs second
-  - pnpm test        # Runs third (slow)
+  - pnpm lint        # 首先运行（快速）
+  - pnpm typecheck   # 其次运行
+  - pnpm test        # 第三运行（较慢）
 ```
 
-**Recommendation**: Order fast → slow
+**建议**：按快 → 慢的顺序排列
 
-### Exit Codes
+### 退出码
 
-- Exit 0 = Pass
-- Non-zero = Fail
+- 退出码 0 = 通过
+- 非零 = 失败
 
-### Timeout
+### 超时
 
-Each command has 120 second timeout. Long-running tests may need:
-- Splitting into smaller test suites
-- Running only fast tests in Ralph Loop
-- Adjusting `COMMAND_TIMEOUT` in script
+每个命令有 120 秒超时。长时间运行的测试可能需要：
+- 拆分为更小的测试套件
+- 在 Ralph Loop 中仅运行快速测试
+- 调整脚本中的 `COMMAND_TIMEOUT`
 
 ---
 
-## Fallback: Completion Markers
+## 回退：完成标记
 
-If `worktree.yaml` has no `verify` config, Ralph Loop uses completion markers.
+如果 `worktree.yaml` 没有 `verify` 配置，Ralph Loop 使用完成标记。
 
-### How It Works
+### 工作原理
 
-1. Read `check.jsonl` for reason fields
-2. Generate expected markers: `{REASON}_FINISH`
-3. Check agent output for all markers
-4. Missing marker = block stop
+1. 读取 `check.jsonl` 中的 reason 字段
+2. 生成预期标记：`{REASON}_FINISH`
+3. 检查 Agent 输出中是否包含所有标记
+4. 缺少标记 = 阻止停止
 
-### Example
+### 示例
 
 ```jsonl
 {"file": "...", "reason": "typecheck"}
 {"file": "...", "reason": "lint"}
 ```
 
-Expected markers:
+预期标记：
 - `TYPECHECK_FINISH`
 - `LINT_FINISH`
 
 ---
 
-## Debugging
+## 调试
 
-### Check State
+### 检查状态
 
 ```bash
 cat .trellis/.ralph-state.json
 ```
 
-### Manual Verify
+### 手动验证
 
 ```bash
 # Run verify commands manually
 pnpm lint && pnpm typecheck && pnpm test
 ```
 
-### Reset State
+### 重置状态
 
 ```bash
 rm .trellis/.ralph-state.json
 ```
 
-### View Hook Output
+### 查看 Hook 输出
 
-Check agent output for Ralph Loop messages:
-- "Verification passed" = all commands succeeded
-- "Verification failed" = blocking, shows errors
-- "Max iterations reached" = giving up
+检查 Agent 输出中的 Ralph Loop 消息：
+- "Verification passed" = 所有命令成功
+- "Verification failed" = 阻止中，显示错误
+- "Max iterations reached" = 放弃
 
 ---
 
-## Customizing
+## 自定义
 
-### Add Test Verification
+### 添加测试验证
 
 ```yaml
 verify:
@@ -210,7 +210,7 @@ verify:
   - pnpm test
 ```
 
-### Add Build Verification
+### 添加构建验证
 
 ```yaml
 verify:
@@ -219,9 +219,9 @@ verify:
   - pnpm build
 ```
 
-### Different Languages
+### 不同语言
 
-**Go:**
+**Go：**
 ```yaml
 verify:
   - go fmt ./...
@@ -229,7 +229,7 @@ verify:
   - go test ./...
 ```
 
-**Python:**
+**Python：**
 ```yaml
 verify:
   - ruff check .
@@ -237,7 +237,7 @@ verify:
   - pytest
 ```
 
-**Rust:**
+**Rust：**
 ```yaml
 verify:
   - cargo fmt --check
@@ -247,11 +247,11 @@ verify:
 
 ---
 
-## Disabling Ralph Loop
+## 禁用 Ralph Loop
 
-To disable for a project:
+在项目中禁用：
 
-1. Remove `verify` from `worktree.yaml`
-2. Or remove SubagentStop hook from settings.json
+1. 从 `worktree.yaml` 中移除 `verify`
+2. 或从 settings.json 中移除 SubagentStop hook
 
-**Warning**: Without Ralph Loop, code quality isn't automatically enforced.
+**警告**：没有 Ralph Loop，代码质量将不会自动强制执行。

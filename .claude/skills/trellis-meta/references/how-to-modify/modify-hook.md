@@ -1,36 +1,36 @@
-# How To: Modify Hook
+# 操作指南：修改 Hook
 
-Change hook behavior for context injection or validation.
+更改 Hook 行为以实现上下文注入或验证。
 
-**Platform**: Claude Code only
+**平台**：仅限 Claude Code
 
 ---
 
-## Files to Modify
+## 需要修改的文件
 
-| File | Action | Required |
+| 文件 | 操作 | 是否必需 |
 |------|--------|----------|
-| `.claude/hooks/{hook}.py` | Modify | Yes |
-| `.claude/settings.json` | Modify | If changing matcher/timeout |
-| `trellis-local/SKILL.md` | Update | Yes |
+| `.claude/hooks/{hook}.py` | 修改 | 是 |
+| `.claude/settings.json` | 修改 | 如果更改匹配器（matcher）/超时（timeout） |
+| `trellis-local/SKILL.md` | 更新 | 是 |
 
 ---
 
-## Hook Types
+## Hook 类型
 
-| Hook | File | Purpose |
+| Hook | 文件 | 用途 |
 |------|------|---------|
-| SessionStart | `session-start.py` | Inject initial context |
-| PreToolUse:Task | `inject-subagent-context.py` | Inject agent context |
-| SubagentStop:check | `ralph-loop.py` | Quality enforcement |
+| SessionStart | `session-start.py` | 注入初始上下文 |
+| PreToolUse:Task | `inject-subagent-context.py` | 注入 Agent 上下文 |
+| SubagentStop:check | `ralph-loop.py` | 质量强制执行 |
 
 ---
 
-## Step 1: Understand Hook Structure
+## 步骤 1：理解 Hook 结构
 
-### Input (stdin)
+### 输入（stdin）
 
-Hooks receive JSON input:
+Hook 接收 JSON 输入：
 
 ```json
 {
@@ -43,9 +43,9 @@ Hooks receive JSON input:
 }
 ```
 
-### Output (stdout)
+### 输出（stdout）
 
-Hooks output JSON:
+Hook 输出 JSON：
 
 ```json
 {
@@ -57,20 +57,20 @@ Hooks output JSON:
 }
 ```
 
-### Result Types
+### 结果类型
 
-| Result | Effect |
+| 结果 | 效果 |
 |--------|--------|
-| `continue` | Allow operation, optionally modify |
-| `block` | Prevent operation |
+| `continue` | 允许操作，可选修改 |
+| `block` | 阻止操作 |
 
 ---
 
-## Step 2: Modify Hook Logic
+## 步骤 2：修改 Hook 逻辑
 
-### Example: Add Context to Session Start
+### 示例：向会话启动添加上下文
 
-Edit `.claude/hooks/session-start.py`:
+编辑 `.claude/hooks/session-start.py`：
 
 ```python
 def get_additional_context():
@@ -90,9 +90,9 @@ additional = get_additional_context()
 message = f"{existing_message}\n\n{additional}"
 ```
 
-### Example: Add Agent Validation
+### 示例：添加 Agent 验证
 
-Edit `.claude/hooks/inject-subagent-context.py`:
+编辑 `.claude/hooks/inject-subagent-context.py`：
 
 ```python
 def validate_agent_input(subagent_type, prompt):
@@ -110,9 +110,9 @@ if not valid:
     return
 ```
 
-### Example: Add Verify Command
+### 示例：添加验证命令
 
-Edit `.claude/hooks/ralph-loop.py`:
+编辑 `.claude/hooks/ralph-loop.py`：
 
 ```python
 # Add to verify commands list
@@ -126,11 +126,11 @@ def get_verify_commands():
 
 ---
 
-## Step 3: Modify Settings (If Needed)
+## 步骤 3：修改设置（如需要）
 
-Edit `.claude/settings.json`:
+编辑 `.claude/settings.json`：
 
-### Change Timeout
+### 更改超时
 
 ```json
 {
@@ -151,7 +151,7 @@ Edit `.claude/settings.json`:
 }
 ```
 
-### Change Matcher
+### 更改匹配器
 
 ```json
 {
@@ -168,9 +168,9 @@ Edit `.claude/settings.json`:
 
 ---
 
-## Step 4: Document in trellis-local
+## 步骤 4：在 trellis-local 中记录
 
-Update `.claude/skills/trellis-local/SKILL.md`:
+更新 `.claude/skills/trellis-local/SKILL.md`：
 
 ```markdown
 ## Hooks Changed
@@ -192,9 +192,9 @@ Update `.claude/skills/trellis-local/SKILL.md`:
 
 ---
 
-## Testing
+## 测试
 
-### Manual Test
+### 手动测试
 
 ```bash
 # Test session-start
@@ -209,19 +209,19 @@ echo '{"subagent_type":"check","output":"test"}' | \
   python3 .claude/hooks/ralph-loop.py
 ```
 
-### Integration Test
+### 集成测试
 
-1. Start new Claude Code session
-2. Verify session-start output
-3. Invoke subagent
-4. Verify context injection
-5. Verify Ralph Loop (for check agent)
+1. 启动新的 Claude Code 会话
+2. 验证 session-start 输出
+3. 调用 Subagent
+4. 验证上下文注入
+5. 验证 Ralph Loop（针对 check agent）
 
 ---
 
-## Common Modifications
+## 常见修改
 
-### Add File to Session Context
+### 向会话上下文添加文件
 
 ```python
 # session-start.py
@@ -231,7 +231,7 @@ files_to_inject = [
 ]
 ```
 
-### Skip Injection for Certain Agents
+### 跳过对某些 Agent 的注入
 
 ```python
 # inject-subagent-context.py
@@ -242,7 +242,7 @@ if subagent_type in SKIP_INJECTION:
     return
 ```
 
-### Add Custom Verification
+### 添加自定义验证
 
 ```python
 # ralph-loop.py
@@ -259,10 +259,10 @@ if not ok:
 
 ---
 
-## Checklist
+## 检查清单
 
-- [ ] Hook logic modified
-- [ ] Settings updated (if needed)
-- [ ] Manual test passed
-- [ ] Integration test passed
-- [ ] Documented in trellis-local
+- [ ] Hook 逻辑已修改
+- [ ] 设置已更新（如需要）
+- [ ] 手动测试通过
+- [ ] 集成测试通过
+- [ ] 已在 trellis-local 中记录

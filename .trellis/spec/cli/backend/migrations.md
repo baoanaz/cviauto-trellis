@@ -1,4 +1,4 @@
-# Migration System
+# 迁移系统（Migration System）
 
 智能迁移系统，用于处理模板文件重命名和删除。
 
@@ -68,7 +68,7 @@ src/migrations/
 
 **何时 _不_ 需要**：
 - 非 breaking 版本（`breaking: false`）：不需要 `migrationGuide`
-- breaking 但 `recommendMigrate: false`：罕见（"breaking 但不建议 migrate" 基本不存在），真要这样跑，没校验强制。
+- breaking 但 `recommendMigrate: false`：罕见（「breaking 但不建议 migrate」基本不存在），真要这样跑，没校验强制。
 
 ## 迁移类型
 
@@ -193,111 +193,97 @@ update:
 - 初始化：`trellis init` 时自动创建
 - 更新：`trellis update` 后自动更新被覆盖文件的哈希
 
-### Manifest ownership contract (CRITICAL — data loss prevention)
+### Manifest 所有权契约（CRITICAL — 数据丢失防护）
 
-`.template-hashes.json` is the **single source of truth** for `trellis uninstall`. Every key listed there gets `fs.unlinkSync`'d at uninstall time. Therefore the manifest must contain **only files trellis actually wrote during init / update — never files that merely happen to exist under a managed directory**.
+`.template-hashes.json` 是 `trellis uninstall` 的**唯一权威来源**。每个在此列出的键在卸载时都会被执行 `fs.unlinkSync`。因此 manifest 必须仅包含 **Trellis 在 init / update 期间实际写入的文件 — 绝不仅仅是碰巧存在于管理目录下的文件**。
 
-#### Why this matters
+#### 为什么这很重要
 
-`.codex/`, `.claude/`, `.opencode/` etc. contain platform-specific user data:
-- `.codex/sessions/*.jsonl` — Codex chat history
-- `.codex/history` — Codex prompt history
-- `.claude/projects/<sanitized-cwd>/*.jsonl` — Claude Code conversation history
-- User-added `.codex/skills/<name>/`, `.claude/agents/<name>/`
+`.codex/`、`.claude/`、`.opencode/` 等包含平台特定的用户数据：
+- `.codex/sessions/*.jsonl` — Codex 聊天历史
+- `.codex/history` — Codex 提示历史
+- `.claude/projects/<sanitized-cwd>/*.jsonl` — Claude Code 对话历史
+- 用户添加的 `.codex/skills/<name>/`、`.claude/agents/<name>/`
 
-If `initializeHashes` walks these dirs and hashes everything, uninstall faithfully deletes user data. Real reported incidents: GitHub Issue #221 (`.codex/sessions/` wiped), PR #271 (pre-existing `AGENTS.md` wiped).
+如果 `initializeHashes` 遍历这些目录并哈希所有内容，uninstall 会忠实地删除用户数据。真实报告的事件：GitHub Issue #221（`.codex/sessions/` 被清空），PR #271（已存在的 `AGENTS.md` 被清空）。
 
-#### Required contract
+#### 必需契约
 
-**`initializeHashes(cwd, opts)`** must derive the manifest set from `opts.trackedPaths` (a `Set<string>` of paths trellis **actually wrote this run**), NOT from `fs.readdirSync` walks of platform dirs.
+**`initializeHashes(cwd, opts)`** 必须从 `opts.trackedPaths`（一个 `Set<string>`，包含 Trellis **本次运行实际写入**的路径）派生 manifest 集，而不是从平台目录的 `fs.readdirSync` 遍历。
 
-The set is produced by `startRecordingWrites()` / `stopRecordingWrites()` instrumentation inside `utils/file-writer.ts`. `writeFile()` records `recordWrite(absPath)` ONLY when:
+该集合由 `utils/file-writer.ts` 中的 `startRecordingWrites()` / `stopRecordingWrites()` 仪器化生成。`writeFile()` 仅在以下情况调用 `recordWrite(absPath)`：
 
-- The file did not exist → wrote (recorded)
-- The file existed and content differed → overwrote (recorded)
+- 文件不存在 → 已写入（已记录）
+- 文件存在且内容不同 → 已覆盖（已记录）
 
-And **does NOT record** when:
+且**不记录**以下情况：
 
-- The file existed and content was byte-identical (no disk write)
-- `writeMode` was `skip-existing` and the file existed (skipped)
-- The call was append-mode (`appendFile`)
+- 文件存在且内容字节相同（无磁盘写入）
+- `writeMode` 为 `skip-existing` 且文件已存在（已跳过）
+- 调用是追加模式（`appendFile`）
 
-Every configurator that wants its writes tracked must funnel through `writeFile()` — direct `fs.writeFileSync` bypasses the recorder.
+每个希望其写入被追踪的配置器必须通过 `writeFile()` 管道化 — 直接的 `fs.writeFileSync` 会绕过记录器。
 
-#### `.trellis/` walk exemption
+#### `.trellis/` 遍历豁免
 
-`.trellis/` files are still hashed via recursive walk (existing `collectFiles` behavior + `EXCLUDE_FROM_HASH` filters). Rationale: `trellis uninstall` step 3 does `fs.rmSync('.trellis/', { recursive: true, force: true })` regardless of manifest content, so the walk's blast radius is contained. Over-hashing inside `.trellis/` only affects `trellis update` 3-way-merge accuracy, not uninstall safety.
+`.trellis/` 文件仍然通过递归遍历进行哈希（现有的 `collectFiles` 行为 + `EXCLUDE_FROM_HASH` 过滤器）。理由：`trellis uninstall` 第 3 步无论如何都会执行 `fs.rmSync('.trellis/', { recursive: true, force: true })`，因此遍历的爆炸半径是受控的。`.trellis/` 内的过度哈希仅影响 `trellis update` 的三方合并准确性，不影响卸载安全性。
 
-#### Self-heal contract: `pruneOrphanManifestKeys`
+#### 自愈契约：`pruneOrphanManifestKeys`
 
-Existing users may have poisoned manifests from older trellis versions. `pruneOrphanManifestKeys(cwd, configuredPlatforms, hashes, opts)` runs at the top of both `trellis update` AND `trellis uninstall` (before plan classification) and prunes orphan keys.
+现有用户可能有来自较旧 trellis 版本的被污染的 manifest。`pruneOrphanManifestKeys(cwd, configuredPlatforms, hashes, opts)` 在 `trellis update` 和 `trellis uninstall` 的顶部（计划分类前）运行，并修剪孤儿键。
 
-**Preserve set** (a key is kept iff one of):
+**保留集**（满足以下任一条件则保留键）：
 
-1. Starts with `.trellis/` (walk-managed)
-2. Path appears in `PLATFORM_FUNCTIONS[id].collectTemplates()` output for ANY configured platform
-3. Path appears in `from` or `to` of ANY migration manifest entry (across all `migrations/manifests/*.json`, not just pending) — must preserve so rename/delete migration logic still has a hash to compare against
-4. Path is `AGENTS.md` AND the file on disk contains `TRELLIS_BLOCK_START` + `TRELLIS_BLOCK_END` markers, OR the file is missing. Files lacking markers are treated as user-owned and pruned.
+1. 以 `.trellis/` 开头（遍历管理）
+2. 路径出现在**任何**已配置平台的 `PLATFORM_FUNCTIONS[id].collectTemplates()` 输出中
+3. 路径出现在**任何**迁移清单条目的 `from` 或 `to` 中（跨所有 `migrations/manifests/*.json`，不仅是待处理的）— 必须保留以便重命名/删除迁移逻辑仍有可用于比较的哈希
+4. 路径是 `AGENTS.md` **且**磁盘上的文件包含 `TRELLIS_BLOCK_START` + `TRELLIS_BLOCK_END` 标记，**或**文件缺失。缺少标记的文件被视为用户拥有并被修剪。
 
-`options.persist: false` for dry-run paths (e.g. `uninstall --dry-run`).
+`options.persist: false` 用于 dry-run 路径（例如 `uninstall --dry-run`）。
 
 #### Wrong vs Correct
 
 ```typescript
-// Wrong — walk-based hashing pollutes manifest with user data
+// Wrong — 基于遍历的哈希用用户数据污染了 manifest
 for (const dir of ALL_MANAGED_DIRS) {
   for (const f of collectFiles(cwd, dir)) {
-    hashes[f] = sha256(read(f));   // includes .codex/sessions/foo.jsonl
+    hashes[f] = sha256(read(f));   // 包含 .codex/sessions/foo.jsonl
   }
 }
 
-// Correct — manifest reflects exactly what trellis wrote this run
+// Correct — manifest 精确反映 Trellis 本次运行写入的内容
 startRecordingWrites();
-await runConfigurators(cwd);       // each writeFile() calls recordWrite()
+await runConfigurators(cwd);       // 每个 writeFile() 调用 recordWrite()
 const written = stopRecordingWrites();
 initializeHashes(cwd, { trackedPaths: written });
 ```
 
-#### Homedir guard (R2 — defense in depth)
+#### 家目录守卫（R2 — 纵深防御）
 
-Even with the manifest contract above, `trellis init` and `trellis uninstall` refuse to run when `process.cwd()` is exactly the user's home directory. Use `isCwdHomedir()` from `utils/cwd-guard.ts` — it compares via `fs.realpathSync.native()` on both sides, Windows-lowercases for case-insensitivity, try/catch defaults permissive on lookup failure. Override via `TRELLIS_ALLOW_HOMEDIR=1` only; `--force` does NOT bypass.
+即使有了上述 manifest 契约，当 `process.cwd()` 恰好是用户的家目录时，`trellis init` 和 `trellis uninstall` 仍然拒绝运行。使用 `utils/cwd-guard.ts` 中的 `isCwdHomedir()` — 它在两侧通过 `fs.realpathSync.native()` 进行比较，Windows 上小写化以实现不区分大小写，try/catch 在查找失败时默认允许。仅通过 `TRELLIS_ALLOW_HOMEDIR=1` 覆盖；`--force` **不**绕过。
 
-#### Tests required for any change in this area
+#### 此区域任何更改所需的测试
 
-- Integration: pre-populate user files under `.codex/`, `.claude/`, `.opencode/`, run init+uninstall, assert user data preserved.
-- Integration: pre-existing `AGENTS.md` (skip-existing path), uninstall preserves it.
-- Integration: poisoned manifest (manually injected key) → update OR uninstall prunes it, user file survives.
-- Unit: `recordWrite` instrumentation — new/overwrite recorded, identical/skip/append NOT recorded.
-- Unit: `pruneOrphanManifestKeys` — preserves all four classes above; rewrites manifest only when pruned.length > 0.
-- Unit: `isCwdHomedir` — symlinked home matches; subdirectory does NOT match; Windows case-insensitive.
+- Integration: 在 `.codex/`、`.claude/`、`.opencode/` 下预填用户文件，运行 init+uninstall，断言用户数据被保留。
+- Integration: 已存在的 `AGENTS.md`（skip-existing 路径），uninstall 保留它。
+- Integration: 被污染的 manifest（手动注入的键）→ update 或 uninstall 修剪它，用户文件存活。
+- Unit: `recordWrite` 仪器化 — 新建/覆盖记录，相同/跳过/追加不记录。
+- Unit: `pruneOrphanManifestKeys` — 保留上述所有四个类别；仅当 pruned.length > 0 时才重写 manifest。
+- Unit: `isCwdHomedir` — 符号链接的家目录匹配；子目录不匹配；Windows 不区分大小写。
 
-### `workflow.md` whole-file update contract
+### `workflow.md` 整文件更新契约
 
-`.trellis/workflow.md` is not only documentation. It is runtime input for
-`get_context.py`, `workflow_phase.py`, SessionStart strippers, and per-turn
-workflow-state hooks.
+`.trellis/workflow.md` 不仅是文档。它是 `get_context.py`、`workflow_phase.py`、SessionStart 剥离器和每回合 workflow-state hooks 的运行时输入。
 
-`trellis update` must therefore keep `workflow.md` on the normal whole-file
-template path:
+因此 `trellis update` 必须将 `workflow.md` 保持在正常的整文件模板路径上：
 
-- If the installed file's current hash matches the tracked hash, update the
-  entire file to the packaged template and refresh the tracked hash.
-- If the installed file was edited by the user, use the standard
-  modified-file decision path (`confirm`, `--force`, or `--skip`).
-- Do not partially merge only `[workflow-state:*]` tag blocks.
+- 如果已安装文件的当前哈希与跟踪的哈希匹配，将整个文件更新为打包模板并刷新跟踪的哈希。
+- 如果已安装文件被用户编辑，使用标准的已修改文件决策路径（`confirm`、`--force` 或 `--skip`）。
+- 不要仅部分合并 `[workflow-state:*]` 标签块。
 
-Reason: runtime-significant routing markers and phase headings also live
-outside `[workflow-state:*]` blocks. A partial tag-block merge can update hook
-breadcrumbs while leaving stale platform blocks, for example `[Codex]` instead
-of `[codex-inline]` / `[codex-sub-agent]`, causing `get_context.py --mode phase
---platform codex` to return empty or wrong step detail after upgrade.
+原因：运行时重要的路由标记和阶段标题也存在于 `[workflow-state:*]` 块之外。部分标签块合并可能在更新 hook 面包屑的同时留下过时的平台块，例如 `[Codex]` 而不是 `[codex-inline]` / `[codex-sub-agent]`，导致 `get_context.py --mode phase --platform codex` 在升级后返回空或错误的步骤细节。
 
-Regression coverage for this belongs in versioned update integration tests,
-not only fresh-init template tests: write the older `.trellis/.version`, stage
-older hash-tracked template files, run `trellis update`, then assert the
-installed files reach the current packaged shape and the version stamp advances.
-For runtime templates such as `workflow.md`, the scenario must also assert that
-runtime markers such as Codex virtual platform blocks are present after update.
+对此的回归覆盖属于版本化的更新集成测试，而不仅仅是全新 init 模板测试：写入较旧的 `.trellis/.version`，上演较旧的哈希跟踪模板文件，运行 `trellis update`，然后断言已安装文件达到当前打包形状且版本戳已推进。对于运行时模板如 `workflow.md`，场景还必须断言运行时标记如 Codex 虚拟平台块在更新后存在。
 
 ## CLI 使用
 

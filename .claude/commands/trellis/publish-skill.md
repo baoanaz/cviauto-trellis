@@ -1,46 +1,46 @@
-# Publish Skill to Docs Site
+# 发布技能到文档站（Publish Skill to Docs Site）
 
-Sync a marketplace skill to the documentation site. Creates skill detail pages (EN/ZH), updates the marketplace index, and updates docs.json navigation.
+将 marketplace 技能（skill）同步到文档站。创建技能详情页（EN/ZH），更新 marketplace 索引，并更新 docs.json 导航。
 
-## Arguments
+## 参数（Arguments）
 
-- `$ARGUMENTS` — Skill directory name under `marketplace/skills/` (e.g., `cc-codex-spec-bootstrap`). If omitted, list available skills and ask.
+- `$ARGUMENTS` — `marketplace/skills/` 下的技能目录名（例如 `cc-codex-spec-bootstrap`）。如省略，列出可用的技能并询问。
 
-## Steps
+## 步骤（Steps）
 
-### Step 1: Identify the Skill
+### 第 1 步：识别技能（Identify the Skill）
 
 ```bash
-# If no argument, list available skills
+# 如未提供参数，列出可用的技能
 ls marketplace/skills/
 ```
 
-Read the skill's `SKILL.md` to extract:
-- **name** (from frontmatter)
-- **description** (from frontmatter)
-- What the skill does (from body)
-- Prerequisites / tools needed
-- What files are included
+阅读技能的 `SKILL.md` 以提取：
+- **name**（来自 frontmatter）
+- **description**（来自 frontmatter）
+- 技能的功能（来自正文）
+- 前置条件 / 所需工具
+- 包含哪些文件
 
 ```bash
 cat marketplace/skills/<skill-name>/SKILL.md
 ```
 
-### Step 2: Check Existing Docs
+### 第 2 步：检查现有文档（Check Existing Docs）
 
-Verify the skill doesn't already have docs pages:
+验证该技能尚未有文档页面：
 
 ```bash
 ls docs-site/skills-market/<skill-name>.mdx 2>/dev/null
 ```
 
-If pages already exist, ask user if they want to update them.
+如果页面已存在，询问用户是否要更新它们。
 
-### Step 3: Create EN Detail Page
+### 第 3 步：创建英文详情页（Create EN Detail Page）
 
-Create `docs-site/skills-market/<skill-name>.mdx`.
+创建 `docs-site/skills-market/<skill-name>.mdx`。
 
-Follow the format of existing skill pages (see `docs-site/skills-market/trellis-meta.mdx` as reference):
+遵循现有技能页面的格式（参考 `docs-site/skills-market/trellis-meta.mdx`）：
 
 ```markdown
 ---
@@ -83,24 +83,24 @@ Options:
 <table of directories/files>
 ```
 
-### Step 4: Create ZH Detail Page
+### 第 4 步：创建中文详情页（Create ZH Detail Page）
 
-Create `docs-site/zh/skills-market/<skill-name>.mdx` with Chinese translation of the EN page.
+创建 `docs-site/zh/skills-market/<skill-name>.mdx`，内容为英文页面的中文翻译。
 
-### Step 5: Update Index Pages
+### 第 5 步：更新索引页面（Update Index Pages）
 
-Add the skill to the Official Skills table in both:
+在两个页面的 Official Skills 表格中添加该技能：
 - `docs-site/skills-market/index.mdx`
 - `docs-site/zh/skills-market/index.mdx`
 
-### Step 6: Update docs.json
+### 第 6 步：更新 docs.json（Update docs.json）
 
-Add the new page to both EN and ZH Skills navigation groups in `docs-site/docs.json`:
+在 `docs-site/docs.json` 的英文和中文 Skills 导航组中添加新页面：
 
-- EN: `"skills-market/<skill-name>"` in the Skills pages array
-- ZH: `"zh/skills-market/<skill-name>"` in the ZH Skills pages array
+- EN：在 Skills 页面数组中添加 `"skills-market/<skill-name>"`
+- ZH：在 ZH Skills 页面数组中添加 `"zh/skills-market/<skill-name>"`
 
-### Step 7: Commit and Push Docs
+### 第 7 步：提交并推送文档（Commit and Push Docs）
 
 ```bash
 cd docs-site
@@ -110,22 +110,22 @@ git commit -m "docs: add <skill-name> skill to marketplace"
 git push
 ```
 
-### Step 8: Ensure Skill on Main Branch
+### 第 8 步：确保技能在 main 分支上（Ensure Skill on Main Branch）
 
-If the marketplace skill isn't on `main` yet (e.g., committed on a feature branch):
+如果 marketplace 技能尚未在 `main` 分支上（例如提交在功能分支上）：
 
 ```bash
-# Check if skill exists on main
+# 检查技能是否在 main 分支上存在
 git log main --oneline -- marketplace/skills/<skill-name>/ | head -1
 ```
 
-If not on main, cherry-pick the commit:
+如果不在 main 上，cherry-pick 该提交：
 
 ```bash
-# Find the commit that added the skill
+# 查找添加技能的那个提交
 git log --oneline -- marketplace/skills/<skill-name>/ | head -1
 
-# Cherry-pick to main
+# Cherry-pick 到 main
 git stash
 git checkout main && git pull
 git cherry-pick <commit-hash>
@@ -133,11 +133,11 @@ git push origin main
 git checkout - && git stash pop
 ```
 
-### Step 9: Confirm
+### 第 9 步：确认（Confirm）
 
-Report:
-- Docs-site pages created (EN + ZH)
-- Index pages updated
-- docs.json updated
-- Docs-site pushed
-- Marketplace skill available on main
+报告：
+- Docs-site 详情页已创建（EN + ZH）
+- 索引页面已更新
+- docs.json 已更新
+- Docs-site 已推送
+- Marketplace 技能在 main 分支上可用

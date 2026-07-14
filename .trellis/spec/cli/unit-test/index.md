@@ -1,88 +1,88 @@
-# Unit Test Guidelines
+# 单元测试指南（Unit Test Guidelines）
 
-> Testing conventions and patterns for this project.
-
----
-
-## Overview
-
-This project uses **Vitest** with TypeScript ESM. Tests live in a centralized `test/` directory mirroring `src/` structure. The goal is fast, reproducible tests with minimal mocking.
+> 本项目的测试规范和模式。
 
 ---
 
-## Guidelines Index
+## 概述（Overview）
 
-| Guide | Description | Status |
+本项目使用 **Vitest** 搭配 TypeScript ESM。测试集中放置在 `test/` 目录下，镜像 `src/` 的结构。目标是编写快速、可复现、且最小化 mock 的测试。
+
+---
+
+## 指南索引（Guidelines Index）
+
+| 指南（Guide） | 描述（Description） | 状态（Status） |
 |-------|-------------|--------|
-| [Conventions](./conventions.md) | File naming, structure, assertion patterns, test isolation (env-leak guard), when to write tests | Done |
-| [Mock Strategies](./mock-strategies.md) | What to mock, how, and the minimal mocking principle | Done |
-| [Integration Patterns](./integration-patterns.md) | Function-level integration tests for commands | Done |
+| [规范（Conventions）](./conventions.md) | 文件命名、结构、断言模式、测试隔离（环境变量泄漏防护）、何时编写测试 | 已完成（Done） |
+| [Mock 策略（Mock Strategies）](./mock-strategies.md) | 什么需要 mock、如何 mock、以及最小化 mock 原则 | 已完成（Done） |
+| [集成模式（Integration Patterns）](./integration-patterns.md) | 用于命令的函数级集成测试 | 已完成（Done） |
 
 ---
 
-## Quick Reference
+## 快速参考（Quick Reference）
 
 ```bash
-# Run all tests
+# 运行所有测试
 pnpm test
 
-# Watch mode
+# Watch 模式
 pnpm test:watch
 
-# Run a specific test file
+# 运行指定的测试文件
 pnpm test test/commands/init.integration.test.ts
 
-# Run with coverage report (terminal + HTML)
+# 运行覆盖率报告（终端 + HTML）
 pnpm test:coverage
 ```
 
 ---
 
-## Code Coverage
+## 代码覆盖率（Code Coverage）
 
-Coverage is generated automatically via `@vitest/coverage-v8`. Configuration is in `vitest.config.ts`.
+覆盖率通过 `@vitest/coverage-v8` 自动生成。配置在 `vitest.config.ts` 中。
 
-- **Terminal**: `pnpm test:coverage` prints per-file coverage table
-- **HTML report**: `./coverage/index.html` (gitignored, generated on demand)
-- **Source scope**: `src/**/*.ts` (excludes `src/cli/index.ts`)
+- **终端**：`pnpm test:coverage` 打印每个文件的覆盖率表格
+- **HTML 报告**：`./coverage/index.html`（已 gitignore，按需生成）
+- **源码范围**：`src/**/*.ts`（排除 `src/cli/index.ts`）
 
-Do **not** maintain a manual coverage table — always run `pnpm test:coverage` for the real numbers.
+**不要**维护手动覆盖率表——始终运行 `pnpm test:coverage` 获取真实数据。
 
 ---
 
-## CI / Pipeline Strategy
+## CI / 流水线策略（CI / Pipeline Strategy）
 
-| Stage | What Runs | Rationale |
+| 阶段（Stage） | 运行内容（What Runs） | 理由（Rationale） |
 |-------|-----------|-----------|
-| **pre-commit** (husky) | `lint-staged` (eslint + prettier) | Keep fast; don't add tests here or developers will skip with `--no-verify` |
-| **CI** (GitHub Actions, PR gate) | `pnpm lint` → `pnpm build` → `pnpm test` | Full suite; ~312 tests run in ~1s, no reason to split |
+| **pre-commit**（husky） | `lint-staged`（eslint + prettier） | 保持快速；不要在此添加测试，否则开发者会使用 `--no-verify` 跳过 |
+| **CI**（GitHub Actions，PR 门禁） | `pnpm lint` → `pnpm build` → `pnpm test` | 完整套件；约 312 个测试运行约 1 秒，无需拆分 |
 
-**When to reconsider**: If total test time exceeds 5 minutes, split into fast (unit) and slow (integration) stages. Currently unnecessary.
-
----
-
-## Pre-Development Checklist
-
-Before writing or improving tests:
-
-1. Read [conventions.md](./conventions.md) — file naming, structure, assertion patterns, when to write tests
-2. Read [mock-strategies.md](./mock-strategies.md) — what to mock, how, minimal mocking principle
-3. For command-level tests, read [integration-patterns.md](./integration-patterns.md)
+**何时重新考虑**：如果总测试时间超过 5 分钟，拆分为快速（单元）和慢速（集成）阶段。目前无需如此。
 
 ---
 
-## Quality Check
+## 开发前检查清单（Pre-Development Checklist）
 
-After writing tests:
+在编写或改进测试之前：
 
-1. Ensure tests follow conventions (naming, structure, assertions)
-2. Verify mocking is minimal — prefer real code paths
-3. Run validation:
+1. 阅读 [conventions.md](./conventions.md)——文件命名、结构、断言模式、何时编写测试
+2. 阅读 [mock-strategies.md](./mock-strategies.md)——什么需要 mock、如何 mock、最小化 mock 原则
+3. 对于命令级测试，阅读 [integration-patterns.md](./integration-patterns.md)
+
+---
+
+## 质量检查（Quality Check）
+
+编写测试之后：
+
+1. 确保测试遵循规范（命名、结构、断言）
+2. 验证 mock 是最小化的——优先使用真实代码路径
+3. 运行验证：
    ```bash
    pnpm lint && pnpm typecheck && pnpm test
    ```
-4. Check coverage decisions — report any gaps with rationale
+4. 检查覆盖率决策——报告任何缺口及理由
 
 ---
 
-**Language**: All documentation should be written in **English**.
+**语言（Language）**：所有文档应使用 **英文（English）** 编写。

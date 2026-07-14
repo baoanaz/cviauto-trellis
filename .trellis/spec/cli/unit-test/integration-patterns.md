@@ -1,23 +1,23 @@
-# Integration Test Patterns
+# 集成测试模式（Integration Test Patterns）
 
-> Patterns for function-level integration tests of CLI commands.
-
----
-
-## Approach: Function-Level Integration (Approach B)
-
-Instead of spawning CLI subprocesses, directly import and call `init()` / `update()` functions in real temp directories. This gives:
-
-- Fast execution (~400ms per test file)
-- Reproducible results (no network, no TTY)
-- Precise control of external dependencies via mocks
-- Full code path coverage from entry to file system output
-
-**Trade-off**: Does not test CLI argument parsing (commander layer).
+> CLI 命令的函数级集成测试模式。
 
 ---
 
-## Standard Test Setup
+## 方法：函数级集成（Approach B）
+
+不通过生成 CLI 子进程，而是直接在真实临时目录中导入并调用 `init()` / `update()` 函数。这带来了：
+
+- 快速执行（每个测试文件约 400ms）
+- 可复现结果（无网络、无 TTY）
+- 通过 mock 精确控制外部依赖
+- 从入口到文件系统输出的完整代码路径覆盖
+
+**权衡**：不测试 CLI 参数解析（commander 层）。
+
+---
+
+## 标准测试 Setup
 
 ```typescript
 describe("command() integration", () => {
@@ -32,7 +32,7 @@ describe("command() integration", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
-    vi.unstubAllGlobals();  // Only needed if vi.stubGlobal was used
+    vi.unstubAllGlobals();  // 仅在使用 vi.stubGlobal 时需要
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 });
@@ -40,11 +40,11 @@ describe("command() integration", () => {
 
 ---
 
-## Common Patterns
+## 常见模式（Common Patterns）
 
-### Pattern: Setup Project (for update tests)
+### 模式：项目 Setup（用于 update 测试）
 
-Update tests need an initialized project as precondition:
+Update 测试需要一个已初始化的项目作为前置条件：
 
 ```typescript
 async function setupProject(): Promise<void> {
@@ -53,15 +53,15 @@ async function setupProject(): Promise<void> {
 
 it("test case", async () => {
   await setupProject();
-  // ... modify state ...
+  // ... 修改状态 ...
   await update({ force: true });
-  // ... assert results ...
+  // ... 断言结果 ...
 });
 ```
 
-### Pattern: Full Snapshot Comparison
+### 模式：完整快照对比（Full Snapshot Comparison）
 
-For verifying an operation is a true no-op:
+用于验证某个操作是真正的无操作（no-op）：
 
 ```typescript
 const snapshotBefore = new Map<string, string>();
@@ -76,68 +76,68 @@ walk(tmpDir);
 
 await operation();
 
-// Compare: no added, no removed, no changed files
+// 比较：无新增、无删除、无文件变更
 ```
 
-### Pattern: Simulate Template Version Change
+### 模式：模拟模板版本变更（Simulate Template Version Change）
 
-To test auto-update detection (template changed, user did not modify):
+用于测试自动更新检测（模板变更，用户未修改）：
 
 ```typescript
-// 1. Write "old content" to a template file
+// 1. 将"旧内容"写入模板文件
 const oldContent = "# Old version\n";
 fs.writeFileSync(targetFull, oldContent);
 
-// 2. Update hash file to match old content (so update thinks user didn't modify it)
+// 2. 更新哈希文件以匹配旧内容（使 update 认为用户未修改）
 const hashes = JSON.parse(fs.readFileSync(hashFile, "utf-8"));
 hashes[targetRelative] = computeHash(oldContent);
 fs.writeFileSync(hashFile, JSON.stringify(hashes, null, 2));
 
-// 3. Run update — should auto-update to current template
+// 3. 运行 update——应自动更新为当前模板
 await update({ force: true });
 expect(fs.readFileSync(targetFull, "utf-8")).toBe(currentTemplateContent);
 ```
 
-### Pattern: Downgrade Protection
+### 模式：降级保护（Downgrade Protection）
 
 ```typescript
-// Set project version to future
+// 将项目版本设置为未来版本
 fs.writeFileSync(versionPath, "99.99.99");
 
 await update({});
 
-// Version should NOT be changed — update refused to downgrade
+// 版本不应被更改——update 拒绝降级
 expect(fs.readFileSync(versionPath, "utf-8")).toBe("99.99.99");
 ```
 
 ---
 
-## Test Matrix Design
+## 测试矩阵设计（Test Matrix Design）
 
-Integration test scenarios should be organized as a numbered matrix in the PRD:
+集成测试场景应在 PRD 中以编号矩阵的形式组织：
 
-| # | Scenario | Options | Verification |
+| # | 场景（Scenario） | 选项（Options） | 验证（Verification） |
 |---|----------|---------|--------------|
-| 1 | No-op (same version) | `{}` | Zero file changes, no backup |
-| 2 | Dry run | `{ dryRun: true }` | No file modifications |
-| 3 | Deleted file recreation | `{ force: true }` | File restored |
+| 1 | 无操作（相同版本） | `{}` | 零文件变更，无备份 |
+| 2 | 干运行（Dry run） | `{ dryRun: true }` | 无文件修改 |
+| 3 | 已删除文件重建 | `{ force: true }` | 文件已恢复 |
 | ... | | | |
 
-Each test is numbered (`#1`, `#2`, ...) matching the matrix for traceability.
+每个测试按编号（`#1`、`#2`……）标记，与矩阵匹配以便追溯。
 
 ---
 
-## Discovered Bugs (via integration tests)
+## 通过集成测试发现的 Bug
 
-Integration tests are effective at finding **cross-module inconsistencies**:
+集成测试在发现**跨模块不一致**方面非常有效：
 
-1. **Template placeholder roundtrip**: `init` resolves `{{PYTHON_CMD}}` → `python3`, but `update` compared against raw `{{PYTHON_CMD}}`. Every update detected false changes.
+1. **模板占位符来回转换**：`init` 将 `{{PYTHON_CMD}}` 解析为 `python3`，但 `update` 与原始 `{{PYTHON_CMD}}` 进行比较。每次 update 都会检测到虚假变更。
 
-2. **Template list mismatch**: `update` listed files not created by `init`, causing phantom "new file" detections on same-version update.
+2. **模板列表不匹配**：`update` 列出了 `init` 未创建的文件，导致相同版本 update 时出现虚假的"新文件"检测。
 
-3. **Project-type-conditional templates ignored**: `createSpecTemplates()` accepted `projectType` but ignored it (`_projectType`), always creating both backend + frontend specs. `collectTemplateFiles()` unconditionally included all spec files regardless of which dirs existed. Pure backend projects got empty frontend spec dirs on init, and update always tracked frontend files even when the dir was removed.
+3. **项目类型相关的模板被忽略**：`createSpecTemplates()` 接收了 `projectType` 但忽略了它（`_projectType`），始终同时创建 backend + frontend 的 spec。`collectTemplateFiles()` 无条件包含所有 spec 文件，而不论哪些目录实际存在。纯 backend 项目在 init 时得到空的 frontend spec 目录，并且 update 始终追踪 frontend 文件，即使目录已被删除。
 
-All three bugs were invisible to unit tests (which test modules in isolation) but immediately surfaced when testing the full init→update flow.
+以上三个 bug 对在隔离状态下测试各模块的单元测试不可见，但在测试完整的 init→update 流程时立即暴露。
 
 ---
 
@@ -145,13 +145,13 @@ All three bugs were invisible to unit tests (which test modules in isolation) bu
 
 ### DO
 
-- Use real file system operations (no mocking fs)
-- Test the full flow: entry function → file system output
-- Verify both positive outcomes (file created) and negative outcomes (file not changed)
-- Clean up temp directories after every test
+- 使用真实文件系统操作（不 mock fs）
+- 测试完整流程：入口函数 → 文件系统输出
+- 同时验证正向结果（文件已创建）和逆向结果（文件未变更）
+- 每个测试后清理临时目录
 
 ### DON'T
 
-- Don't mock internal modules to simulate template changes — use filesystem manipulation instead
-- Don't share temp directories between tests
-- Don't depend on specific template content in assertions (use `computeHash` or read from init output)
+- 不要 mock 内部模块来模拟模板变更——改用文件系统操作
+- 不要在测试之间共享临时目录
+- 不要在断言中依赖特定模板内容（使用 `computeHash` 或从 init 输出中读取）

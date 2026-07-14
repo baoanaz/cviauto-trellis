@@ -1,124 +1,124 @@
-# Cognitive Biases That Corrupt First Principles Thinking
+# 破坏第一性原理思维的认知偏差（Cognitive Biases）
 
-First-principles reasoning demands that you strip away assumptions and reason from ground truths. But your brain is wired to do the opposite — it takes shortcuts, clings to patterns, and avoids the discomfort of uncertainty. These 12 biases are the most dangerous enemies of first-principles thinking because they disguise assumptions as truths.
+第一性原理推理要求你剥离假设，从基本事实出发进行推理。但你的大脑天生就倾向于相反的做法——它走捷径、固守模式、回避不确定性带来的不适。下面这 12 种偏差是第一性原理思维最危险的敌人，因为它们将假设伪装成真理。
 
-Source: think-better project.
-
----
-
-## The 12 Biases
-
-### 1. Confirmation Bias
-
-**What it does**: You seek, interpret, and remember evidence that supports your existing beliefs.
-**How it corrupts FP thinking**: When decomposing to ground truths, you unconsciously "discover" foundations that happen to support your preferred conclusion. The analysis feels rigorous but the destination was predetermined. This is the single most dangerous bias for FP reasoning because it makes bad analysis feel airtight.
-**Debiasing strategy**: Actively seek disconfirming evidence first. Before building up from your ground truths, spend 10 minutes trying to prove them wrong. Write down what evidence would change your mind — then go look for it.
-**Key question**: "Am I looking for truth, or am I looking for permission?"
-
-### 2. Anchoring
-
-**What it does**: You over-rely on the first piece of information you encounter, and all subsequent reasoning adjusts from that anchor.
-**How it corrupts FP thinking**: The conventional approach becomes your mental anchor even when you are trying to think from scratch. Your "first principles" solution ends up suspiciously close to the status quo with minor adjustments. The anchor is invisible — you genuinely believe you started from zero.
-**Debiasing strategy**: Generate 3 alternatives before evaluating any single one. Force yourself to produce options that are structurally different, not incremental variations. Deliberately include one option that would make your industry peers uncomfortable.
-**Key question**: "Is my 'from scratch' solution just the existing approach with cosmetic changes?"
-
-### 3. Sunk Cost Fallacy
-
-**What it does**: You continue investing in something because of past investment, not future value.
-**How it corrupts FP thinking**: Legacy decisions feel like ground truths because so much was invested in them. "We use X because we spent two years building it" masquerades as "X is the right foundation." The more you have invested, the harder it is to see the investment as irrelevant to the forward-looking decision.
-**Debiasing strategy**: Ask "If we were starting from zero today with everything we now know, would we make this same choice?" If no, the sunk cost is distorting your reasoning. Treat all past investments as write-offs when evaluating the path forward.
-**Key question**: "Would I choose this if I hadn't already invested in it?"
-
-### 4. Status Quo Bias
-
-**What it does**: You prefer the current state of affairs simply because it is current.
-**How it corrupts FP thinking**: "How it works now" feels like a constraint when it is actually a choice. You unconsciously preserve existing structures and call them fundamentals. This is particularly insidious in organizations where "the way we do things" has been codified into process documents that look like laws.
-**Debiasing strategy**: Explicitly list everything you are treating as a constraint. For each one, ask: "Is this a law of physics, a regulation, or just how we currently do it?" Reclassify choices as choices. Be ruthless — most "constraints" are preferences.
-**Key question**: "Am I treating a choice as a constraint?"
-
-### 5. Overconfidence
-
-**What it does**: You overestimate the accuracy and completeness of your own knowledge and beliefs.
-**How it corrupts FP thinking**: You treat assumptions as verified ground truths without testing them. Your confidence in your decomposition prevents you from noticing gaps. The cleaner and more elegant your first-principles analysis feels, the more suspicious you should be — reality is usually messier than your model.
-**Debiasing strategy**: Assign a confidence percentage to each assumption in your reasoning chain. Anything below 80% needs external validation before you build on it. If every assumption is above 90%, you are almost certainly overconfident.
-**Key question**: "How would I know if this assumption were wrong?"
-
-### 6. Framing Effect
-
-**What it does**: Your decisions change depending on how information is presented, even when the underlying facts are identical.
-**How it corrupts FP thinking**: You accept the problem statement as given instead of questioning whether it is the right problem. The frame handed to you becomes an invisible constraint. In organizations, whoever writes the brief controls the conclusion — even for people doing "first principles" analysis on it.
-**Debiasing strategy**: Restate the problem in 3 structurally different ways before solving it. Change the subject, invert the goal, or shift the level of abstraction. If the problem was framed by someone else, ask what they left out of the frame.
-**Key question**: "Who framed this problem, and what did their framing exclude?"
-
-### 7. Availability Heuristic
-
-**What it does**: You judge the likelihood or importance of something by how easily examples come to mind.
-**How it corrupts FP thinking**: Recent, vivid, or emotionally charged experiences get elevated to universal truths. A single dramatic failure becomes "this never works." A recent success becomes "this always works." Your ground truths end up being a highlight reel of your recent memory, not an objective assessment.
-**Debiasing strategy**: Ask "Am I generalizing from a small or biased sample?" Seek base rates and systematic data instead of relying on memorable anecdotes. If you can name the specific example driving your belief, it is probably an anecdote, not a pattern.
-**Key question**: "Is this a pattern or just a memorable example?"
-
-### 8. Groupthink
-
-**What it does**: You conform to group consensus to maintain harmony, suppressing dissent and alternative viewpoints.
-**How it corrupts FP thinking**: Contrarian ground truths get silenced because they threaten group cohesion. The group converges on comfortable "first principles" that everyone already agrees with, defeating the entire purpose of the exercise. First-principles analysis done by a group often produces the safest possible answer, not the truest one.
-**Debiasing strategy**: Assign a devil's advocate role that rotates each session. Make it someone's explicit job to challenge every assumption, especially the ones that feel obvious. Collect written input before group discussion to prevent anchoring on the first speaker.
-**Key question**: "Is everyone agreeing because this is true, or because disagreeing is uncomfortable?"
-
-### 9. Planning Fallacy
-
-**What it does**: You systematically underestimate the time, cost, and difficulty of future actions.
-**How it corrupts FP thinking**: "Build from scratch" solutions seem easier and faster than they are. First-principles reasoning can make you overconfident about novel approaches because the analysis feels clean while the execution will not be. The gap between a correct first-principles conclusion and a successful implementation is where most FP-driven initiatives die.
-**Debiasing strategy**: Use reference class forecasting. Find 3-5 comparable projects (not your own optimistic plan) and use their actual timelines as your baseline. Multiply your time estimate by 2x for familiar work and 3x for novel work.
-**Key question**: "How long did this take the last 5 times someone tried it?"
-
-### 10. Loss Aversion
-
-**What it does**: You feel losses roughly twice as intensely as equivalent gains, making you avoid giving things up.
-**How it corrupts FP thinking**: You avoid discarding assumptions, frameworks, or prior work even when evidence says you should. Letting go of a "ground truth" feels like a loss, so you protect it past its usefulness. This bias is especially strong when the assumption was hard-won or publicly stated.
-**Debiasing strategy**: Frame decisions as "what do we gain by updating our assumptions" instead of "what do we lose by abandoning our position." Reframe every loss as a trade. Explicitly name what you gain by letting go.
-**Key question**: "Am I holding onto this because it is true, or because letting go feels like losing?"
-
-### 11. Dunning-Kruger Effect
-
-**What it does**: You overestimate your competence in areas where you have little expertise, while experts underestimate theirs.
-**How it corrupts FP thinking**: Naive first-principles analysis in an unfamiliar domain feels sufficient and elegant. You miss non-obvious constraints, edge cases, and failure modes that domain experts would catch instantly. The analysis is clean because it is incomplete. This is the classic trap for smart generalists entering a new domain.
-**Debiasing strategy**: Ask "Who has spent 10,000 hours in this domain?" Find them and pressure-test your reasoning before acting on it. Pay particular attention when your analysis contradicts expert consensus — you might be right, but the base rate says you are probably wrong.
-**Key question**: "Would a domain expert laugh at my decomposition?"
-
-### 12. Survivorship Bias
-
-**What it does**: You draw conclusions only from visible successes while ignoring the invisible failures.
-**How it corrupts FP thinking**: You build ground truths from winners' stories. "Successful companies did X, therefore X is a ground truth." But you never studied the companies that also did X and failed. Survivorship bias makes first-principles analysis converge on whatever the current winners are doing, which is the opposite of thinking from scratch.
-**Debiasing strategy**: Actively research failures in this domain. For every success story informing your reasoning, find 2 failure stories. Ask what they had in common with the successes — that commonality is probably not what caused the success.
-**Key question**: "Am I only looking at survivors?"
+来源：think-better 项目。
 
 ---
 
-## Bias Categories
+## 12 种偏差
 
-These 12 biases cluster into 3 attack vectors against first-principles thinking:
+### 1. 确认偏差（Confirmation Bias）
 
-**Biases that corrupt your inputs** (what you accept as ground truths):
-- Confirmation Bias, Availability Heuristic, Survivorship Bias, Framing Effect
+**它的作用**：你寻找、解释和记住支持你已有信念的证据。
+**它如何破坏 FP 思维**：在分解到基本事实时，你无意识地「发现」了恰好支持你偏好结论的基础。分析过程感觉严谨，但结论早已预设。这是 FP 推理中最危险的一种偏差，因为它让糟糕的分析感觉天衣无缝。
+**去偏差策略**：首先主动寻找否定性证据。在从你的基本事实出发构建之前，花 10 分钟尝试证明它们是错误的。写下什么证据会改变你的想法——然后去找到它。
+**关键问题**：「我是在寻找真相，还是在寻找许可？」
 
-**Biases that protect existing conclusions** (what you refuse to discard):
-- Anchoring, Sunk Cost Fallacy, Status Quo Bias, Loss Aversion
+### 2. 锚定效应（Anchoring）
 
-**Biases that inflate your confidence** (what you think you know):
-- Overconfidence, Dunning-Kruger Effect, Planning Fallacy, Groupthink
+**它的作用**：你过度依赖接收到的第一条信息，所有后续推理都从该锚点调整。
+**它如何破坏 FP 思维**：传统做法成为你的心理锚点，即使你试图从零开始思考。你的「第一性原理」解决方案最终可疑地接近现状，只做了微小的调整。锚点是隐形的——你真心相信你是从零开始的。
+**去偏差策略**：在评估任何一个选项之前，先生成 3 个替代方案。强迫自己产出结构上不同、而非增量变化的选项。有意包含一个会让你的行业同行感到不安的选项。
+**关键问题**：「我的『从零开始』解决方案是否只是现有方法换了个包装？」
 
-If you only have time to check one category, check the first — corrupted inputs produce confidently wrong conclusions.
+### 3. 沉没成本谬误（Sunk Cost Fallacy）
+
+**它的作用**：你因为过去的投入而继续投资某件事，而非因为未来的价值。
+**它如何破坏 FP 思维**：遗留决策因投入巨大而感觉像基本事实。「我们使用 X 是因为我们花了两年时间构建它」伪装成「X 是正确的基石」。你投入越多，就越难将投入视为与前瞻性决策无关。
+**去偏差策略**：问「如果我们今天用现在掌握的一切从零开始，我们会做出同样的选择吗？」如果答案是否定的，沉没成本正在扭曲你的推理。在评估前进路径时，将所有过去投入视为已核销。
+**关键问题**：「如果我还没有在这上面投入过，我会选择这个吗？」
+
+### 4. 现状偏差（Status Quo Bias）
+
+**它的作用**：你仅仅因为现状是现状就偏好它。
+**它如何破坏 FP 思维**：「现在的工作方式」感觉像一个约束，而它实际上是一个选择。你无意识地保留现有结构，并称之为基础。这在组织环境中尤其隐蔽，因为「我们做事的方式」已被编入看起来像法律的流程文档中。
+**去偏差策略**：明确列出你视为约束的所有事项。对每一项，问：「这是物理定律、法规，还是仅仅是我们目前的做法？」将选择重新归类为选择。要无情——大多数「约束」是偏好。
+**关键问题**：「我是否将选择当成了约束？」
+
+### 5. 过度自信（Overconfidence）
+
+**它的作用**：你高估了自己知识和信念的准确性和完整性。
+**它如何破坏 FP 思维**：你将假设视为已验证的基本事实，而不进行测试。你对分解过程的自信使你看不到空白。你的第一性原理分析感觉越干净、越优雅，你就越应该怀疑——现实通常比你的模型更混乱。
+**去偏差策略**：为推理链中的每个假设分配一个置信度百分比。低于 80% 的任何内容在构建之前需要外部验证。如果每个假设都高于 90%，你几乎肯定过度自信了。
+**关键问题**：「如果这个假设是错的，我如何知道？」
+
+### 6. 框架效应（Framing Effect）
+
+**它的作用**：你的决策因信息呈现方式的不同而改变，即使底层事实完全相同。
+**它如何破坏 FP 思维**：你将问题陈述作为既定事实接受，而不质疑这是否是正确的问题。交给你的框架变成了隐形的约束。在组织中，谁来写简报谁就控制了结论——即使是对此做「第一性原理」分析的人也是如此。
+**去偏差策略**：在解决问题之前，用 3 种结构上不同的方式重新陈述问题。改变主语、反转目标、或转变抽象层次。如果问题是别人框架的，问问他们从框架中排除了什么。
+**关键问题**：「谁框定了这个问题，他们的框架排除了什么？」
+
+### 7. 可得性启发（Availability Heuristic）
+
+**它的作用**：你通过例子浮现在脑海中的容易程度来判断某事发生的可能性或重要性。
+**它如何破坏 FP 思维**：最近的、生动的或充满情感的经历被提升为普遍真理。一次戏剧性的失败变成「这永远不会成功」。一次近期的成功变成「这总是有效的」。你的基本事实最终变成了你近期记忆的精选集，而非客观评估。
+**去偏差策略**：问「我是否从一个小样本或有偏样本中做归纳？」寻求基础率和系统数据，而非依赖令人难忘的轶事。如果你能说出驱动你信念的具体例子，它很可能是一个轶事，而非一种模式。
+**关键问题**：「这是一种模式，还只是一个令人难忘的例子？」
+
+### 8. 群体思维（Groupthink）
+
+**它的作用**：你为了维持和谐而服从群体共识，压制异议和替代观点。
+**它如何破坏 FP 思维**：逆向的基本事实因为威胁到群体凝聚力而被沉默。群体收敛到每个人都已经同意的舒适的「第一性原理」，这完全违背了练习的初衷。由群体做的第一性原理分析通常产出最安全的答案，而非最真实的答案。
+**去偏差策略**：分配一个每次轮换的「魔鬼代言人（Devil's Advocate）」角色。让某个人的明确工作是挑战每一个假设，尤其是那些感觉显而易见的。在群体讨论之前收集书面意见，以防止锚定在第一个发言者身上。
+**关键问题**：「大家同意是因为这是真的，还是因为不同意让人不舒服？」
+
+### 9. 规划谬误（Planning Fallacy）
+
+**它的作用**：你系统性地低估未来行动所需的时间、成本和难度。
+**它如何破坏 FP 思维**：「从零构建」的解决方案看起来比实际更容易、更快。第一性原理推理可能让你对新颖方法过于自信，因为分析过程感觉干净，而执行过程不会。正确的第一性原理结论与成功实施之间的差距，是大多数 FP 驱动举措失败的地方。
+**去偏差策略**：使用参考类预测（Reference Class Forecasting）。找到 3-5 个可比项目（不是你自己的乐观计划），将其实际时间线作为你的基线。将你熟悉的工作的时间估算乘以 2 倍，将新颖工作乘以 3 倍。
+**关键问题**：「前 5 次有人尝试这个时花了多长时间？」
+
+### 10. 损失厌恶（Loss Aversion）
+
+**它的作用**：你对损失的感受强烈程度大约是同等收益的两倍，使你避免放弃事物。
+**它如何破坏 FP 思维**：即使证据表明你应该放弃，你也避免丢弃假设、框架或先前的工作。放弃一个「基本事实」感觉像是一种损失，所以你保护它直到它不再有用。当假设来之不易或曾被公开陈述时，这种偏差尤其强烈。
+**去偏差策略**：将决策框架为「更新假设后我们能获得什么」，而非「放弃我们的立场我们会失去什么」。将每次损失重新框架为一次交换。明确说出你通过放手获得了什么。
+**关键问题**：「我坚持这个是因为它是真的，还是因为放手感觉像损失？」
+
+### 11. 邓宁-克鲁格效应（Dunning-Kruger Effect）
+
+**它的作用**：你在自己缺乏专业知识的领域高估自己的能力，而专家则低估自己的能力。
+**它如何破坏 FP 思维**：在不熟悉领域中的幼稚第一性原理分析感觉足够且优雅。你错过了领域专家一眼就能发现的非显性约束、边界情况和失败模式。分析干净是因为它不完整。这是聪明通才进入新领域时的经典陷阱。
+**去偏差策略**：问「谁在这个领域投入了 10,000 小时？」找到他们，在行动之前用你的推理向他们进行压力测试。当你的分析与专家共识相矛盾时，要特别注意——你可能是对的，但基础率表明你很可能错了。
+**关键问题**：「领域专家会嘲笑我的分解吗？」
+
+### 12. 幸存者偏差（Survivorship Bias）
+
+**它的作用**：你只从可见的成功案例中得出结论，而忽略无形的失败案例。
+**它如何破坏 FP 思维**：你从成功者的故事中构建基本事实。「成功的公司做了 X，因此 X 是基本事实。」但你从未研究过那些也做了 X 但失败的公司。幸存者偏差使第一性原理分析收敛到当前赢家正在做的任何事情，这与从零开始思考恰恰相反。
+**去偏差策略**：主动研究该领域的失败案例。对于每个为你的推理提供信息的成功故事，找出 2 个失败故事。问它们与成功案例有什么共同点——那个共同点很可能不是导致成功的原因。
+**关键问题**：「我是否只看到了幸存者？」
 
 ---
 
-## Bias Detection Checklist
+## 偏差分类
 
-Run these 5 questions before finalizing any first-principles analysis:
+这 12 种偏差聚集成 3 个针对第一性原理思维的攻击向量：
 
-1. **Evidence check** — "Did I seek disconfirming evidence with the same energy I sought confirming evidence?"
-2. **Constraint audit** — "For each constraint in my reasoning, is it a physical law, a regulation, or just a current choice?"
-3. **Sample check** — "Are my ground truths based on systematic evidence or vivid anecdotes?"
-4. **Expertise check** — "Has someone with deep domain expertise reviewed my decomposition?"
-5. **Inversion check** — "If I argued the opposite position, what ground truths would I use — and are any of them actually stronger?"
+**破坏你输入的偏差**（你接受为基本事实的内容）：
+- 确认偏差、可得性启发、幸存者偏差、框架效应
 
-If you cannot confidently answer all 5, your first-principles analysis is likely contaminated. Go back and stress-test before building forward.
+**保护现有结论的偏差**（你拒绝丢弃的内容）：
+- 锚定效应、沉没成本谬误、现状偏差、损失厌恶
+
+**膨胀你自信的偏差**（你以为自己知道的内容）：
+- 过度自信、邓宁-克鲁格效应、规划谬误、群体思维
+
+如果你只有时间检查一个类别，检查第一个——被破坏的输入会产生自信的错误结论。
+
+---
+
+## 偏差检测清单
+
+在完成任何第一性原理分析之前，运行这 5 个问题：
+
+1. **证据检查**——「我是否以寻求确认证据相同的精力去寻求了否定证据？」
+2. **约束审计**——「对于我推理中的每个约束，它是物理定律、法规，还是仅仅是当前的选择？」
+3. **样本检查**——「我的基本事实是基于系统性证据，还是基于生动的轶事？」
+4. **专业知识检查**——「是否有具有深厚领域专业知识的人审查过我的分解？」
+5. **反转检查**——「如果我论证相反的立场，我会使用哪些基本事实——其中是否有任何实际上更强？」
+
+如果你无法自信地回答全部 5 个问题，你的第一性原理分析很可能已被污染。在向前构建之前，回去进行压力测试。

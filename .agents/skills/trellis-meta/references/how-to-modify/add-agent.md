@@ -1,106 +1,106 @@
-# How To: Add Agent
+# How To：添加 Agent
 
-Add a new agent type like `my-agent`.
+添加新的 agent 类型，如 `my-agent`。
 
-**Platform**: Claude Code only
+**平台**：仅 Claude Code
 
 ---
 
-## Files to Modify
+## 需修改的文件
 
-| File | Action | Required |
+| 文件 | 操作 | 是否必需 |
 |------|--------|----------|
-| `.claude/agents/my-agent.md` | Create | Yes |
-| `.claude/hooks/inject-subagent-context.py` | Modify | Yes |
-| `.trellis/tasks/{template}/my-agent.jsonl` | Create | Yes |
-| `trellis-local/SKILL.md` | Update | Yes |
-| `.claude/agents/dispatch.md` | Modify | If adding to pipeline |
+| `.claude/agents/my-agent.md` | 创建 | 是 |
+| `.claude/hooks/inject-subagent-context.py` | 修改 | 是 |
+| `.trellis/tasks/{template}/my-agent.jsonl` | 创建 | 是 |
+| `trellis-local/SKILL.md` | 更新 | 是 |
+| `.claude/agents/dispatch.md` | 修改 | 如需加入流水线 |
 
 ---
 
-## Step 1: Create Agent Definition
+## 步骤 1：创建 Agent 定义
 
-Create `.claude/agents/my-agent.md`:
+创建 `.claude/agents/my-agent.md`：
 
 ```markdown
 ---
 name: my-agent
 description: |
-  What this agent specializes in.
-  When it should be used.
+  此 agent 专精于什么。
+  应在何时使用。
 tools: Read, Write, Edit, Bash, Glob, Grep
 model: opus
 ---
 
 # My Agent
 
-## Core Responsibilities
+## 核心职责
 
-1. Primary responsibility
-2. Secondary responsibility
+1. 首要职责
+2. 次要职责
 3. ...
 
-## Workflow
+## 工作流
 
-1. First step
-2. Second step
+1. 第一步
+2. 第二步
 3. ...
 
-## Forbidden Operations
+## 禁止操作
 
-- Thing 1 (why it's forbidden)
-- Thing 2 (why it's forbidden)
-- git commit (unless explicitly allowed)
+- 事项 1（禁止原因）
+- 事项 2（禁止原因）
+- git commit（除非明确允许）
 
-## Output Format
+## 输出格式
 
-What the agent should produce.
+Agent 应产出的内容。
 ```
 
-### Agent Definition Fields
+### Agent 定义字段
 
-| Field | Required | Description |
+| 字段 | 是否必需 | 描述 |
 |-------|----------|-------------|
-| `name` | Yes | Agent identifier |
-| `description` | Yes | What the agent does |
-| `tools` | Yes | Allowed tools |
-| `model` | No | Model to use (opus, sonnet) |
+| `name` | 是 | Agent 标识符 |
+| `description` | 是 | Agent 的功能描述 |
+| `tools` | 是 | 允许使用的工具 |
+| `model` | 否 | 使用的模型（opus、sonnet） |
 
 ---
 
-## Step 2: Update Hook
+## 步骤 2：更新 Hook
 
-Edit `.claude/hooks/inject-subagent-context.py`:
+编辑 `.claude/hooks/inject-subagent-context.py`：
 
-### Add Constant
+### 添加常量
 
 ```python
-# Near other agent constants
+# 在其他 agent 常量附近
 AGENT_MY_AGENT = "my-agent"
 
-# Add to list
+# 添加到列表
 AGENTS_ALL = (..., AGENT_MY_AGENT)
 ```
 
-### Add Context Function
+### 添加上下文函数
 
 ```python
 def get_my_agent_context(repo_root: str, task_dir: str) -> list:
-    """Get context for my-agent."""
+    """获取 my-agent 的上下文。"""
     context_files = []
 
-    # Load from JSONL
+    # 从 JSONL 加载
     jsonl_path = os.path.join(task_dir, "my-agent.jsonl")
     if os.path.exists(jsonl_path):
         context_files.extend(load_jsonl_context(jsonl_path))
 
-    # Add any additional files
+    # 添加其他附加文件
     # context_files.append({"file": "...", "reason": "..."})
 
     return context_files
 ```
 
-### Add to Main Switch
+### 添加到主 switch
 
 ```python
 elif subagent_type == AGENT_MY_AGENT:
@@ -114,108 +114,108 @@ elif subagent_type == AGENT_MY_AGENT:
 
 ---
 
-## Step 3: Create JSONL Template
+## 步骤 3：创建 JSONL 模板
 
-Create context template for task directories.
+为任务目录创建上下文模板。
 
-**Option A**: Add to `task.py init-context`:
+**选项 A**：添加到 `task.py init-context`：
 
 ```python
 def init_my_agent_context(task_dir, dev_type):
     jsonl_path = os.path.join(task_dir, "my-agent.jsonl")
     with open(jsonl_path, "w") as f:
-        # Add relevant specs
+        # 添加相关 spec
         f.write(json.dumps({
             "file": ".trellis/spec/guides/index.md",
-            "reason": "Thinking guides"
+            "reason": "思考指南"
         }) + "\n")
 ```
 
-**Option B**: Manually create template:
+**选项 B**：手动创建模板：
 
 ```jsonl
-{"file": ".trellis/spec/guides/index.md", "reason": "Thinking guides"}
-{"file": ".trellis/tasks/{task}/prd.md", "reason": "Requirements"}
+{"file": ".trellis/spec/guides/index.md", "reason": "思考指南"}
+{"file": ".trellis/tasks/{task}/prd.md", "reason": "需求文档"}
 ```
 
 ---
 
-## Step 4: Add to Pipeline (Optional)
+## 步骤 4：加入流水线（可选）
 
-If the agent should be part of the standard workflow:
+如果此 agent 应是标准工作流的一部分：
 
-### Update task.json Template
+### 更新 task.json 模板
 
 ```json
 "next_action": [
   {"phase": 1, "action": "implement"},
-  {"phase": 2, "action": "my-agent"},  // Add here
+  {"phase": 2, "action": "my-agent"},  // 添加此处
   {"phase": 3, "action": "check"},
   {"phase": 4, "action": "finish"}
 ]
 ```
 
-### Update dispatch.md
+### 更新 dispatch.md
 
-Add handling for the new phase:
+添加对新阶段的处理：
 
 ```markdown
-## Phase Handling
+## 阶段处理
 
 ...
 
-### my-agent Phase
-- Call `Task(subagent_type="my-agent")`
-- Wait for completion
-- Proceed to next phase
+### my-agent 阶段
+- 调用 `Task(subagent_type="my-agent")`
+- 等待完成
+- 进入下一阶段
 ```
 
 ---
 
-## Step 5: Document in trellis-local
+## 步骤 5：在 trellis-local 中记录
 
-Update `.claude/skills/trellis-local/SKILL.md`:
+更新 `.claude/skills/trellis-local/SKILL.md`：
 
 ```markdown
 ## Agents
 
-### Added Agents
+### 已添加的 Agent
 
 #### my-agent
-- **File**: `.claude/agents/my-agent.md`
-- **Platform**: [CC]
-- **Purpose**: What it does
-- **Tools**: Read, Write, Edit, Bash, Glob, Grep
-- **Added**: 2026-01-31
-- **Reason**: Why it was added
+- **文件**: `.claude/agents/my-agent.md`
+- **平台**: [CC]
+- **用途**: 功能描述
+- **工具**: Read, Write, Edit, Bash, Glob, Grep
+- **添加日期**: 2026-01-31
+- **原因**: 添加原因
 
-### Hooks Changed
+### 已修改的 Hook
 
 #### inject-subagent-context.py
-- **Change**: Added support for `my-agent` type
-- **Lines modified**: XX-YY
-- **Date**: 2026-01-31
+- **变更**: 添加了对 `my-agent` 类型的支持
+- **修改行**: XX-YY
+- **日期**: 2026-01-31
 ```
 
 ---
 
-## Testing
+## 测试
 
-1. Create a task with my-agent.jsonl
-2. Set as current task: `task.py start <task-dir>`
-3. Invoke agent: `Task(subagent_type="my-agent", prompt="Test")`
-4. Verify context injection works
-5. Verify agent behavior matches definition
+1. 创建包含 my-agent.jsonl 的任务
+2. 设为当前任务：`task.py start <task-dir>`
+3. 调用 agent：`Task(subagent_type="my-agent", prompt="Test")`
+4. 验证上下文注入正常
+5. 验证 agent 行为符合定义
 
 ---
 
-## Checklist
+## 检查清单
 
-- [ ] Agent definition created with proper frontmatter
-- [ ] Hook updated with agent constant
-- [ ] Hook updated with context function
-- [ ] Hook updated with main switch case
-- [ ] JSONL template created
-- [ ] Added to pipeline (if needed)
-- [ ] Documented in trellis-local
-- [ ] Tested the agent
+- [ ] Agent 定义已创建，frontmatter 正确
+- [ ] Hook 已更新 agent 常量
+- [ ] Hook 已更新上下文函数
+- [ ] Hook 已更新主 switch 分支
+- [ ] JSONL 模板已创建
+- [ ] 已加入流水线（如需要）
+- [ ] 已在 trellis-local 中记录
+- [ ] 已测试 agent

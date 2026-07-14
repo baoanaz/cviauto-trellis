@@ -1,79 +1,79 @@
-# `trellis uninstall` Command
+# `trellis uninstall` 命令
 
-Source: `packages/cli/src/commands/uninstall.ts`
+源码：`packages/cli/src/commands/uninstall.ts`
 
-How the uninstall command removes every Trellis-written file from a project, scrubs structured config files in place, and prunes empty managed directories — without ever touching user-authored neighbors.
-
----
-
-## Overview
-
-`trellis uninstall` is the inverse of `trellis init` / `trellis update`: it removes everything Trellis wrote and leaves everything Trellis did not.
-
-- **Manifest is authoritative.** The single source of truth for "what trellis wrote" is `.trellis/.template-hashes.json`. Files outside that manifest are never touched, regardless of where they live (e.g. user-added scripts under `.claude/hooks/`, custom commands under `.cursor/commands/`).
-- **No user-modification gate.** Whether the user has edited a manifest-listed file or not, it is removed. `update` semantics (warn / preserve modified files) do not apply here — the user's intent is to remove Trellis entirely.
-- **Two file classes.** Manifest entries fall into:
-  1. *Opaque content files* (`.py`, `.md`, `.toml`, `.json` agents, etc.) — unlinked outright.
-  2. *Structured config files* (`settings.json`, `hooks.json`, `package.json`, `config.toml`) — passed through a scrubber that removes only the trellis-owned fields and writes the trimmed result back. If nothing meaningful remains, the scrubber returns `fullyEmpty: true` and the file is deleted instead of rewritten.
-- **`.trellis/` is removed unconditionally.** Tasks, runtime state, workspace journal, config — all of it. Users who want to keep historical task records must back up `.trellis/tasks/` themselves before running `uninstall`.
-- **Idempotent.** Re-running on a project that has no `.trellis/` is a friendly no-op. Re-running after a partial failure picks up whatever is still on disk and converges.
-- **Best-effort cleanup.** Permission errors on individual `unlink`/`rmdir` calls are swallowed; the command never aborts halfway. The summary at the end reports counts but does not enumerate per-file failures.
-
-For the *content* of each scrubber (which fields are stripped from `.claude/settings.json`, what counts as a trellis comment in `.codex/config.toml`, etc.), see `uninstall-scrubbers.md` for per-file scrubbing rules.
+卸载命令如何从项目中移除每个 Trellis 写入的文件，原地清理结构化配置文件，并修剪空的管理目录 — 而不触及用户编写的相邻文件。
 
 ---
 
-## Command Entry
+## 概述
 
-Wired in `cli/index.ts` near other top-level subcommands:
+`trellis uninstall` 是 `trellis init` / `trellis update` 的反操作：它移除 Trellis 写入的所有内容，并保留 Trellis 未写入的所有内容。
+
+- **清单是权威的。**「Trellis 写入了什么」的唯一权威来源是 `.trellis/.template-hashes.json`。清单之外的文件永远不会被触碰，无论它们位于何处（例如，`.claude/hooks/` 下的用户添加脚本、`.cursor/commands/` 下的自定义命令）。
+- **无用户修改门禁。**无论用户是否编辑了清单中列出的文件，它都会被移除。`update` 的语义（警告 / 保留修改过的文件）在此不适用 — 用户的意图是完全移除 Trellis。
+- **两种文件类别。**清单条目分为：
+  1. *不透明内容文件*（`.py`、`.md`、`.toml`、`.json` agents 等）— 直接删除。
+  2. *结构化配置文件*（`settings.json`、`hooks.json`、`package.json`、`config.toml`）— 通过清理器（scrubber）处理，仅移除 Trellis 拥有的字段，并将修剪后的结果写回。如果没有任何有意义的内容保留，清理器返回 `fullyEmpty: true`，文件将被删除而不是重新写入。
+- **`.trellis/` 被无条件移除。**任务、运行时状态、工作区日志、配置 — 全部。希望保留历史任务记录的用户必须在运行 `uninstall` 之前自行备份 `.trellis/tasks/`。
+- **幂等。**对没有 `.trellis/` 的项目重新运行是友好的空操作。在部分失败后重新运行会拾取磁盘上仍然存在的任何内容并收敛。
+- **尽力清理。**单个文件/目录的 `unlink`/`rmdir` 权限错误被吞掉；命令从不中途终止。最后的摘要报告计数但不枚举每个文件的失败。
+
+有关每个清理器的*内容*（从 `.claude/settings.json` 移除哪些字段，`.codex/config.toml` 中什么算作 Trellis 注释等），参见 `uninstall-scrubbers.md` 获取每个文件的清理规则。
+
+---
+
+## 命令入口
+
+在 `cli/index.ts` 中靠近其他顶层子命令连接：
 
 ```
 trellis uninstall [-y|--yes] [--dry-run]
 ```
 
-| Flag | Type | Effect |
+| 标志 | 类型 | 效果 |
 |------|------|--------|
-| `-y, --yes` | boolean | Skip the `Continue?` confirmation prompt. |
-| `--dry-run` | boolean | Print the plan and exit without modifying anything. |
+| `-y, --yes` | boolean | 跳过 `Continue?` 确认提示。 |
+| `--dry-run` | boolean | 打印计划并退出，不修改任何内容。 |
 
-There are no `--platform <name>` or `--keep-config` flags. The design is intentionally all-or-nothing: partial uninstall (e.g. "remove Trellis from Cursor only, leave Claude Code") is **out of scope** because the manifest does not partition by platform — see *Common Pitfalls* below.
+没有 `--platform <name>` 或 `--keep-config` 标志。设计故意是全有或全无：部分卸载（例如，「仅从 Cursor 移除 Trellis，保留 Claude Code」）**超出范围**，因为清单不按平台分区 — 参见下面的*常见陷阱*。
 
-The command surface lives in `commands/uninstall.ts:uninstall` and is the only export consumed by `cli/index.ts`. The `UninstallOptions` interface in the same file mirrors the two CLI flags 1:1.
+命令接口位于 `commands/uninstall.ts:uninstall`，是由 `cli/index.ts` 消费的唯一导出。同一文件中的 `UninstallOptions` 接口与两个 CLI 标志一一对应。
 
 ---
 
-## Plan Composition
+## 计划编写（Plan Composition）
 
-The command builds a plan first, prints it, optionally prompts, then executes. Plan composition is a pure function of `cwd` + manifest contents.
+命令首先构建计划，打印它，可选择提示，然后执行。计划编写是 `cwd` + 清单内容的纯函数。
 
-### Pre-checks (before any planning)
+### 前置检查（在任何计划之前）
 
-`commands/uninstall.ts:uninstall` performs two pre-checks at the top:
+`commands/uninstall.ts:uninstall` 在顶部执行两个前置检查：
 
-1. **`.trellis/` must exist.** If missing, print a gray "not installed" message and return cleanly (exit 0). This is the idempotent re-run path.
-2. **Manifest must exist and be non-empty.** `loadHashes(cwd)` returns `{}` when `.trellis/.template-hashes.json` is missing or unreadable. Without the manifest there is no way to distinguish trellis-owned platform files from user-owned ones, so the command refuses to proceed and exits with a red error message + `process.exit(1)`. Users in this state are told they may delete `.trellis/` manually.
+1. **`.trellis/` 必须存在。**如果缺失，打印灰色「not installed」消息并干净返回（exit 0）。这是幂等重新运行路径。
+2. **清单必须存在且非空。**当 `.trellis/.template-hashes.json` 缺失或不可读时，`loadHashes(cwd)` 返回 `{}`。没有清单，无法区分 Trellis 拥有的平台文件和用户拥有的文件，因此命令拒绝继续并以红色错误消息 + `process.exit(1)` 退出。处于此状态的用户被告知可以手动删除 `.trellis/`。
 
-### Planner — `commands/uninstall.ts:buildPlan`
+### 计划器 — `commands/uninstall.ts:buildPlan`
 
-Inputs: `cwd`, `hashes` (manifest record).
+输入：`cwd`、`hashes`（清单记录）。
 
-For every POSIX path in `hashes`:
+对于 `hashes` 中的每个 POSIX 路径：
 
-1. Resolve the absolute path via `path.join(cwd, ...posixPath.split("/"))`.
-2. Look up the path in the structured-files dispatch table (see below).
-3. **No structured spec match** → record as a plain `PlannedDeletion`. If the file is missing on disk, the entry is still recorded with `missing: true` (so the summary can report it as "skipped" without confusing it with a successful deletion).
-4. **Spec match, file missing on disk** → record as `PlannedDeletion { missing: true }`. The scrubber is not invoked.
-5. **Spec match, file present** → read the file, run the scrubber:
-   - If the scrubber returns `fullyEmpty: true`, record as `PlannedDeletion { missing: false }`. The file will be unlinked just like any other manifest entry.
-   - Otherwise, record as `PlannedModification` carrying the pre-computed `ScrubResult` (the post-scrub content) plus the `reason` string for the human-readable plan output.
+1. 通过 `path.join(cwd, ...posixPath.split("/"))` 解析绝对路径。
+2. 在结构化文件分发表中查找路径（见下文）。
+3. **无结构化规范匹配** → 记录为普通 `PlannedDeletion`。如果文件在磁盘上缺失，条目仍以 `missing: true` 记录（以便摘要可以将其报告为「skipped」，而不会与成功删除混淆）。
+4. **规范匹配，磁盘上文件缺失** → 记录为 `PlannedDeletion { missing: true }`。不调用清理器。
+5. **规范匹配，文件存在** → 读取文件，运行清理器：
+   - 如果清理器返回 `fullyEmpty: true`，记录为 `PlannedDeletion { missing: false }`。文件将像任何其他清单条目一样被删除。
+   - 否则，记录为 `PlannedModification`，携带预计算的 `ScrubResult`（清理后内容）加上用于人类可读计划输出的 `reason` 字符串。
 
-`removeTrellisDir` is set to `true` unconditionally — by the time `buildPlan` runs, we have already verified `.trellis/` exists.
+`removeTrellisDir` 无条件设置为 `true` — 当 `buildPlan` 运行时，我们已经验证了 `.trellis/` 存在。
 
-### Structured-file dispatch table — `commands/uninstall.ts:buildStructuredFileSpecs`
+### 结构化文件分发表 — `commands/uninstall.ts:buildStructuredFileSpecs`
 
-A `Map<posixPath, StructuredFileSpec>` built once per command invocation. Each entry pairs a manifest-listed config file with the scrubber that knows how to surgically edit it. Current entries:
+每个命令调用构建一次的 `Map<posixPath, StructuredFileSpec>`。每个条目将清单中列出的配置文件与知道如何精确编辑它的清理器配对。当前条目：
 
-| Manifest path | Scrubber | Hooks-JSON mode |
+| 清单路径 | 清理器 | Hooks-JSON 模式 |
 |---|---|---|
 | `.claude/settings.json` | `scrubHooksJson` | `nested` |
 | `.gemini/settings.json` | `scrubHooksJson` | `nested` |
@@ -83,212 +83,212 @@ A `Map<posixPath, StructuredFileSpec>` built once per command invocation. Each e
 | `.codex/hooks.json` | `scrubHooksJson` | `nested` |
 | `.cursor/hooks.json` | `scrubHooksJson` | `flat` |
 | `.github/copilot/hooks.json` | `scrubHooksJson` | `flat` |
-| `.opencode/package.json` | `scrubOpencodePackageJson` | n/a |
-| `.pi/settings.json` | `scrubPiSettings` | n/a |
-| `.codex/config.toml` | `scrubCodexConfigToml` | n/a |
+| `.opencode/package.json` | `scrubOpencodePackageJson` | 不适用 |
+| `.pi/settings.json` | `scrubPiSettings` | 不适用 |
+| `.codex/config.toml` | `scrubCodexConfigToml` | 不适用 |
 
-Adding a new platform that ships a structured config file means adding one row to this table — the planner picks it up automatically. **Per-file scrub semantics live in `uninstall-scrubbers.md`; do not duplicate them here.**
+添加一个发布结构化配置文件的新平台意味着向此表添加一行 — 计划器自动拾取它。**每个文件的清理语义位于 `uninstall-scrubbers.md`；不要在此重复它们。**
 
-The `StructuredFileSpec.scrub` callback receives `(content, deletedPaths)`. `deletedPaths` is the full set of manifest-listed POSIX paths for *this uninstall*, used by hooks-JSON scrubbers to identify trellis-managed `command` strings without false-matching on user-added hooks that merely mention the path in an `echo` or comment.
+`StructuredFileSpec.scrub` 回调接收 `(content, deletedPaths)`。`deletedPaths` 是*此次卸载*的清单列出 POSIX 路径的完整集合，被 hooks-JSON 清理器用于识别 Trellis 管理的 `command` 字符串，而不错误匹配仅在 `echo` 或注释中提到路径的用户添加 hooks。
 
-### Plan rendering — `commands/uninstall.ts:renderPlan`
+### 计划渲染 — `commands/uninstall.ts:renderPlan`
 
-Two-column output:
+两列输出：
 
-- **Will be deleted (N entries)** — the un-missing deletions plus a synthetic `WORKFLOW/` line representing the `.trellis/` directory itself (only printed if the directory still exists, which it always should after the pre-check).
-- **Will be modified (N files)** — the structured-file modifications, each annotated with the `reason` from its dispatch entry.
-- **Skipped** — a gray footer counting manifest entries already missing from disk (still recorded in the plan but not actionable).
+- **Will be deleted（N 个条目）** — 非缺失的删除加上一个代表 `.trellis/` 目录本身的合成 `WORKFLOW/` 行（仅当目录仍然存在时才打印，在前置检查之后它应该总是存在的）。
+- **Will be modified（N 个文件）** — 结构化文件修改，每个都带有其分发条目的 `reason` 注释。
+- **Skipped** — 灰色页脚，统计清单中已在磁盘上缺失的条目（仍记录在计划中但不可操作）。
 
-This is purely cosmetic; the plan object itself drives execution.
-
----
-
-## Confirmation & Dry Run
-
-After printing the plan:
-
-1. **`--dry-run`** — print "Dry run — no files were modified." and return. No prompt, no mutation, no `process.exit`.
-2. **`--yes`** — skip prompt, go straight to execution.
-3. **Otherwise** — prompt `Continue? [Y/n]` (default `Y`) via inquirer.
-
-### Non-TTY guard
-
-If `process.stdin.isTTY` is false **and** neither `--yes` nor `--dry-run` is set, the command refuses to prompt and exits non-zero with a red message instructing the user to pass `--yes` or `--dry-run`. This is a deliberate fail-closed UX choice that mirrors `trellis update` in scripted environments. The brief `readline.createInterface(...).close()` call before exit is a defensive ref-release in case anything else opened stdin (mostly defensive — the process is about to exit anyway).
-
-If the user answers "no" at the prompt, print a yellow "Uninstall cancelled. No files modified." and return. **No partial execution; no rollback needed.**
+这纯粹是外观上的；计划对象本身驱动执行。
 
 ---
 
-## Plan Execution — `commands/uninstall.ts:executePlan`
+## 确认与 Dry Run
 
-Five ordered phases. The order matters for partial-failure recovery (an interrupted uninstall leaves the project in a more-recoverable state):
+打印计划后：
 
-### Phase 1 — Modifications first
+1. **`--dry-run`** — 打印「Dry run — no files were modified.」并返回。无提示，无变更，无 `process.exit`。
+2. **`--yes`** — 跳过提示，直接进入执行。
+3. **否则** — 通过 inquirer 提示 `Continue? [Y/n]`（默认 `Y`）。
 
-Write each `PlannedModification.result.content` to its `absPath` via `fs.writeFileSync`. Doing this **before** deletions means that if a later step crashes, structured config files have at least had their trellis fragments stripped. User data inside those files (other deps in `package.json`, other hooks in `settings.json`, custom keys) is preserved.
+### 非 TTY 守卫
 
-### Phase 2 — File deletions
+如果 `process.stdin.isTTY` 为 false **且**既没有设置 `--yes` 也没有设置 `--dry-run`，命令拒绝提示并以非零退出，打印红色消息指示用户传递 `--yes` 或 `--dry-run`。这是一个故意 fail-closed 的 UX 选择，镜像了脚本化环境中的 `trellis update`。退出前的简短 `readline.createInterface(...).close()` 调用是防御性引用释放，以防其他内容打开了 stdin（主要是防御性的 — 进程无论如何都即将退出）。
 
-For each `PlannedDeletion` where `missing` is false, `fs.unlinkSync(absPath)`. Errors are caught and silently skipped — see *Best-Effort Cleanup* in *Boundaries*.
-
-While deleting, the parent directory of each deleted file is added to a `Set<string>` of `deletedDirCandidates` (POSIX dirname of the manifest path). These are the directories that may have just become empty and are eligible for pruning.
-
-### Phase 3 — Drop `.trellis/` recursively
-
-`fs.rmSync(trellisDir, { recursive: true, force: true })`. Whole directory tree gone in one call. This is unconditional within `executePlan`; the only gate is the pre-check at the top of `uninstall()` which establishes that the directory exists and a manifest is present.
-
-### Phase 4 — Prune empty managed sub-directories
-
-For every dir in `deletedDirCandidates`, call `cleanupEmptyDirs(cwd, dirPosix)` (re-exported from `commands/update.ts`). This walks the directory bottom-up and removes any sub-directory that became empty after Phase 2 — but it explicitly **refuses to remove managed root dirs** (`.claude`, `.cursor`, `.codex`, etc.) because the normal `update` flow needs them to persist.
-
-### Phase 5 — Prune empty managed root directories
-
-This is the uninstall-only fixup that `cleanupEmptyDirs` deliberately won't do. After Phase 4, a platform root like `.claude` may be sitting empty (every nested file removed, every nested empty subdir already pruned). During uninstall there is no reason to keep it, so we walk `ALL_MANAGED_DIRS` (excluding `DIR_NAMES.WORKFLOW` because Phase 3 already handled it), sorted **deepest-first** by slash count, and `rmdirSync` each one that is empty.
-
-After removing a deepest dir (e.g. `.agents/skills`), the loop walks **upward** until it hits a non-empty parent or runs out of POSIX path. This handles cases like:
-- `.agents/skills` empty → remove → `.agents` may now be empty → remove → done.
-
-The deepest-first sort matters: if we walked `ALL_MANAGED_DIRS` in registry order and tried to remove `.agents` before `.agents/skills`, the rmdir would fail because the dir was non-empty.
-
-Returns `{ deletedFiles, modifiedFiles, deletedDirs }` for the green summary line.
+如果用户在提示中回答「no」，打印黄色「Uninstall cancelled. No files modified.」并返回。**无部分执行；无需回滚。**
 
 ---
 
-## `.trellis/` Handling
+## 计划执行 — `commands/uninstall.ts:executePlan`
 
-`.trellis/` is removed in its entirety — there is no `--keep-config` or `--keep-tasks` flag. This includes:
+五个有序阶段。顺序对部分失败恢复很重要（中断的卸载将项目留在更可恢复的状态）：
 
-| Subdirectory | Status |
+### 阶段 1 — 先修改
+
+将每个 `PlannedModification.result.content` 通过 `fs.writeFileSync` 写入其 `absPath`。在**删除之前**这样做意味着如果后续步骤崩溃，结构化配置文件至少已经剥离了其 Trellis 片段。这些文件中的用户数据（`package.json` 中的其他 deps、`settings.json` 中的其他 hooks、自定义键）被保留。
+
+### 阶段 2 — 文件删除
+
+对于每个 `missing` 为 false 的 `PlannedDeletion`，`fs.unlinkSync(absPath)`。错误被捕获并静默跳过 — 参见*边界*中的*尽力清理*。
+
+删除时，每个已删除文件的父目录被添加到一个 `Set<string>` 的 `deletedDirCandidates`（清单路径的 POSIX dirname）。这些是可能刚刚变为空并符合修剪条件的目录。
+
+### 阶段 3 — 递归删除 `.trellis/`
+
+`fs.rmSync(trellisDir, { recursive: true, force: true })`。整个目录树在一次调用中消失。这在 `executePlan` 内是无条件的；唯一的门禁是 `uninstall()` 顶部的前置检查，它确定了目录存在且清单存在。
+
+### 阶段 4 — 修剪空管理子目录
+
+对于 `deletedDirCandidates` 中的每个目录，调用 `cleanupEmptyDirs(cwd, dirPosix)`（从 `commands/update.ts` 重新导出）。这自底向上遍历目录并移除在阶段 2 之后变为空的任何子目录 — 但它显式**拒绝移除管理根目录**（`.claude`、`.cursor`、`.codex` 等），因为正常的 `update` 流程需要它们持久化。
+
+### 阶段 5 — 修剪空管理根目录
+
+这是 `cleanupEmptyDirs` 故意不做的仅卸载修复。在阶段 4 之后，像 `.claude` 这样的平台根目录可能是空的（每个嵌套文件已移除，每个嵌套空子目录已修剪）。在卸载期间没有理由保留它，因此我们遍历 `ALL_MANAGED_DIRS`（排除 `DIR_NAMES.WORKFLOW`，因为阶段 3 已经处理了它），按斜杠计数**最深层优先**排序，并对为空的每个目录执行 `rmdirSync`。
+
+移除最深层目录（例如 `.agents/skills`）后，循环**向上**遍历直到遇到非空父级或用完 POSIX 路径。这处理如下情况：
+- `.agents/skills` 为空 → 移除 → `.agents` 现在可能为空 → 移除 → 完成。
+
+最深层优先排序很重要：如果我们按注册表顺序遍历 `ALL_MANAGED_DIRS`，并尝试在 `.agents/skills` 之前移除 `.agents`，rmdir 会因为目录非空而失败。
+
+返回 `{ deletedFiles, modifiedFiles, deletedDirs }` 用于绿色摘要行。
+
+---
+
+## `.trellis/` 处理
+
+`.trellis/` 被完整移除 — 没有 `--keep-config` 或 `--keep-tasks` 标志。这包括：
+
+| 子目录 | 状态 |
 |---|---|
-| `.trellis/scripts/` | Removed (template-managed). |
-| `.trellis/spec/` | Removed (managed via `update.skip` semantics during `update`, but uninstall removes everything). |
-| `.trellis/tasks/` | Removed (user data). |
-| `.trellis/workspace/` | Removed (user journal). |
-| `.trellis/runtime/` | Removed (session state). |
-| `.trellis/config.yaml` | Removed (user config). |
-| `.trellis/.developer` | Removed. |
-| `.trellis/.current-task` | Removed. |
-| `.trellis/.template-hashes.json` | Removed. |
+| `.trellis/scripts/` | 已移除（模板管理）。 |
+| `.trellis/spec/` | 已移除（在 `update` 期间通过 `update.skip` 语义管理，但 uninstall 移除所有内容）。 |
+| `.trellis/tasks/` | 已移除（用户数据）。 |
+| `.trellis/workspace/` | 已移除（用户日志）。 |
+| `.trellis/runtime/` | 已移除（会话状态）。 |
+| `.trellis/config.yaml` | 已移除（用户配置）。 |
+| `.trellis/.developer` | 已移除。 |
+| `.trellis/.current-task` | 已移除。 |
+| `.trellis/.template-hashes.json` | 已移除。 |
 
-This is **deliberately destructive** for user data inside `.trellis/`. Users are responsible for backing up `tasks/` or `workspace/` before running `uninstall` if they want history preserved. The plan output prints `WORKFLOW/  (entire directory, including tasks/runtime/config)` so this is visible before the confirmation prompt.
+这对 `.trellis/` 中的用户数据是**故意破坏性的**。用户负责在运行 `uninstall` 之前备份 `tasks/` 或 `workspace/`，如果他们希望保留历史记录。计划输出打印 `WORKFLOW/  (entire directory, including tasks/runtime/config)`，因此这在确认提示之前是可见的。
 
-> Rationale: a "soft uninstall" that leaves orphan `.trellis/` content behind is a worse state than either fully-installed or fully-uninstalled — the leftover files reference removed scripts (`.trellis/scripts/`) and broken sub-agent configs (`.trellis/tasks/<id>/implement.jsonl` pointing at deleted spec files). Either keep Trellis or remove it cleanly. There is no half-Trellis mode.
-
----
-
-## Boundaries
-
-### What `uninstall` will NOT do
-
-- **Touch any file outside `.template-hashes.json`.** User-added scripts inside `.claude/hooks/`, custom commands inside `.cursor/commands/`, project-local agents the user defined themselves — all preserved. Test `#7` in `test/commands/uninstall.integration.test.ts` covers this.
-- **Mutate user-authored sections of structured config.** Scrubbers strip *only* trellis-emitted entries. Other deps in `package.json`, other event hooks in `settings.json`, custom `[features]` table entries in `config.toml` — all preserved. Test `#8` covers this for `.claude/settings.json`.
-- **Touch git history.** No `git add`, no `git commit`, no `git rm`. The user is expected to commit the post-uninstall state themselves. (Same convention as `update`.)
-- **Touch `~/.codex/config.toml` or any other user-level config.** Codex's hook activation flag (`features.hooks = true`) lives in the user's home config; we never edit that. We do remove the project-local `.codex/config.toml`, which only contains `project_doc_fallback_filenames` + a comment block.
-- **Reverse migrations.** If a user originally installed v0.4 and migrated to v0.5, `uninstall` removes the v0.5-shape files (whatever the current manifest contains). It does not reconstruct any v0.4 files.
-
-### Best-effort cleanup
-
-Phases 2, 4, 5 all use try/catch with empty handlers. Permission errors on individual files or directories are swallowed. The summary's "deleted N files" count will under-report if any of these errors fire. We accept this trade-off: aborting halfway through uninstall would leave the user in a worse state than completing best-effort.
-
-If a user reports "uninstall didn't remove file X", the diagnosis path is:
-
-1. Did the file exist in `.trellis/.template-hashes.json` before the uninstall? (If not, it was never trellis-owned.)
-2. Did permissions or AV software block the unlink? (`ls -la` the path post-uninstall.)
-3. Was the file inside a structured config that scrubbed-but-was-not-fully-empty? (Check the file content.)
-
-### Manifest as scope contract
-
-Every behavior decision flows from "is this path in the manifest?":
-
-- Path in manifest, no structured spec → unlink.
-- Path in manifest, structured spec, scrub returns `fullyEmpty` → unlink.
-- Path in manifest, structured spec, scrub keeps content → write back trimmed content.
-- Path NOT in manifest → invisible to uninstall.
-
-The corollary: when adding a new platform/template that emits a structured config file, **you MUST** (a) add the path to `.template-hashes.json` (which happens automatically through `collectPlatformTemplates`) and (b) add a `StructuredFileSpec` row to `buildStructuredFileSpecs`. Forgetting (b) means uninstall will outright unlink the config file and take any user-added neighbors with it.
+> 理由：留下孤儿 `.trellis/` 内容的「软卸载」是比完全安装或完全卸载更糟糕的状态 — 剩余文件引用了已删除的脚本（`.trellis/scripts/`）和指向已删除 spec 文件的损坏子 agent 配置（`.trellis/tasks/<id>/implement.jsonl`）。要么保留 Trellis，要么干净地移除它。不存在半 Trellis 模式。
 
 ---
 
-## Common Pitfalls
+## 边界
 
-### 1. "Per-platform uninstall" is not supported
+### `uninstall` 不会做什么
 
-There is no `--platform claude-code` flag. Reason: the manifest does not partition by platform — it is a flat `Record<posixPath, sha256>`. Inferring "this entry belongs to Claude Code" would mean prefix-matching `.claude/`, which is fragile (`.agents/skills/` is shared by Codex and Pi; `.github/copilot/` lives outside the platform-name pattern).
+- **不会触碰 `.template-hashes.json` 之外的任何文件。**`.claude/hooks/` 内用户添加的脚本、`.cursor/commands/` 内用户自定义命令、用户自己定义的项目本地 agents — 全部保留。`test/commands/uninstall.integration.test.ts` 中的测试 `#7` 覆盖了这一点。
+- **不会变更结构化配置的用户编写部分。**清理器仅剥离 Trellis 发出的条目。`package.json` 中的其他 deps、`settings.json` 中的其他事件 hooks、`config.toml` 中的自定义 `[features]` 表条目 — 全部保留。测试 `#8` 覆盖了 `.claude/settings.json` 的这一点。
+- **不会触碰 git 历史。**无 `git add`、无 `git commit`、无 `git rm`。用户需自行提交卸载后状态。（与 `update` 相同的约定。）
+- **不会触碰 `~/.codex/config.toml` 或任何其他用户级配置。**Codex 的 hook 激活标志（`features.hooks = true`）位于用户的 home 配置中；我们从不编辑它。我们确实删除项目本地的 `.codex/config.toml`，它仅包含 `project_doc_fallback_filenames` + 一个注释块。
+- **不会逆向迁移。**如果用户最初安装了 v0.4 并迁移到 v0.5，`uninstall` 移除 v0.5 形状的文件（无论当前清单包含什么）。它不会重建任何 v0.4 文件。
 
-If a user wants to remove just one platform's files, the path is `trellis update` after editing `config.yaml`'s platform list — that flow knows how to deconfigure platforms cleanly. `uninstall` is a single-shot full removal.
+### 尽力清理
 
-### 2. Adding a new structured config file without a scrubber
+阶段 2、4、5 都使用带空处理程序的 try/catch。单个文件或目录的权限错误被吞掉。如果这些错误中的任何一个触发，摘要的「deleted N files」计数将少报。我们接受这种权衡：在卸载中途中止会让用户处于比尽力完成更糟糕的状态。
 
-**Symptom**: User runs `uninstall`, finds their custom keys in `.newplatform/settings.json` are gone — the entire file got unlinked because the planner had no `StructuredFileSpec` for it.
+如果用户报告「uninstall 没有移除文件 X」，诊断路径是：
 
-**Cause**: Manifest tracks the file (good — the planner sees it), but `buildStructuredFileSpecs` lacks a row for it, so the planner falls into the "plain deletion" branch.
+1. 文件在卸载前是否存在于 `.trellis/.template-hashes.json` 中？（如果不在，它从来都不是 Trellis 拥有的。）
+2. 权限或 AV 软件是否阻止了 unlink？（卸载后 `ls -la` 该路径。）
+3. 文件是否在结构化配置中，且清理后非完全为空？（检查文件内容。）
 
-**Fix**: Always add a `StructuredFileSpec` row at the same time you add the new platform's manifest-tracked structured config. The companion scrubber goes in `utils/uninstall-scrubbers.ts` — see `uninstall-scrubbers.md` for the contract.
+### 清单作为范围契约
 
-### 3. Forgetting that `cleanupEmptyDirs` won't touch root dirs
+每个行为决策都源于「此路径是否在清单中？」：
 
-**Symptom**: After uninstall, `.cursor/` is empty but still present.
+- 路径在清单中，无结构化规范 → unlink。
+- 路径在清单中，有结构化规范，清理返回 `fullyEmpty` → unlink。
+- 路径在清单中，有结构化规范，清理保留内容 → 写回修剪后的内容。
+- 路径不在清单中 → 对 uninstall 不可见。
 
-**Cause**: `cleanupEmptyDirs` (shared with `update.ts`) refuses to remove anything in `ALL_MANAGED_DIRS` because during `update` those dirs must persist. Phase 5 of `executePlan` is the uninstall-specific fixup that goes back and prunes them.
-
-**Fix**: This is already handled correctly. If you ever modify Phase 5 (e.g. to add an exception), make sure the deepest-first sort is preserved — otherwise nested managed dirs (`.agents/skills`) will leak.
-
-### 4. Manifest drift after manual edits
-
-**Symptom**: User manually deleted some Trellis files, then runs `uninstall`. Plan shows "skipped N entries" for those files (they were missing on disk), but the unrelated structured-config phase still works correctly.
-
-**Cause**: Working as designed. The planner records `missing: true` for any manifest-listed file that is gone, then skips it during execution.
-
-**Note**: There is no "manifest is stale, please run `update` first" warning — uninstall is the user's exit hatch and should not require any prior intervention.
-
-### 5. Codex `[features] hooks = true` survives uninstall
-
-**Symptom**: User uninstalls Trellis but `~/.codex/config.toml` still has `[features]\nhooks = true`.
-
-**Cause**: That flag is in the **user-level** Codex config, not project-local. Trellis never wrote to it (the README+the project `.codex/config.toml` comment block instruct the user to add it manually). `uninstall` therefore does not remove it.
-
-**Fix**: Document this in the future — add a closing reminder to the green summary if Codex was one of the configured platforms. Currently silent.
-
-### 6. Hooks-JSON command-string matching is structural, not substring
-
-The hooks-JSON scrubber matches on the *trailing whitespace-delimited token* of each `command`, not arbitrary substring. A user-defined hook whose body merely echoes a deleted path (`echo "see .claude/hooks/session-start.py"`) will NOT be removed — its trailing token is `inspiration"`, not the manifest path. This is the correct behavior; see `uninstall-scrubbers.md` for the full matching contract.
-
-If you ever need to extend the scrubber to match different command shapes (e.g. quoted paths, `--script=path` flags), update both `uninstall-scrubbers.ts` and the hooks-JSON tests in `test/utils/uninstall-scrubbers.test.ts` — `uninstall.ts` itself does not need to change.
+推论：当添加一个发出结构化配置文件的新平台/模板时，**你必须**（a）将路径添加到 `.template-hashes.json`（通过 `collectPlatformTemplates` 自动发生）并（b）向 `buildStructuredFileSpecs` 添加一个 `StructuredFileSpec` 行。忘记（b）意味着 uninstall 将直接 unlink 配置文件并带走任何用户添加的相邻内容。
 
 ---
 
-## Test Conventions
+## 常见陷阱
 
-Tests live in `packages/cli/test/commands/uninstall.integration.test.ts`. The file pattern: each test runs `init({ ..., force: true })` in a fresh tmpdir to set up a real Trellis install, then exercises one path through `uninstall()`.
+### 1. 不支持「按平台卸载」
 
-Reference cases (number = test ID in the file):
+没有 `--platform claude-code` 标志。原因：清单不按平台分区 — 它是一个扁平的 `Record<posixPath, sha256>`。推断「此条目属于 Claude Code」意味着前缀匹配 `.claude/`，这是脆弱的（`.agents/skills/` 由 Codex 和 Pi 共享；`.github/copilot/` 不在平台名称模式之外）。
 
-| # | Scenario | What it pins down |
+如果用户想要只移除一个平台的文件，路径是在编辑 `config.yaml` 的平台列表后运行 `trellis update` — 该流程知道如何干净地取消平台配置。`uninstall` 是一次性完全移除。
+
+### 2. 添加没有清理器的新结构化配置文件
+
+**症状**：用户运行 `uninstall`，发现他们在 `.newplatform/settings.json` 中的自定义键消失了 — 整个文件被 unlink 了，因为计划器没有该文件的 `StructuredFileSpec`。
+
+**原因**：清单跟踪该文件（好 — 计划器看到了它），但 `buildStructuredFileSpecs` 缺少该文件的一行，因此计划器进入「plain deletion」分支。
+
+**修复**：在添加新平台的清单跟踪结构化配置时，始终同时添加一个 `StructuredFileSpec` 行。配套的清理器放在 `utils/uninstall-scrubbers.ts` 中 — 参见 `uninstall-scrubbers.md` 获取契约。
+
+### 3. 忘记 `cleanupEmptyDirs` 不会触碰根目录
+
+**症状**：卸载后，`.cursor/` 为空但仍然存在。
+
+**原因**：`cleanupEmptyDirs`（与 `update.ts` 共享）拒绝移除 `ALL_MANAGED_DIRS` 中的任何内容，因为在 `update` 期间这些目录必须持久化。`executePlan` 的阶段 5 是回去修剪它们的仅卸载修复。
+
+**修复**：这已经被正确处理。如果你修改阶段 5（例如，添加例外），请确保保持最深层优先排序 — 否则嵌套的管理目录（`.agents/skills`）会泄露。
+
+### 4. 手动编辑后的清单漂移
+
+**症状**：用户手动删除了某些 Trellis 文件，然后运行 `uninstall`。计划显示这些文件的「skipped N entries」（它们在磁盘上缺失），但不相关的结构化配置阶段仍然正确处理。
+
+**原因**：按设计工作。计划器为任何已消失的清单列出文件记录 `missing: true`，然后在执行期间跳过它。
+
+**注意**：没有「manifest is stale, please run `update` first」警告 — uninstall 是用户的紧急出口，不应要求任何事先干预。
+
+### 5. Codex `[features] hooks = true` 在卸载后仍存在
+
+**症状**：用户卸载了 Trellis，但 `~/.codex/config.toml` 仍然有 `[features]\nhooks = true`。
+
+**原因**：该标志在**用户级** Codex 配置中，不是项目本地的。Trellis 从未写入它（README + 项目 `.codex/config.toml` 注释块指示用户手动添加它）。因此 `uninstall` 不删除它。
+
+**修复**：将来在文档中说明 — 如果 Codex 是已配置的平台之一，在绿色摘要后添加一条关闭提醒。目前是静默的。
+
+### 6. Hooks-JSON command-string 匹配是结构化的，不是子串
+
+Hooks-JSON 清理器匹配每个 `command` 的**尾随空白分隔的 token**，而不是任意子串。一个用户定义的 hook，其主体仅回显已删除路径（`echo "see .claude/hooks/session-start.py"`）不会被移除 — 其尾随 token 是 `inspiration"`，而不是清单路径。这是正确的行为；参见 `uninstall-scrubbers.md` 获取完整匹配契约。
+
+如果你需要扩展清理器以匹配不同的命令形状（例如，带引号的路径、`--script=path` 标志），同时更新 `uninstall-scrubbers.ts` 和 `test/utils/uninstall-scrubbers.test.ts` 中的 hooks-JSON 测试 — `uninstall.ts` 本身不需要更改。
+
+---
+
+## 测试约定
+
+测试位于 `packages/cli/test/commands/uninstall.integration.test.ts`。文件模式：每个测试在新鲜 tmpdir 中运行 `init({ ..., force: true })` 以设置真实的 Trellis 安装，然后通过 `uninstall()` 执行一条路径。
+
+参考案例（编号 = 文件中的测试 ID）：
+
+| # | 场景 | 它锁定的内容 |
 |---|---|---|
-| 1 | `.trellis/` missing | Friendly no-op exit, no error. |
-| 2 | `.trellis/` present, manifest missing | Error exit (manual cleanup hint). |
-| 3 | `init claude+cursor → uninstall` | Project is byte-clean afterwards. |
-| 4 | `--dry-run` | No filesystem mutation. |
-| 5 | Prompt `n` | Aborts with no mutation. |
-| 6 | User-modified manifest file is still removed | Manifest membership trumps modification state. |
-| 7 | User-added file in managed dir survives | Manifest is the scope boundary. |
-| 8 | `.claude/settings.json` with extra user fields | Scrubber preserves user fields, strips trellis hooks. |
-| 8a | Empty managed dirs pruned (Kilo case, no structured config) | Phase 4+5 cleanup. |
-| 8b | Platform root survives when scrubbing leaves residual content | Phase 5 only prunes empty roots. |
+| 1 | `.trellis/` 缺失 | 友好空操作退出，无错误。 |
+| 2 | `.trellis/` 存在，清单缺失 | 错误退出（手动清理提示）。 |
+| 3 | `init claude+cursor → uninstall` | 之后项目是字节干净的。 |
+| 4 | `--dry-run` | 无文件系统变更。 |
+| 5 | 提示 `n` | 中止且不变更。 |
+| 6 | 用户修改的清单文件仍被移除 | 清单成员资格胜过修改状态。 |
+| 7 | 管理目录中的用户添加文件存活 | 清单是范围边界。 |
+| 8 | `.claude/settings.json` 带有额外用户字段 | 清理器保留用户字段，剥离 Trellis hooks。 |
+| 8a | 空管理目录已修剪（Kilo 案例，无结构化配置） | 阶段 4+5 清理。 |
+| 8b | 清理后剩余内容时平台根目录存活 | 阶段 5 仅修剪空根目录。 |
 
-When adding a new structured-config platform:
+添加新的结构化配置平台时：
 
-1. Add a row to the dispatch table.
-2. Write a unit test in `test/utils/uninstall-scrubbers.test.ts` for the scrubber itself.
-3. Add an integration test in this file mirroring `#8` — init that platform, write some user-owned fields into the structured config, uninstall, assert the user fields survive and the trellis fields are gone.
+1. 向分发表添加一行。
+2. 在 `test/utils/uninstall-scrubbers.test.ts` 中为清理器本身编写单元测试。
+3. 在此文件中添加一个镜像 `#8` 的集成测试 — init 该平台，将一些用户拥有的字段写入结构化配置，uninstall，断言用户字段存活且 Trellis 字段消失。
 
-Do **not** mock `fs` for these tests; they all use real tmpdirs. The pattern is: `beforeEach` makes a tmpdir and `chdir`'s into it, `afterEach` restores `cwd` and `rmSync` the tmpdir. This catches Windows path bugs, permission issues, and unintended side effects that a mocked fs would hide.
+对这些测试**不要** mock `fs`；它们都使用真实的 tmpdirs。模式是：`beforeEach` 创建一个 tmpdir 并 `chdir` 进入，`afterEach` 恢复 `cwd` 并 `rmSync` 该 tmpdir。这能发现 Windows 路径 bug、权限问题和 mock fs 会隐藏的非预期副作用。
 
 ---
 
-## Reference Symbols
+## 参考符号
 
-| Symbol | Location |
+| 符号 | 位置 |
 |---|---|
 | `uninstall` | `commands/uninstall.ts:uninstall` |
 | `UninstallOptions` | `commands/uninstall.ts:UninstallOptions` |
@@ -300,7 +300,7 @@ Do **not** mock `fs` for these tests; they all use real tmpdirs. The pattern is:
 | `StructuredFileSpec` | `commands/uninstall.ts:StructuredFileSpec` |
 | `PlannedDeletion` / `PlannedModification` / `UninstallPlan` | `commands/uninstall.ts` |
 | `loadHashes` | `utils/template-hash.ts:loadHashes` |
-| `cleanupEmptyDirs` | `commands/update.ts:cleanupEmptyDirs` (re-exported) |
+| `cleanupEmptyDirs` | `commands/update.ts:cleanupEmptyDirs`（重新导出） |
 | `ALL_MANAGED_DIRS` / `isManagedRootDir` | `configurators/index.ts` |
 | `DIR_NAMES.WORKFLOW` | `constants/paths.ts:DIR_NAMES` |
-| Scrubbers (`scrubHooksJson`, `scrubOpencodePackageJson`, `scrubPiSettings`, `scrubCodexConfigToml`) | `utils/uninstall-scrubbers.ts` — see `uninstall-scrubbers.md` |
+| 清理器（`scrubHooksJson`, `scrubOpencodePackageJson`, `scrubPiSettings`, `scrubCodexConfigToml`） | `utils/uninstall-scrubbers.ts` — 参见 `uninstall-scrubbers.md` |

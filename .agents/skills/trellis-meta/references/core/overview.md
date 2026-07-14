@@ -1,69 +1,69 @@
-# Core Systems Overview
+# 核心系统概述
 
-These systems work on **all platforms** (Claude Code, Cursor, and future platforms).
+这些系统在**所有平台**（Claude Code、Cursor 以及未来平台）上均可运行。
 
 ---
 
-## What's in Core?
+## 核心系统包含什么？
 
-| System | Purpose | Files |
+| 系统 | 用途 | 文件 |
 |--------|---------|-------|
-| Workspace | Session tracking, journals | `.trellis/workspace/` |
-| Tasks | Work item tracking | `.trellis/tasks/` |
-| Specs | Coding guidelines | `.trellis/spec/` |
-| Commands | Slash command prompts | `.claude/commands/` |
-| Scripts | Automation utilities | `.trellis/scripts/` (core subset) |
+| Workspace | 会话跟踪、日志 | `.trellis/workspace/` |
+| Tasks | 工作项跟踪 | `.trellis/tasks/` |
+| Specs | 编码规范 | `.trellis/spec/` |
+| Commands | 斜杠命令提示 | `.claude/commands/` |
+| Scripts | 自动化工具 | `.trellis/scripts/`（核心子集） |
 
 ---
 
-## Why These Are Portable
+## 为什么这些系统具有可移植性
 
-All core systems are **file-based**:
-- No special runtime required
-- Read/write with any tool
-- Works in any AI coding environment
+所有核心系统都是**基于文件**的：
+- 不需要特殊运行时
+- 可用任何工具读写
+- 适用于任何 AI 编码环境
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    CORE SYSTEMS (File-Based)                 │
-│                                                              │
-│  .trellis/                                                   │
-│  ├── workspace/     → Journals, session history              │
-│  ├── tasks/         → Task directories, PRDs, context files  │
-│  ├── spec/          → Coding guidelines                      │
-│  └── scripts/       → Python utilities (core subset)         │
-│                                                              │
-│  .claude/                                                    │
-│  └── commands/      → Slash command prompts                  │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                    核心系统（基于文件，CORE SYSTEMS）              │
+│                                                                  │
+│  .trellis/                                                       │
+│  ├── workspace/     → 日志、会话历史                              │
+│  ├── tasks/         → 任务目录、PRD、上下文文件                    │
+│  ├── spec/          → 编码规范                                    │
+│  └── scripts/       → Python 工具（核心子集）                     │
+│                                                                  │
+│  .claude/                                                        │
+│  └── commands/      → 斜杠命令提示                                │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Platform Usage
+## 平台使用方式
 
 ### Claude Code
-All core systems work automatically with hook integration.
+所有核心系统通过钩子集成自动工作。
 
 ### Cursor
-Read files manually at session start:
-1. Read `.trellis/workflow.md`
-2. Read relevant specs from `.trellis/spec/`
-3. Run `python3 .trellis/scripts/task.py current --source` for active work
-4. Read JSONL files for context
+在会话开始时手动读取文件：
+1. 阅读 `.trellis/workflow.md`
+2. 阅读 `.trellis/spec/` 中的相关规范
+3. 运行 `python3 .trellis/scripts/task.py current --source` 获取当前活动工作
+4. 阅读 JSONL 文件获取上下文
 
-### Other Platforms
-Same as Cursor - manual file reading.
+### 其他平台
+与 Cursor 相同 - 手动读取文件。
 
 ---
 
-## Documents in This Directory
+## 本目录中的文档
 
-| Document | Content |
+| 文档 | 内容 |
 |----------|---------|
-| `files.md` | All files in `.trellis/` with purposes |
-| `workspace.md` | Workspace system, journals, developer identity |
-| `tasks.md` | Task system, directories, JSONL context files |
-| `specs.md` | Spec system, guidelines organization |
-| `scripts.md` | Core scripts (platform-independent) |
+| `files.md` | `.trellis/` 中的所有文件及其用途 |
+| `workspace.md` | Workspace 系统、日志、开发者身份 |
+| `tasks.md` | Task 系统、目录、JSONL 上下文文件 |
+| `specs.md` | Spec 系统、规范组织方式 |
+| `scripts.md` | 核心脚本（平台无关） |

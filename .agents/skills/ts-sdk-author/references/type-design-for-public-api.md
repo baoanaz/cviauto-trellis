@@ -1,19 +1,19 @@
-# Type Design for SDK Public API
+# SDK 公共 API 的类型设计
 
-Type design for a published SDK is not the same job as type design for application code. An app's types are consumed by the team that wrote them; an SDK's types are consumed by strangers reading auto-generated `.d.ts` on first encounter. Three constraints follow:
+为已发布 SDK 设计类型与应用代码的类型设计不是同一回事。应用的类型由编写它们的团队消费；SDK 的类型由陌生人在第一次遇到自动生成的 `.d.ts` 时阅读。由此产生三个约束：
 
-1. **Don't leak internals.** Every exported symbol becomes API — helper unions, "convenience" aliases, re-exports all count.
-2. **Stay evolvable.** Each exported type is a contract. Generic params need defaults, options bags need optional fields, discriminated unions need an escape valve.
-3. **Be inferable.** Users should not have to manually annotate generics for 80% of calls. If `client.users.get('123')` requires `client.users.get<User>('123')`, the design failed.
+1. **不要泄露内部实现。** 每个导出的符号都成为 API——辅助联合类型、"便利"别名、重新导出都算在内。
+2. **保持可演进性。** 每个导出的类型都是一份合约。泛型参数需要默认值，选项对象需要可选字段，可辨识联合类型（discriminated union）需要一个逃生阀。
+3. **保持可推断性。** 用户不应为 80% 的调用手动标注泛型。如果 `client.users.get('123')` 需要写成 `client.users.get<User>('123')`，设计就失败了。
 
 ---
 
-## 1. Branded Types for Domain Modeling
+## 1. 用于领域建模的品牌类型（Branded Types）
 
-Motivation: prevent callers from passing a raw `string` where you meant `UserId`, or swapping `UserId` and `OrderId`. The compiler treats them as the same primitive otherwise.
+动机：防止调用者在你需要 `UserId` 的地方传入原始 `string`，或者交换 `UserId` 和 `OrderId`。否则编译器会将它们视为相同的基本类型。
 
 ```typescript
-// Phantom (compile-time only) brand. No runtime cost.
+// Phantom（仅编译时）品牌。零运行时成本。
 type Brand<T, B extends string> = T & { readonly __brand: B };
 
 export type UserId  = Brand<string, "UserId">;
@@ -21,7 +21,7 @@ export type OrderId = Brand<number, "OrderId">;
 export type Email   = Brand<string, "Email">;
 export type Url     = Brand<string, "Url">;
 
-// Smart constructors validate at the boundary, then cast inside.
+// 智能构造函数在边界处验证，然后在内部转型。
 export function toUserId(id: string): UserId {
   if (!/^usr_[a-z0-9]{12}$/.test(id)) throw new TypeError("Invalid UserId");
   return id as UserId;
@@ -31,33 +31,33 @@ export function toEmail(s: string): Email {
   return s as Email;
 }
 
-// Type-guard variant — narrow without throwing.
+// 类型守卫变体——不抛出异常地收窄类型。
 export function isUserId(v: string): v is UserId {
   return /^usr_[a-z0-9]{12}$/.test(v);
 }
 
 declare function getOrder(userId: UserId, orderId: OrderId): Promise<unknown>;
-// getOrder("abc" as string, 1 as number) — type error: neither is branded.
+// getOrder("abc" as string, 1 as number) — 类型错误：两者都不是品牌类型。
 ```
 
-**Phantom vs runtime tag.** The `__brand` field is phantom only — doesn't exist at runtime, zero bytes, serializes cleanly to JSON. A runtime tag (`{ value: string; kind: "UserId" }`) catches more bugs but breaks JSON interop and forces unwrapping. SDKs should prefer phantom brands and validate at deserialization boundaries.
+**Phantom vs 运行时标签。** `__brand` 字段仅存在于 phantom——运行时不存在，零字节，可干净地序列化为 JSON。运行时标签（`{ value: string; kind: "UserId" }`）捕获更多 bug，但会破坏 JSON 互操作并强制解包。SDK 应优先使用 phantom 品牌，并在反序列化边界处验证。
 
-**Symbol brands** are stricter (two libraries can't collide by accident):
+**Symbol 品牌** 更严格（两个库不会意外冲突）：
 
 ```typescript
 declare const userIdBrand: unique symbol;
 export type UserId = string & { readonly [userIdBrand]: void };
 ```
 
-**Anti-pattern:** exporting the `Brand<T,B>` helper publicly. It becomes API and any change is breaking. Keep `Brand` internal; export only concrete branded aliases.
+**反模式：** 公开导出 `Brand<T,B>` 辅助类型。它成为 API 的一部分，任何变更都是破坏性的。将 `Brand` 保留为内部实现；仅导出具体的品牌别名。
 
 ---
 
-## 2. Generic API Surfaces
+## 2. 泛型 API 对外接口
 
-Generics are how SDK types stay useful across the universe of user schemas you don't know yet. Goal: **maximum inference, minimum annotation.**
+泛型是 SDK 类型在你还不知道的用户 schema 宇宙中保持有用的方式。目标：**最大化推断，最小化标注。**
 
-### Generic client with schema parameter
+### 带 schema 参数的泛型客户端
 
 ```typescript
 export interface SchemaShape {
@@ -85,28 +85,28 @@ type MySchema = {
 };
 const client = createClient<MySchema>("https://api.example.com");
 client.call("users", "get",    { id: "u1" });    // OK
-client.call("users", "get",    { name: "bad" }); // type error
-client.call("users", "delete", { id: "u1" });    // type error
+client.call("users", "get",    { name: "bad" }); // 类型错误
+client.call("users", "delete", { id: "u1" });    // 类型错误
 ```
 
-### Generic defaults prevent breaking changes
+### 泛型默认值防止破坏性变更
 
 ```typescript
 // V1
 export type ApiResponse<T> = { ok: true; data: T } | { ok: false; error: string };
 
-// V2 BREAKING — required new param.
+// V2 破坏性变更——需要新增参数。
 export type ApiResponse<T, E> = { ok: true; data: T } | { ok: false; error: E };
 
-// V2 NON-BREAKING — defaulted new param.
+// V2 非破坏性变更——新增参数有默认值。
 export type ApiResponse<T, E = string> =
   | { ok: true; data: T }
   | { ok: false; error: E };
 ```
 
-**Rule:** every generic added after 1.0 needs a default. Adding a required generic is a major-version break.
+**规则：** 1.0 之后添加的每个泛型都需要默认值。添加必需的泛型是主版本（major-version）破坏性变更。
 
-### Generic constraints
+### 泛型约束
 
 ```typescript
 export interface Entity { readonly id: string }
@@ -124,51 +124,51 @@ export function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
 }
 ```
 
-### Inference tradeoffs
+### 推断权衡
 
-| Pattern | Inferred? |
+| 模式 | 可推断？ |
 |---|---|
-| `fn<T>(x: T)` | yes — from argument |
-| `fn<T>(): T` | no — user must annotate |
-| `fn<T>(x: { value: T })` | yes — inside argument |
-| `fn<T extends string>(x: T)` | yes — preserves literal |
-| `class C<T> {}` | no — must be set at `new C<T>()` |
+| `fn<T>(x: T)` | 是 — 从参数推断 |
+| `fn<T>(): T` | 否 — 用户必须标注 |
+| `fn<T>(x: { value: T })` | 是 — 在参数内部 |
+| `fn<T extends string>(x: T)` | 是 — 保留字面量 |
+| `class C<T> {}` | 否 — 必须在 `new C<T>()` 时设置 |
 
-Put generics on call sites, not construct sites, when you want zero-annotation usage:
+当你想要零标注使用体验时，将泛型放在调用点，而不是构造点：
 
 ```typescript
-// BAD — annotation required per call.
+// 糟糕——每次调用都需要标注。
 export class Store<T> { get(key: string): T { /* ... */ return null as never } }
 new Store<User>().get("k");
 
-// GOOD — generic on method, inferred from a runtime carrier.
+// 良好——泛型在方法上，从运行时载体推断。
 export class TypedStore {
   get<T>(key: string, schema: Schema<T>): T { /* ... */ return null as never }
 }
-typedStore.get("k", UserSchema); // inferred
+typedStore.get("k", UserSchema); // 推断出类型
 ```
 
 ---
 
-## 3. Conditional & Mapped Types
+## 3. 条件类型与映射类型
 
-These derive user-facing types from a single source of truth — a schema, a route table, a function signature.
+这些类型从单一事实来源——一个 schema、一个路由表、一个函数签名——推导出面向用户的类型。
 
-### Conditional types & `infer`
+### 条件类型与 `infer`
 
 ```typescript
 export type UnwrapPromise<T> = T extends Promise<infer U> ? U : T;
 type R1 = UnwrapPromise<Promise<User>>; // User
 
-// Distributive — applies per union member.
+// 分布式——按联合成员逐个应用。
 type ToArray<T> = T extends unknown ? T[] : never;
 type X = ToArray<string | number>; // string[] | number[]
 
-// Non-distributive — wrap in tuple to pin to single union.
+// 非分布式——包裹在元组中以固定为单个联合。
 type ToArrayMono<T> = [T] extends [unknown] ? T[] : never;
 type Y = ToArrayMono<string | number>; // (string | number)[]
 
-// Recursive flatten.
+// 递归展平。
 type Flatten<T> =
   T extends Array<infer U>
     ? U extends Array<unknown> ? Flatten<U> : U
@@ -176,7 +176,7 @@ type Flatten<T> =
 type F = Flatten<string[][][]>; // string
 ```
 
-### Mapped types & key remapping
+### 映射类型与键重映射
 
 ```typescript
 export type Frozen<T> = { readonly [K in keyof T]: T[K] };
@@ -190,7 +190,7 @@ export type PickByType<T, U> = {
 };
 ```
 
-### Template literal types for URL parsing
+### 用于 URL 解析的模板字面量类型
 
 ```typescript
 export type ExtractRouteParams<S extends string> =
@@ -213,10 +213,10 @@ export function get<Path extends string>(
 }
 
 get("/users/:id", { id: "u1" });   // OK
-get("/users/:id", { wrong: "x" }); // type error
+get("/users/:id", { wrong: "x" }); // 类型错误
 ```
 
-### Full type-safe REST client
+### 完整类型安全的 REST 客户端
 
 ```typescript
 type ApiEndpoints = {
@@ -251,11 +251,11 @@ await c.request("POST", "/users", { body: { name: "n", email: "e" } });  // User
 
 ---
 
-## 4. Type Guards & Discriminated Unions
+## 4. 类型守卫与可辨识联合类型（Discriminated Unions）
 
-Public type guards define how users branch on your data. Design them deliberately.
+公共类型守卫定义了用户如何在你提供的数据上进行分支。要有意地设计它们。
 
-### Result type — the SDK's universal return shape
+### Result 类型——SDK 的通用返回形状
 
 ```typescript
 export type Result<T, E = SdkError> =
@@ -265,14 +265,14 @@ export type Result<T, E = SdkError> =
 export const ok  = <T>(value: T): Result<T, never> => ({ ok: true, value });
 export const err = <E>(error: E): Result<never, E> => ({ ok: false, error });
 
-// User narrows cleanly with one branch:
+// 用户用一个分支干净地收窄类型：
 const r = await sdk.users.get(id);
 if (r.ok) r.value.email; else r.error.code;
 ```
 
-The SDK never throws for *expected* failures — it returns `Result`. Throw only for programmer errors (bad arguments, invariant violations).
+SDK 从不为*预期中的*失败抛出异常——它返回 `Result`。仅对程序员错误（错误参数、不变式违反）抛出异常。
 
-### Exhaustiveness helper
+### 穷尽性辅助函数
 
 ```typescript
 export function assertNever(x: never): never {
@@ -289,17 +289,17 @@ function handle(e: Event) {
     case "open":    return;
     case "message": return e.data;
     case "close":   return e.reason;
-    default:        return assertNever(e); // catches new variants at compile time
+    default:        return assertNever(e); // 在编译时捕获新增变体
   }
 }
 ```
 
-Ship `assertNever` publicly — users will need it when branching on your unions.
+公开发布 `assertNever`——当用户在你提供的联合类型上进行分支时，他们会需要它。
 
-### Type predicates & assertion functions
+### 类型谓词与断言函数
 
 ```typescript
-// Predicate — narrows via return type.
+// 谓词——通过返回类型收窄。
 export function isError<T>(r: Result<T>): r is { ok: false; error: SdkError } {
   return r.ok === false;
 }
@@ -307,7 +307,7 @@ export function isNonEmpty<T>(arr: readonly T[]): arr is readonly [T, ...T[]] {
   return arr.length > 0;
 }
 
-// Assertion form — narrows via `asserts`, throws otherwise.
+// 断言形式——通过 `asserts` 收窄，否则抛出异常。
 export function assertIsDefined<T>(v: T): asserts v is NonNullable<T> {
   if (v === null || v === undefined) throw new Error("Expected value");
 }
@@ -316,13 +316,13 @@ export function assertIsEmail(s: string): asserts s is Email {
 }
 ```
 
-**Pitfall:** assertion functions require an *explicit* `asserts` return-type annotation; TS will not infer it. Forgetting it breaks narrowing silently.
+**陷阱：** 断言函数需要*显式*的 `asserts` 返回类型标注；TS 不会推断它。忘记它会被静默地破坏收窄功能。
 
 ---
 
-## 5. The Builder Pattern for Config
+## 5. 用于配置的 Builder 模式
 
-SDKs commonly expose a config builder: `createClient().withRetry(3).withTimeout(5000).build()`. Use `this`-typing for fluency.
+SDK 通常暴露一个配置 builder：`createClient().withRetry(3).withTimeout(5000).build()`。使用 `this` 类型以实现流畅式调用。
 
 ```typescript
 interface RequestOptions {
@@ -345,7 +345,7 @@ export class RequestBuilder {
 }
 ```
 
-### Compile-time required fields (advanced)
+### 编译时必需字段（高级）
 
 ```typescript
 type Builder<T, Set extends keyof T = never> = {
@@ -356,9 +356,9 @@ type Builder<T, Set extends keyof T = never> = {
 };
 ```
 
-Trade-off: heavy types, ugly tooltips. For most SDKs, runtime checks on a `Partial<Config>` are friendlier. Reserve type-tracked builders for genuinely critical config (e.g., security keys).
+权衡：类型重，工具提示（tooltip）丑陋。对于大多数 SDK，在 `Partial<Config>` 上进行运行时检查更友好。将类型跟踪的 builder 保留给真正关键的配置（例如，安全密钥）。
 
-### Pre-defined profiles often beat builders
+### 预定义配置文件通常优于 builder
 
 ```typescript
 export const presets = {
@@ -373,26 +373,26 @@ export function createClient(opts: {
 }) { /* ... */ }
 ```
 
-Use the simplest tool that fits.
+使用适合的最简单工具。
 
 ---
 
-## 6. Utility Types: What to Ship, What to Keep Internal
+## 6. 工具类型：哪些要发布，哪些保留为内部实现
 
-Built-ins (`Partial`, `Pick`, `Omit`, `Awaited`, `ReturnType`, `Parameters`, `NonNullable`) are in the lib — use them freely inside your code. The question is which *custom* ones to re-export.
+内建类型（`Partial`、`Pick`、`Omit`、`Awaited`、`ReturnType`、`Parameters`、`NonNullable`）在 lib 中——在代码内部自由使用它们。问题是哪些*自定义*类型要重新导出。
 
-| Utility | Built-in | Ship? | Reason |
+| 工具类型 | 内建 | 发布？ | 原因 |
 |---|---|---|---|
-| `Partial<T>`, `Pick`, `Omit`, `Awaited` | yes | n/a | Already in lib |
-| `DeepPartial<T>` | no | maybe | Useful for config diffing |
-| `DeepReadonly<T>` | no | maybe | If you return frozen objects |
-| `Prettify<T>` | no | NO | Tooltip cosmetic; internal only |
-| `RequireAtLeastOne<T>` | no | yes | Express "at least one of" options |
-| `RequireExactlyOne<T>` | no | yes | Express "exactly one of" / XOR options |
-| `Mutable<T>` | no | rare | Mostly internal |
-| `Brand<T, B>` | no | NO | Keep internal; export concrete brands |
-| `ValueOf<T>` | no | yes | Useful for enum-like consts |
-| `Nullable<T>` | no | yes | Common enough to standardize one form |
+| `Partial<T>`、`Pick`、`Omit`、`Awaited` | 是 | 不适用 | 已在 lib 中 |
+| `DeepPartial<T>` | 否 | 也许 | 对配置 diff 有用 |
+| `DeepReadonly<T>` | 否 | 也许 | 如果你返回冻结对象 |
+| `Prettify<T>` | 否 | 不要 | 工具提示美观性；仅内部使用 |
+| `RequireAtLeastOne<T>` | 否 | 是 | 表达"至少一个"选项 |
+| `RequireExactlyOne<T>` | 否 | 是 | 表达"恰好一个" / XOR 选项 |
+| `Mutable<T>` | 否 | 罕见 | 大多是内部使用 |
+| `Brand<T, B>` | 否 | 不要 | 保留为内部；导出具体品牌 |
+| `ValueOf<T>` | 否 | 是 | 对类似枚举的 const 有用 |
+| `Nullable<T>` | 否 | 是 | 足够常见，值得标准化一种形式 |
 
 ```typescript
 export type DeepReadonly<T> = T extends (...a: never[]) => unknown
@@ -412,52 +412,52 @@ export type RequireExactlyOne<T, K extends keyof T = keyof T> =
 export type ValueOf<T> = T[keyof T];
 export type Nullable<T> = T | null | undefined;
 
-// Internal only — never export.
+// 仅内部使用——永远不要导出。
 type Prettify<T> = { [K in keyof T]: T[K] } & {};
 ```
 
-Anti-pattern: re-exporting `Prettify`. It's a TS-compiler-version-sensitive cosmetic; users would depend on intersection-flattening behavior.
+反模式：重新导出 `Prettify`。这是一个对 TS 编译器版本敏感的装饰性操作；用户会依赖交叉类型展平行为。
 
 ---
 
-## 7. tsconfig for Libraries
+## 7. 用于库的 tsconfig
 
-A library tsconfig differs from an app tsconfig. Goal: **emit clean, portable, fast-to-consume `.d.ts`.**
+库的 tsconfig 与应用 tsconfig 不同。目标：**产出干净、可移植、快速消费的 `.d.ts`。**
 
-### Core library tsconfig.json
+### 核心库 tsconfig.json
 
 ```jsonc
 {
   "compilerOptions": {
-    // Target — the lowest you support. ES2020 is safe.
+    // 目标——你支持的最低版本。ES2020 是安全的。
     "target": "ES2020",
     "lib": ["ES2020"],
 
-    // Module — match your package.json "type" and consumer environments.
+    // 模块——匹配你的 package.json "type" 和消费者环境。
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
 
-    // Strictness — non-negotiable for library code.
+    // 严格性——对库代码不可协商。
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "noImplicitOverride": true,
 
-    // Emit — libraries always emit declarations.
+    // 产出——库始终产出声明文件。
     "declaration": true,
-    "declarationMap": true,         // go-to-def into your source
+    "declarationMap": true,         // 跳转到你的源码定义
     "sourceMap": true,
-    "removeComments": false,         // keep JSDoc in .d.ts
-    "stripInternal": true,           // omit /** @internal */ from .d.ts
+    "removeComments": false,         // 在 .d.ts 中保留 JSDoc
+    "stripInternal": true,           // 从 .d.ts 中省略 /** @internal */
     "outDir": "./dist",
     "rootDir": "./src",
 
-    // Isolation — required for fast tools (esbuild, swc).
+    // 隔离——快速工具（esbuild、swc）所必需。
     "isolatedModules": true,
-    "verbatimModuleSyntax": true,    // TS 5.0+: explicit type/value imports
-    "isolatedDeclarations": true,    // TS 5.5+: explicit annotations on exports
+    "verbatimModuleSyntax": true,    // TS 5.0+：显式类型/值导入
+    "isolatedDeclarations": true,    // TS 5.5+：导出上的显式标注
 
     "incremental": true,
     "skipLibCheck": true
@@ -467,68 +467,68 @@ A library tsconfig differs from an app tsconfig. Goal: **emit clean, portable, f
 }
 ```
 
-### Flag reference for libraries
+### 库的标志参考
 
-| Flag | Purpose |
+| 标志 | 用途 |
 |---|---|
-| `declaration: true` | Emit `.d.ts` — mandatory |
-| `declarationMap: true` | Source-map `.d.ts` back to source |
-| `sourceMap: true` | Debug into your sources from node_modules |
-| `composite: true` | Project references; implies `declaration` + `incremental` |
-| `incremental: true` | Cache type info between builds |
-| `stripInternal: true` | Omit `/** @internal */` symbols from emitted `.d.ts` |
-| `isolatedModules: true` | Catch code bundlers can't transpile per-file |
-| `verbatimModuleSyntax: true` | TS 5.0+: force `import type` discipline |
-| `isolatedDeclarations: true` | TS 5.5+: every export must have explicit type |
-| `skipLibCheck: true` | Skip checking other libs' `.d.ts` — much faster |
-| `exactOptionalPropertyTypes: true` | `foo?: T` excludes `undefined` from value |
-| `noUncheckedIndexedAccess: true` | `arr[0]` becomes `T \| undefined` — safer surface |
+| `declaration: true` | 产出 `.d.ts`——强制 |
+| `declarationMap: true` | 将 `.d.ts` 源码映射回源文件 |
+| `sourceMap: true` | 从 node_modules 调试到你的源码 |
+| `composite: true` | 项目引用；隐含 `declaration` + `incremental` |
+| `incremental: true` | 在构建之间缓存类型信息 |
+| `stripInternal: true` | 从产出的 `.d.ts` 中省略 `/** @internal */` 符号 |
+| `isolatedModules: true` | 捕获代码打包器无法逐文件转译的内容 |
+| `verbatimModuleSyntax: true` | TS 5.0+：强制 `import type` 规范 |
+| `isolatedDeclarations: true` | TS 5.5+：每个导出必须有显式类型 |
+| `skipLibCheck: true` | 跳过检查其他库的 `.d.ts`——更快 |
+| `exactOptionalPropertyTypes: true` | `foo?: T` 从值中排除 `undefined` |
+| `noUncheckedIndexedAccess: true` | `arr[0]` 变为 `T \| undefined`——更安全的对外接口 |
 
-### `verbatimModuleSyntax` (TS 5.0+)
+### `verbatimModuleSyntax`（TS 5.0+）
 
-Forces explicit type-vs-value imports. With `isolatedModules`, mixed imports break under modern bundlers and ESM-only environments.
+强制显式区分类型导入和值导入。结合 `isolatedModules`，混合导入在现代打包器和纯 ESM 环境下会出错。
 
 ```typescript
-// WRONG under verbatimModuleSyntax
+// 在 verbatimModuleSyntax 下错误
 import { User, getUser } from "./users";
 
-// RIGHT
+// 正确
 import type { User } from "./users";
 import { getUser } from "./users";
-// or combined
+// 或组合形式
 import { type User, getUser } from "./users";
 
-// Re-exports must also discriminate.
+// 重新导出也必须区分。
 export type { User } from "./users";
 export { getUser } from "./users";
 ```
 
-If you accidentally value-import a type, TS emits a runtime reference to a non-existent export. The flag forces correctness.
+如果你意外地以值方式导入类型，TS 会产出一个对不存在导出项的运行时引用。该标志强制执行正确性。
 
-### `isolatedDeclarations` (TS 5.5+)
+### `isolatedDeclarations`（TS 5.5+）
 
-Requires every exported symbol to carry an explicit type annotation. `.d.ts` generation becomes deterministic and parallelizable via tools like `swc` and `oxc`. Library builds get dramatically faster.
+要求每个导出的符号都带有显式类型标注。`.d.ts` 生成变得确定性和可并行化，可通过 `swc` 和 `oxc` 等工具实现。库构建速度显著加快。
 
 ```typescript
-// REJECTED — return type inferred.
+// 被拒绝——返回类型被推断。
 export function getUser(id: string) { return db.users.find(id); }
 
-// ACCEPTED — explicit.
+// 被接受——显式标注。
 export function getUser(id: string): Promise<User | null> { return db.users.find(id); }
 
-// Class fields too.
+// 类字段也是如此。
 export class Client {
-  baseUrl = "https://api.example.com";              // BAD
-  baseUrl: string = "https://api.example.com";      // GOOD
+  baseUrl = "https://api.example.com";              // 糟糕
+  baseUrl: string = "https://api.example.com";      // 良好
 }
 ```
 
-Trade-off: more typing. Benefit: parallel `.d.ts` emit; signatures become self-documenting. **For libraries published to npm, set `isolatedDeclarations: true`.**
+权衡：更多的类型标注。收益：并行 `.d.ts` 产出；签名变得自文档化。**对于发布到 npm 的库，设置 `isolatedDeclarations: true`。**
 
-### Project references for monorepos
+### 用于 monorepo 的项目引用
 
 ```jsonc
-// repo/tsconfig.json — solution-style root.
+// repo/tsconfig.json — solution 风格的根配置。
 { "files": [], "references": [
   { "path": "./packages/core" },
   { "path": "./packages/transport" },
@@ -544,30 +544,30 @@ Trade-off: more typing. Benefit: parallel `.d.ts` emit; signatures become self-d
 }
 ```
 
-Build with `tsc --build`. Each package gets independent `.d.ts` emit; incremental builds skip untouched graphs.
+使用 `tsc --build` 构建。每个包独立产出 `.d.ts`；增量构建跳过未变更的图。
 
 ---
 
-## 8. API Evolution Patterns
+## 8. API 演进模式
 
-### Deprecation markers
+### 弃用标记
 
 ```typescript
 /**
- * @deprecated Use {@link createClient}. Removed in v3.
+ * @deprecated 使用 {@link createClient}。将在 v3 中移除。
  */
 export function makeClient(opts: ClientOptions): Client { return null as never }
 
 export interface ClientOptions {
   apiKey: string;
-  /** @deprecated ignored as of v2.4 */
+  /** @deprecated 自 v2.4 起被忽略 */
   legacy?: boolean;
 }
 ```
 
-`@deprecated` is read by the TS language service — editors render struck-through.
+`@deprecated` 被 TS 语言服务读取——编辑器会渲染删除线。
 
-### Versioned subpaths
+### 版本化子路径
 
 ```jsonc
 // package.json
@@ -581,73 +581,73 @@ export interface ClientOptions {
 }
 ```
 
-Users opt in: `import { Client } from "@example/sdk/v2"`. Allows side-by-side migration.
+用户选择加入：`import { Client } from "@example/sdk/v2"`。允许并行迁移。
 
-### Open discriminated unions
+### 开放的可辨识联合类型
 
-Closed unions break consumers' exhaustive switches when you extend them.
+封闭的联合类型在扩展时会破坏消费者的穷尽性 switch。
 
 ```typescript
-// V1 — closed; V2 adds "error" → all switches break.
+// V1 — 封闭；V2 添加 "error" → 所有 switch 都中断。
 export type Event = { kind: "open" } | { kind: "close" };
 
-// Mitigations:
-// (a) document that the union is open; require a `default` branch.
-// (b) include an escape-hatch variant from day one:
+// 缓解措施：
+// (a) 文档说明该联合类型是开放的；要求提供 `default` 分支。
+// (b) 从一开始就包含一个逃生阀变体：
 export type Event2 =
   | { kind: "open" }
   | { kind: "close" }
   | { kind: string; [key: string]: unknown };
 ```
 
-Trade-off: loss of exhaustiveness in the open case. Document the policy.
+权衡：在开放情况下失去穷尽性。文档化该策略。
 
-### Interfaces vs type aliases for public types
+### 公共类型的 Interface vs Type Alias
 
 ```typescript
-// Interface — augmentable by users via module augmentation.
+// Interface — 用户可通过模块增强（module augmentation）进行扩展。
 export interface ClientOptions { apiKey: string; }
 
-// User-side plugin:
+// 用户侧插件：
 declare module "@example/sdk" {
   interface ClientOptions { pluginOption?: string; }
 }
 
-// Type alias — cannot be augmented.
+// Type alias — 无法被增强。
 export type ClientOptionsT = { apiKey: string };
 ```
 
-**Rule of thumb:**
-- `interface` for object shapes plugins may augment (transport options, request context, error metadata).
-- `type` for unions, conditionals, tuples, mapped types — anything that isn't a plain object shape.
-- `interface` also performs better for large object types (TS caches them more aggressively).
+**经验法则：**
+- `interface` 用于插件可能增强的对象形状（传输选项、请求上下文、错误元数据）。
+- `type` 用于联合类型、条件类型、元组、映射类型——任何不是简单对象形状的东西。
+- `interface` 对于大型对象类型的性能也更好（TS 更积极地缓存它们）。
 
 ---
 
-## 9. Anti-Patterns
+## 9. 反模式
 
-### Leaking internal types
+### 泄露内部类型
 
 ```typescript
-// BAD — internal helper accidentally exported.
+// 糟糕——内部辅助类型意外导出。
 export type _InternalMapHelper<K, V> = Map<K, V> & { __magic: true };
 
-// GOOD — keep unexported and use stripInternal.
+// 良好——保持未导出并使用 stripInternal。
 type InternalMapHelper<K, V> = Map<K, V> & { __magic: true };
 export class Cache<K, V> {
   /** @internal */ store!: InternalMapHelper<K, V>;
 }
 ```
 
-### Over-generic helpers inferring to `unknown`
+### 过度泛型的辅助函数推断为 `unknown`
 
-If a generic helper's return type appears as `unknown` in user code, the help is gone. Either tighten the constraints or drop the generic.
+如果泛型辅助函数的返回类型在用户代码中显示为 `unknown`，帮助就消失了。要么收紧约束，要么放弃泛型。
 
 ```typescript
-// BAD
+// 糟糕
 export function pipe<T>(...fns: ((x: any) => any)[]): (x: T) => unknown { /* ... */ return null as never }
 
-// GOOD — recursive tuple types preserve the chain end.
+// 良好——递归元组类型保留链的末端。
 type LastReturn<F extends readonly unknown[]> =
   F extends readonly [...unknown[], (...a: never) => infer R] ? R : never;
 export function pipe<T, F extends readonly ((x: never) => unknown)[]>(
@@ -655,54 +655,54 @@ export function pipe<T, F extends readonly ((x: never) => unknown)[]>(
 ): (x: T) => LastReturn<F> { return null as never }
 ```
 
-### `any` in public signatures
+### 公共签名中的 `any`
 
 ```typescript
-// BAD — `any` poisons everything downstream.
+// 糟糕——`any` 污染下游所有内容。
 export function call(method: string, args: any): any { return null as never }
 
-// GOOD — `unknown` forces user narrowing.
+// 良好——`unknown` 强制用户收窄类型。
 export function call(method: string, args: unknown): unknown { return null as never }
 
-// BETTER — generic with default.
+// 更好——带默认值的泛型。
 export function call<T = unknown>(method: string, args: Record<string, unknown>): Promise<T> { return null as never }
 ```
 
-### Return types depending on `--strict`
+### 返回类型依赖于 `--strict`
 
 ```typescript
-// BAD — inferred return narrows under strict, widens otherwise.
+// 糟糕——推断的返回类型在 strict 下收窄，否则放宽。
 export function findUser(id: string) { return db.find(id); }
 
-// GOOD — always explicit.
+// 良好——始终显式标注。
 export function findUser(id: string): User | undefined { return db.find(id); }
 ```
 
-Users may have `strict: false`. Your public types should not shift shape based on their tsconfig.
+用户可能设置了 `strict: false`。你的公共类型不应根据他们的 tsconfig 而改变形状。
 
-### Exporting type aliases where interfaces belong
+### 在本应使用 interface 的地方导出 type alias
 
 ```typescript
-// BAD — users cannot augment.
+// 糟糕——用户无法增强。
 export type Hooks = {
   beforeRequest?: (req: Req) => void;
   afterResponse?: (res: Res) => void;
 };
 
-// GOOD — plugins can augment.
+// 良好——插件可以增强。
 export interface Hooks {
   beforeRequest?: (req: Req) => void;
   afterResponse?: (res: Res) => void;
 }
 ```
 
-### Default export of class for SDK entry
+### SDK 入口使用 default export 导出类
 
 ```typescript
-// BAD — composes poorly with named exports, barrels, verbatimModuleSyntax.
+// 糟糕——与命名导出、barrel、verbatimModuleSyntax 组合不佳。
 export default class Sdk {}
 
-// GOOD — named exports compose and tree-shake better.
+// 良好——命名导出组合和树摇（tree-shake）效果更好。
 export class Sdk {}
 export type { SdkOptions, SdkResult };
 export { createClient, presets };
@@ -711,20 +711,20 @@ export { createClient, presets };
 ### `enum`
 
 ```typescript
-// BAD — runtime behavior, bundler pitfalls, reverse-mappings.
+// 糟糕——运行时行为、打包器陷阱、反向映射。
 export enum Status { Pending, Active, Closed }
 
-// GOOD — const object + `as const` + ValueOf.
+// 良好——const 对象 + `as const` + ValueOf。
 export const Status = { Pending: "pending", Active: "active", Closed: "closed" } as const;
 export type Status = typeof Status[keyof typeof Status];
 // "pending" | "active" | "closed"
 ```
 
-`enum` is one of TS's most regretted features. Avoid in public SDK API.
+`enum` 是 TS 中最令人遗憾的特性之一。在公共 SDK API 中避免使用。
 
 ---
 
-## 10. Putting It Together — Minimal SDK Skeleton
+## 10. 整合——最小 SDK 骨架
 
 ```typescript
 // src/types.ts ---------------------------------------------------------------
@@ -802,7 +802,7 @@ export { Client, createClient, toUserId, toEmail };
 ```
 
 ```jsonc
-// package.json (excerpt)
+// package.json（摘录）
 {
   "name": "@example/sdk",
   "version": "1.0.0",
@@ -817,15 +817,15 @@ export { Client, createClient, toUserId, toEmail };
 }
 ```
 
-What this skeleton demonstrates:
+这个骨架展示了什么：
 
-- Branded `UserId`/`Email` enforce domain integrity at API boundaries.
-- `Result<T, E>` discriminated union — users branch, never `try/catch` for expected failures.
-- `interface` for `ClientOptions` and `User` — augmentable by plugin authors.
-- `type` for `Result` and `SdkError` — unions / not for augmentation.
-- Named exports only; no default.
-- `isolatedDeclarations` forces explicit return types on every public function.
-- `verbatimModuleSyntax` keeps imports honest.
-- Single entry point, single bundle, deterministic `.d.ts`.
+- 品牌化的 `UserId`/`Email` 在 API 边界处强制执行领域完整性。
+- `Result<T, E>` 可辨识联合类型——用户进行分支，对于预期中的失败从不 `try/catch`。
+- `interface` 用于 `ClientOptions` 和 `User`——插件作者可增强。
+- `type` 用于 `Result` 和 `SdkError`——联合类型，不适合增强。
+- 仅命名导出，无默认导出。
+- `isolatedDeclarations` 强制每个公共函数都有显式返回类型。
+- `verbatimModuleSyntax` 保持导入诚实。
+- 单一入口点，单一打包，确定性的 `.d.ts`。
 
-Two hundred lines of TypeScript and one tsconfig. Most published SDKs that do nothing more than this are already in the top quartile for developer experience.
+两百行 TypeScript 和一个 tsconfig。大多数做到这些的已发布 SDK 就已经在开发者体验方面处于前四分之一了。

@@ -1,54 +1,54 @@
-# Workspace System
+# 工作区系统（Workspace System）
 
-Track development progress across sessions with per-developer isolation.
+跨会话跟踪开发进度，按开发者隔离。
 
 ---
 
-## Directory Structure
+## 目录结构
 
 ```
 .trellis/workspace/
-├── index.md                    # Global overview
-└── {developer}/                # Per-developer directory
-    ├── index.md                # Personal index with @@@auto markers
-    ├── journal-1.md            # Session journal (max 2000 lines)
-    ├── journal-2.md            # Rolls over when limit reached
+├── index.md                    # 全局概览
+└── {developer}/                # 按开发者划分的目录
+    ├── index.md                # 个人索引，含 @@@auto 标记
+    ├── journal-1.md            # 会话日志（最多 2000 行）
+    ├── journal-2.md            # 达到上限时轮转
     └── ...
 ```
 
 ---
 
-## Developer Identity
+## 开发者身份
 
 ### `.trellis/.developer`
 
-Stores current developer name. Created by `init_developer.py`.
+存储当前开发者名称。由 `init_developer.py` 创建。
 
 ```
 taosu
 ```
 
-### Initialize Developer
+### 初始化开发者
 
 ```bash
 python3 .trellis/scripts/init_developer.py <name>
 ```
 
-Creates:
-- `.trellis/.developer` - Identity file
-- `.trellis/workspace/<name>/` - Personal workspace
-- `.trellis/workspace/<name>/index.md` - Personal index
-- `.trellis/workspace/<name>/journal-1.md` - First journal
+创建：
+- `.trellis/.developer` - 身份文件
+- `.trellis/workspace/<name>/` - 个人工作区
+- `.trellis/workspace/<name>/index.md` - 个人索引
+- `.trellis/workspace/<name>/journal-1.md` - 首个日志
 
 ---
 
-## Journals
+## 日志
 
-### Purpose
+### 用途
 
-Track session history, decisions, and context.
+跟踪会话历史、决策和上下文。
 
-### Format
+### 格式
 
 ```markdown
 # Journal 1
@@ -69,20 +69,20 @@ Key decisions and learnings...
 ---
 ```
 
-### Journal Rotation
+### 日志轮转
 
-When journal exceeds 2000 lines:
-1. Archive current (append to index)
-2. Create new journal-N.md
-3. Continue writing
+日志超过 2000 行时：
+1. 归档当前日志（追加到索引）
+2. 创建新的 journal-N.md
+3. 继续写入
 
 ---
 
-## Personal Index
+## 个人索引
 
 ### `workspace/{developer}/index.md`
 
-Tracks all sessions and provides quick reference.
+跟踪所有会话并提供快速参考。
 
 ```markdown
 # Developer Workspace - taosu
@@ -102,19 +102,19 @@ Tracks all sessions and provides quick reference.
 - journal-2.md (current)
 ```
 
-### @@@auto Markers
+### @@@auto 标记
 
-Scripts use these markers to auto-update sections:
-- `@@@auto-sessions-start/end` - Recent sessions list
-- `@@@auto-tasks-start/end` - Task summaries
+脚本使用这些标记来自动更新段落：
+- `@@@auto-sessions-start/end` - 最近会话列表
+- `@@@auto-tasks-start/end` - 任务摘要
 
 ---
 
-## Global Index
+## 全局索引
 
 ### `workspace/index.md`
 
-Overview of all developers and project status.
+所有开发者与项目状态的概览。
 
 ```markdown
 # Project Workspace
@@ -129,20 +129,20 @@ Overview of all developers and project status.
 
 ---
 
-## Scripts
+## 脚本
 
-| Script | Purpose |
+| 脚本 | 用途 |
 |--------|---------|
-| `init_developer.py` | Initialize developer identity |
-| `get_developer.py` | Get current developer name |
-| `add_session.py` | Record session to journal |
-| `get_context.py` | Get session context for AI |
+| `init_developer.py` | 初始化开发者身份 |
+| `get_developer.py` | 获取当前开发者名称 |
+| `add_session.py` | 记录会话到日志 |
+| `get_context.py` | 获取 AI 会话上下文 |
 
 ---
 
-## Best Practices
+## 最佳实践
 
-1. **One developer per machine** - Identity stored in `.developer`
-2. **Regular journaling** - Record decisions and context
-3. **Use markers** - Let scripts auto-update indexes
-4. **Review journals** - Before starting new sessions
+1. **每台机器一个开发者** - 身份存储在 `.developer` 中
+2. **定期记录日志** - 记录决策和上下文
+3. **使用标记** - 让脚本自动更新索引
+4. **回顾日志** - 在开始新会话之前

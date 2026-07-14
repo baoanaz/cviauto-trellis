@@ -1,330 +1,330 @@
-# Uninstall Scrubbers
+# Uninstall Scrubbers（卸载清理器）
 
-How `trellis uninstall` performs **paragraph-level deletion** on structured config files (`settings.json`, `hooks.json`, `config.toml`, `package.json`) so that Trellis-emitted fields are removed while user-added neighbors stay intact.
+`trellis uninstall` 如何对结构化配置文件（`settings.json`、`hooks.json`、`config.toml`、`package.json`）执行**段落级删除**，以便移除 Trellis 发出的字段，同时保持用户添加的相邻内容完整。
 
-The scrubbers live in `utils/uninstall-scrubbers.ts`. They are pure functions — they do no I/O, take a file's content as input, and return new content plus a `fullyEmpty` flag. The orchestration that decides which scrubber to call, reads files, writes files, and deletes empty ones lives in `commands/uninstall.ts:uninstall` (specifically in `buildPlan` and `executePlan`; see `commands-uninstall.md`).
+清理器位于 `utils/uninstall-scrubbers.ts`。它们是纯函数 — 不做 I/O，将文件内容作为输入，并返回新内容加上 `fullyEmpty` 标志。决定调用哪个清理器、读取文件、写入文件和删除空文件的编排逻辑位于 `commands/uninstall.ts:uninstall`（具体在 `buildPlan` 和 `executePlan` 中；参见 `commands-uninstall.md`）。
 
 ---
 
-## Overview
+## 概述
 
-### Why paragraph-level, not whole-file delete
+### 为什么是段落级，而不是全文件删除
 
-Most files Trellis writes are opaque (`.py`, `.md`, `.ts`) — `trellis uninstall` `unlink`s them outright. But a handful of platform config files are **shared** with the user:
+Trellis 写入的大多数文件是不透明的（`.py`、`.md`、`.ts`）— `trellis uninstall` 直接 `unlink` 它们。但少数平台配置文件是**与用户共享**的：
 
-| File | What's shared |
+| 文件 | 共享什么 |
 |------|----------------|
-| `.claude/settings.json` | Trellis writes the `hooks` block; user may have set `env`, `model`, `permissions`, `version` |
-| `.cursor/hooks.json` | Same idea, but a flat schema |
-| `.opencode/package.json` | Trellis adds `dependencies["@opencode-ai/plugin"]`; user may have other deps |
-| `.pi/settings.json` | Trellis adds `enableSkillCommands` plus entries in `extensions`/`skills`/`prompts` arrays; user may have entries of their own |
-| `.codex/config.toml` | Trellis writes a documented `project_doc_fallback_filenames` line + a comment block; user may have added more TOML directives |
-| `.codex/hooks.json`, `.gemini/settings.json`, `.factory/settings.json`, `.codebuddy/settings.json`, `.qoder/settings.json`, `.github/copilot/hooks.json` | Same hooks-block pattern as `.claude/settings.json` (sometimes flat, sometimes nested) |
+| `.claude/settings.json` | Trellis 写入 `hooks` 块；用户可能设置了 `env`、`model`、`permissions`、`version` |
+| `.cursor/hooks.json` | 相同的想法，但是扁平 schema |
+| `.opencode/package.json` | Trellis 添加了 `dependencies["@opencode-ai/plugin"]`；用户可能有其他 deps |
+| `.pi/settings.json` | Trellis 添加了 `enableSkillCommands` 加上 `extensions`/`skills`/`prompts` 数组中的条目；用户可能有自己的条目 |
+| `.codex/config.toml` | Trellis 写入一个文档化的 `project_doc_fallback_filenames` 行 + 一个注释块；用户可能添加了更多 TOML 指令 |
+| `.codex/hooks.json`、`.gemini/settings.json`、`.factory/settings.json`、`.codebuddy/settings.json`、`.qoder/settings.json`、`.github/copilot/hooks.json` | 与 `.claude/settings.json` 相同的 hooks 块模式（有时扁平，有时嵌套） |
 
-If `uninstall` simply `rm`-ed these files, the user would lose their own config. If it **left** them alone, the dangling Trellis hook entries would point at deleted scripts and the platform would error on the next session.
+如果 `uninstall` 简单地 `rm` 这些文件，用户将丢失自己的配置。如果它**保留**它们，悬空的 Trellis hook 条目将指向已删除的脚本，平台将在下次会话时出错。
 
-The scrubbers walk each file's structure, drop only the Trellis-known parts, and report whether anything meaningful remains.
+清理器遍历每个文件的结构，仅丢弃 Trellis 已知的部分，并报告是否有任何有意义的内容保留。
 
-### Contract with the caller
+### 与调用者的契约
 
-The caller (`commands/uninstall.ts:buildPlan`) is responsible for:
+调用者（`commands/uninstall.ts:buildPlan`）负责：
 
-- Reading the file off disk and passing its raw text to the scrubber.
-- Comparing `fullyEmpty` from the result: if `true`, the file is queued for deletion; if `false`, the new content is written back.
-- Identifying *which* paths count as "deleted by this uninstall" (passed in to hooks-shaped scrubbers as `deletedPaths`). This is the full list of POSIX paths from `.trellis/.template-hashes.json`.
+- 从磁盘读取文件并将其原始文本传递给清理器。
+- 比较结果中的 `fullyEmpty`：如果 `true`，文件排队等待删除；如果 `false`，新内容写回。
+- 识别*哪些*路径算作「被此卸载删除」（传递给 hooks 形状的清理器作为 `deletedPaths`）。这是来自 `.trellis/.template-hashes.json` 的 POSIX 路径的完整列表。
 
-Scrubbers themselves never touch the filesystem. They never log. They return.
+清理器本身永不触碰文件系统。它们永不记录日志。它们返回。
 
 ---
 
-## Scrubber interface
+## 清理器接口
 
-All scrubbers share a result shape:
+所有清理器共享一个结果形状：
 
 ```ts
 interface ScrubResult {
-  content: string;     // post-scrub text to write back
-  fullyEmpty: boolean; // true → caller should delete the file instead of writing
+  content: string;     // 写回的清理后文本
+  fullyEmpty: boolean; // true → 调用者应删除文件而不是写入
 }
 ```
 
-Two distinct signatures depending on whether the scrubber needs to know the uninstall delete-set:
+根据清理器是否需要知道卸载删除集，有两种不同的签名：
 
-| Signature | Used by |
+| 签名 | 使用者 |
 |-----------|---------|
 | `(content: string, deletedPaths: readonly string[], mode: "nested" \| "flat") → ScrubResult` | `utils/uninstall-scrubbers.ts:scrubHooksJson` |
-| `(content: string) → ScrubResult` | `utils/uninstall-scrubbers.ts:scrubOpencodePackageJson`, `:scrubPiSettings`, `:scrubCodexConfigToml` |
+| `(content: string) → ScrubResult` | `utils/uninstall-scrubbers.ts:scrubOpencodePackageJson`、`:scrubPiSettings`、`:scrubCodexConfigToml` |
 
-Hooks-JSON scrubbers need the delete-set because they identify Trellis hook entries by **whether the entry's command refers to a path being deleted**. The other three identify Trellis content by exact-match values that Trellis-the-configurator hard-codes.
+Hooks-JSON 清理器需要删除集，因为它们通过**条目的命令是否引用正在被删除的路径**来识别 Trellis hook 条目。其他三个通过 Trellis 配置器硬编码的精确匹配值来识别 Trellis 内容。
 
-### Universal invariants
+### 通用不变量
 
-Every scrubber holds the following:
+每个清理器持有以下内容：
 
-- **Input may be malformed** — if `JSON.parse` (or equivalent) throws, return `{ content, fullyEmpty: false }`. The caller's outer flow then writes the file back unchanged. We never half-rewrite.
-- **Input may have unexpected shape** — if the parsed root isn't a plain object, return `{ content, fullyEmpty: false }`. Same reasoning.
-- **Output is canonicalized** — JSON-shaped scrubbers re-`stringify` with 2-space indent and a trailing newline, even if no change was made. This is intentional; user-written hand-formatting is acceptable collateral. Callers know.
-- **No throws** — scrubbers must not propagate exceptions; surface "I couldn't scrub this" via `fullyEmpty: false` plus original `content`.
-- **No side effects** — no `fs.*`, no `console.*`, no network. Pure function.
-- **Idempotent** — running a scrubber on its own output must yield byte-identical content (modulo the JSON pretty-print canonicalization).
+- **输入可能格式错误** — 如果 `JSON.parse`（或等效）抛出，返回 `{ content, fullyEmpty: false }`。调用者的外部流然后将文件不变地写回。我们从不半重写。
+- **输入可能具有意外的形状** — 如果解析的根不是普通对象，返回 `{ content, fullyEmpty: false }`。相同的推理。
+- **输出是规范化的** — JSON 形状的清理器使用 2 空格缩进和尾随换行符重新 `stringify`，即使没有进行更改。这是有意的；用户编写的格式是附带损害。调用者知道。
+- **不抛出异常** — 清理器不得传播异常；通过 `fullyEmpty: false` 加上原始 `content` 展示「我无法清理此」。
+- **无副作用** — 无 `fs.*`、无 `console.*`、无网络。纯函数。
+- **幂等** — 在其自己的输出上运行清理器必须产生字节相同的内容（模 JSON 美化打印规范化）。
 
 ---
 
-## Per-platform scrubbers
+## 每平台清理器
 
 ### `utils/uninstall-scrubbers.ts:scrubHooksJson`
 
-Scrubs `hooks`-shaped settings JSON for **eight** platforms. The schema differs slightly across platforms, so the function takes a `mode` selector:
+清理**八个**平台的 `hooks` 形状的 settings JSON。Schema 在不同平台之间略有不同，因此该函数接受一个 `mode` 选择器：
 
-| Mode | Files | Schema |
+| 模式 | 文件 | Schema |
 |------|-------|--------|
-| `"nested"` | `.claude/settings.json`, `.gemini/settings.json`, `.factory/settings.json`, `.codebuddy/settings.json`, `.qoder/settings.json`, `.codex/hooks.json` | `hooks.{Event}.[ {matcher?, hooks: [ {command, ...} ]} ]` |
-| `"flat"` | `.cursor/hooks.json`, `.github/copilot/hooks.json` | `hooks.{Event}.[ {command, ...} ]` |
+| `"nested"` | `.claude/settings.json`、`.gemini/settings.json`、`.factory/settings.json`、`.codebuddy/settings.json`、`.qoder/settings.json`、`.codex/hooks.json` | `hooks.{Event}.[ {matcher?, hooks: [ {command, ...} ]} ]` |
+| `"flat"` | `.cursor/hooks.json`、`.github/copilot/hooks.json` | `hooks.{Event}.[ {command, ...} ]` |
 
-Algorithm:
+算法：
 
-1. Walk `root.hooks.{eventName}`. For each event array, drop entries whose command matches a deleted path; for nested mode, drill one level deeper through the matcher block's inner `hooks` array first.
-2. If a matcher block's inner `hooks` becomes empty → drop the whole block.
-3. If an event array becomes empty → `delete root.hooks[eventName]`.
-4. If `root.hooks` becomes an empty object → `delete root.hooks`.
-5. `fullyEmpty` is true iff `Object.keys(root).length === 0`.
+1. 遍历 `root.hooks.{eventName}`。对于每个事件数组，删除其命令匹配已删除路径的条目；对于嵌套模式，先深入一层通过匹配器块的内部 `hooks` 数组。
+2. 如果匹配器块的内部 `hooks` 变为空 → 丢弃整个块。
+3. 如果事件数组变为空 → `delete root.hooks[eventName]`。
+4. 如果 `root.hooks` 变为空对象 → `delete root.hooks`。
+5. 当且仅当 `Object.keys(root).length === 0` 时 `fullyEmpty` 为 true。
 
-User-defined keys outside `hooks` (`env`, `model`, `permissions`, `version`) are preserved verbatim — only the Trellis-claimed `hooks` subtree is touched.
+`hooks` 之外的用户定义键（`env`、`model`、`permissions`、`version`）被逐字保留 — 仅触碰 Trellis 声明的 `hooks` 子树。
 
-#### Path matching is **last-token-only**, not substring
+#### 路径匹配是**仅最后 token 匹配**，而非子串
 
-The helper `utils/uninstall-scrubbers.ts:commandMatchesDeletedPath` resolves the script path inside a hook command by taking the **trailing whitespace-delimited token** (with surrounding `'`/`"` stripped). It then compares that token to each deleted path with `===` or `endsWith("/" + p)` (so absolute paths match too).
+辅助函数 `utils/uninstall-scrubbers.ts:commandMatchesDeletedPath` 通过取**尾随空白分隔的 token**（剥离周围的 `'`/`"`）来解析 hook 命令内的脚本路径。然后使用 `===` 或 `endsWith("/" + p)` 将该 token 与每个已删除路径进行比较（因此绝对路径也匹配）。
 
-Why not substring containment? A user-written hook like
+为什么不是子串包含？一个用户编写的 hook 如
 
 ```json
 { "command": "echo 'see .claude/hooks/session-start.py for context'" }
 ```
 
-would naively match `".claude/hooks/session-start.py"` and be wrongly deleted. Last-token-only is stricter: the trailing token here is `context'`, not the deleted path.
+会天真地匹配 `".claude/hooks/session-start.py"` 并被错误删除。仅最后 token 更严格：这里的尾随 token 是 `context'`，而不是已删除路径。
 
-This rule assumes the Trellis-emitted shape:
+此规则假设 Trellis 发出的形状：
 
 ```text
 <python-cmd> <manifest-relative-path>
 ```
 
-(e.g. `python3 .claude/hooks/session-start.py`). Any future change to hook command emission (extra trailing args, different launcher) MUST update both the configurator and this scrubber.
+（例如 `python3 .claude/hooks/session-start.py`）。任何对 hook 命令发出的未来更改（额外尾随参数、不同启动器）必须更新配置器和此清理器。
 
-#### Command field fallback
+#### 命令字段回退
 
-`utils/uninstall-scrubbers.ts:getEntryCommand` reads `command` first, then falls back to `bash`, then `powershell`. Copilot's flat schema uses dual `bash`/`powershell` fields instead of a unified `command`. Either field is enough to identify a Trellis entry; we don't require both to match because Trellis emits the same script path on both fields.
+`utils/uninstall-scrubbers.ts:getEntryCommand` 先读取 `command`，然后回退到 `bash`，然后 `powershell`。Copilot 的扁平 schema 使用双 `bash`/`powershell` 字段而不是统一的 `command`。任一字段足以识别 Trellis 条目；我们不要求两者都匹配，因为 Trellis 在两个字段上发出相同的脚本路径。
 
 ### `utils/uninstall-scrubbers.ts:scrubOpencodePackageJson`
 
-Scrubs `.opencode/package.json`:
+清理 `.opencode/package.json`：
 
-1. Delete `dependencies["@opencode-ai/plugin"]`.
-2. If `dependencies` ends up empty → drop the field.
-3. `fullyEmpty` iff the resulting root object has no keys.
+1. 删除 `dependencies["@opencode-ai/plugin"]`。
+2. 如果 `dependencies` 最终为空 → 丢弃该字段。
+3. 当且仅当结果根对象有零个键时 `fullyEmpty` 为 true。
 
-This is the simplest scrubber: only one field to touch, and the rest of `package.json` (name, version, scripts, devDeps, …) is user-owned.
+这是最简单的清理器：只有一个字段要触碰，`package.json` 的其余部分（name、version、scripts、devDeps、…）由用户拥有。
 
 ### `utils/uninstall-scrubbers.ts:scrubPiSettings`
 
-Scrubs `.pi/settings.json`:
+清理 `.pi/settings.json`：
 
-1. Drop `enableSkillCommands` (Trellis-only flag).
-2. Filter three arrays for the Trellis-emitted entries (exact string match):
-   - `extensions` — remove `"./extensions/trellis/index.ts"`
-   - `skills` — remove `"./skills"`
-   - `prompts` — remove `"./prompts"`
-3. If any of those arrays becomes empty → drop the array key.
-4. `fullyEmpty` iff the root has no keys.
+1. 丢弃 `enableSkillCommands`（仅 Trellis 标志）。
+2. 过滤三个数组中的 Trellis 发出条目（精确字符串匹配）：
+   - `extensions` — 移除 `"./extensions/trellis/index.ts"`
+   - `skills` — 移除 `"./skills"`
+   - `prompts` — 移除 `"./prompts"`
+3. 如果这些数组中的任何一个变为空 → 丢弃数组键。
+4. 当且仅当根有零个键时 `fullyEmpty` 为 true。
 
-Constants `PI_TRELLIS_EXTENSION`, `PI_TRELLIS_SKILLS`, `PI_TRELLIS_PROMPTS` in `utils/uninstall-scrubbers.ts` define the exact strings the Pi configurator emits. If the configurator changes the path emitted, this scrubber must change in lockstep — there is no shared source of truth across the two halves.
+`utils/uninstall-scrubbers.ts` 中的常量 `PI_TRELLIS_EXTENSION`、`PI_TRELLIS_SKILLS`、`PI_TRELLIS_PROMPTS` 定义了 Pi 配置器发出的确切字符串。如果配置器更改了发出的路径，此清理器必须同步更改 — 两半之间没有共享的权威来源。
 
 ### `utils/uninstall-scrubbers.ts:scrubCodexConfigToml`
 
-Scrubs `.codex/config.toml`. Unlike the JSON scrubbers, this one is **line-based**: TOML is harder to round-trip without a real parser, and the Trellis-emitted file is small + flat enough that a marker-line approach is safer than a structural one.
+清理 `.codex/config.toml`。与 JSON 清理器不同，这个是**基于行的**：没有真正的解析器，TOML 更难往返，而 Trellis 发出的文件足够小且扁平，标记行方法比结构化方法更安全。
 
-Trellis writes two distinct content classes into this file:
+Trellis 向此文件写入两个不同的内容类别：
 
-1. The single assignment `project_doc_fallback_filenames = ["AGENTS.md"]`.
-2. A block of leading comments (header + `# NOTE: …` opt-in note).
+1. 单个赋值 `project_doc_fallback_filenames = ["AGENTS.md"]`。
+2. 一个前导注释块（header + `# NOTE: …` opt-in 提示）。
 
-Algorithm:
+算法：
 
-- Walk lines. Drop any line that:
-  - Matches the assignment regex `/^\s*project_doc_fallback_filenames\s*=/`.
-  - Is a comment line whose inner text (after stripping `#` and spaces) **exactly** matches one of the strings in `trellisCommentMarkers` (a hard-coded array inside `utils/uninstall-scrubbers.ts:scrubCodexConfigToml`).
-  - Is a bare `#` comment line — these are inside the Trellis comment block.
-- Collapse consecutive blank lines created by removals.
-- Trim trailing blanks.
-- `fullyEmpty` iff the result has no non-whitespace characters.
+- 遍历行。丢弃任何：
+  - 匹配赋值正则 `/^\s*project_doc_fallback_filenames\s*=/` 的行。
+  - 其内部文本（在剥离 `#` 和空格之后）**精确**匹配 `trellisCommentMarkers` 中的字符串之一的注释行（`utils/uninstall-scrubbers.ts:scrubCodexConfigToml` 内的硬编码数组）。
+  - 裸 `#` 注释行 — 这些在 Trellis 注释块内。
+- 折叠由删除创建的连续空行。
+- 修剪尾随空白。
+- 当且仅当结果没有非空白字符时 `fullyEmpty` 为 true。
 
-User-added lines (their own TOML keys, their own comments, blank gaps) survive because they do not match the assignment regex AND their comment text is not in `trellisCommentMarkers`.
+用户添加的行（他们自己的 TOML 键、他们自己的注释、空白间隙）存活，因为它们不匹配赋值正则且其注释文本不在 `trellisCommentMarkers` 中。
 
 ---
 
-## Marker block format
+## 标记块格式
 
-Scrubbers identify Trellis content via three distinct mechanisms — there is no single uniform marker syntax.
+清理器通过三种不同的机制识别 Trellis 内容 — 没有单一的统一标记语法。
 
-| Mechanism | Used by | Example |
+| 机制 | 使用者 | 示例 |
 |-----------|---------|---------|
-| **Last-token path match** against `deletedPaths` | `scrubHooksJson` | Hook entry with `command = "python3 .claude/hooks/session-start.py"` matches because the trailing token is in the delete-set |
-| **Exact string match** against hard-coded constants | `scrubOpencodePackageJson`, `scrubPiSettings` | `"./skills"` in a Pi `skills` array, `"@opencode-ai/plugin"` as a dep key |
-| **Hard-coded comment-line allowlist** + assignment regex | `scrubCodexConfigToml` | Lines whose stripped text matches any of `trellisCommentMarkers` |
+| **最后 token 路径匹配** 对照 `deletedPaths` | `scrubHooksJson` | 带有 `command = "python3 .claude/hooks/session-start.py"` 的 Hook 条目匹配，因为尾随 token 在删除集中 |
+| **精确字符串匹配** 对照硬编码常量 | `scrubOpencodePackageJson`、`scrubPiSettings` | Pi `skills` 数组中的 `"./skills"`、`"@opencode-ai/plugin"` 作为 dep 键 |
+| **硬编码注释行允许列表** + 赋值正则 | `scrubCodexConfigToml` | 其剥离文本匹配 `trellisCommentMarkers` 中任何一个的行 |
 
-### Why no "BEGIN TRELLIS / END TRELLIS" comment markers?
+### 为什么没有「BEGIN TRELLIS / END TRELLIS」注释标记？
 
-Earlier designs considered wrapping Trellis content in delimited blocks (`# BEGIN TRELLIS …` / `# END TRELLIS`). We rejected that because:
+早期设计考虑将 Trellis 内容包装在定界块中（`# BEGIN TRELLIS …` / `# END TRELLIS`）。我们拒绝了，因为：
 
-- **JSON / TOML can't carry inline comments inside arrays/objects in a way every parser preserves on round-trip.** Both Claude's `settings.json` writer and Codex's `config.toml` re-`stringify` on every save, which would either eat the markers or force us to ship a custom serializer. Neither is worth the maintenance.
-- **The configurators already produce structurally identifiable values** (specific keys, specific paths, specific comment phrasings). Recognizing those structures is sufficient — no markers needed.
+- **JSON / TOML 不能在数组/对象内携带内联注释，其方式每个解析器在往返时都保留。** Claude 的 `settings.json` 写入器和 Codex 的 `config.toml` 都在每次保存时重新 `stringify`，这要么会吃掉标记，要么迫使我们发布自定义序列化器。两者都不值得维护。
+- **配置器已经产生结构上可识别的值**（特定键、特定路径、特定注释措辞）。识别这些结构是足够的 — 不需要标记。
 
-The cost is **brittleness across Trellis versions**: when the configurator changes the path or wording it emits, the scrubber must update in lockstep. See "Common pitfalls" for the explicit rule.
+代价是**跨 Trellis 版本的脆弱性**：当配置器更改它发出的路径或措辞时，清理器必须同步更新。参见「常见陷阱」获取显式规则。
 
-### Legacy compatibility
+### 遗留兼容性
 
-If a future Trellis version starts emitting a *new* hook script path or a different Pi extension path, the scrubber must recognize **both old and new** for at least one major version, or users who upgrade then immediately uninstall will leak the legacy fields. Today the codebase does not yet face this — only one shape of each emission exists. When the first such migration lands, document it here.
-
----
-
-## Hash gate
-
-Scrubbers themselves are **not hash-gated**. Decisions about whether a file may be touched at all are upstream:
-
-- `commands/uninstall.ts:buildPlan` reads `.trellis/.template-hashes.json` and only considers manifest-listed files. Files outside the manifest are never seen by any scrubber.
-- The PRD policy is "全删" — uninstall removes manifest-listed files whether or not the user has modified them. There is no per-file "user-modified, skip" branch like `update.ts` has.
-- `--force` does not exist on `uninstall`; the only flags are `--yes` (skip prompt) and `--dry-run` (plan only).
-
-Hash matching DOES affect `update.ts` flows (preserve user edits, `safe-file-delete` allowlist). It does NOT affect `uninstall`. If you are adding a scrubber and reaching for a hash gate, you are probably writing migration logic in the wrong place — see `migrations.md`.
+如果未来的 Trellis 版本开始发出*新* hook 脚本路径或不同的 Pi 扩展路径，清理器必须识别**旧和新**至少一个主版本，否则升级后立即卸载的用户将泄露遗留字段。今天代码库尚未面临此问题 — 仅存在每种发出的一种形状。当第一个此类迁移落地时，在此记录。
 
 ---
 
-## Boundaries
+## 哈希门控
 
-Scrubbers MUST NOT:
+清理器本身**不是哈希门控的**。关于文件是否可以被触碰的决定在上游：
 
-- Read or write the filesystem. All I/O lives in `commands/uninstall.ts`.
-- Log. The orchestrator owns user-visible output.
-- Touch any file beyond the one passed in. No git ops, no template fetches, no other-file writes.
-- Couple to other platforms. Each scrubber is self-contained: changing `scrubPiSettings` MUST NOT alter the behavior of any other scrubber.
-- Decide whether a file is deletable. They report `fullyEmpty`; the caller decides what to do with that bit.
-- Throw. Malformed or unexpected input → `{ content, fullyEmpty: false }` so the caller leaves the file alone.
+- `commands/uninstall.ts:buildPlan` 读取 `.trellis/.template-hashes.json`，仅考虑清单中列出的文件。清单之外的文件永远不会被任何清理器看到。
+- PRD 策略是「全删」— uninstall 移除清单中列出的文件，无论用户是否修改了它们。没有像 `update.ts` 那样的「user-modified, skip」分支。
+- `--force` 在 `uninstall` 上不存在；唯一的标志是 `--yes`（跳过提示）和 `--dry-run`（仅计划）。
 
-Scrubbers ARE allowed to:
-
-- Re-canonicalize JSON output (re-indent, sort, etc.) — current implementation re-pretty-prints with 2-space indent.
-- Drop blank-line runs created by removals (TOML scrubber does this).
-- Delete sibling fields once their last child disappears (e.g. drop empty `dependencies` after removing the last dep).
+哈希匹配确实影响 `update.ts` 流程（保留用户编辑、`safe-file-delete` 允许列表）。它不影响 `uninstall`。如果你正在添加一个清理器并伸手去拿哈希门控，你可能在错误的地方编写迁移逻辑 — 参见 `migrations.md`。
 
 ---
 
-## Common pitfalls
+## 边界
 
-### Configurator emits a new path; scrubber doesn't know
+清理器不得：
 
-**Symptom**: `trellis uninstall` leaves stale Trellis fields in a platform config file because the scrubber's hard-coded matcher (`PI_TRELLIS_EXTENSION`, `trellisCommentMarkers`) doesn't recognize the new emission.
+- 读取或写入文件系统。所有 I/O 位于 `commands/uninstall.ts` 中。
+- 记录日志。编排器拥有用户可见的输出。
+- 触碰传入文件之外的任何文件。无 git 操作、无模板获取、无其他文件写入。
+- 耦合到其他平台。每个清理器是自包含的：更改 `scrubPiSettings` 不得改变任何其他清理器的行为。
+- 决定文件是否可删除。它们报告 `fullyEmpty`；调用者决定如何处理该位。
+- 抛出异常。格式错误或意外的输入 → `{ content, fullyEmpty: false }`，以便调用者保持文件不变。
 
-**Cause**: configurator and scrubber maintain parallel hard-coded tables of "what Trellis writes". When the configurator changes (e.g. moves the Pi extension to a new path), the scrubber's table goes stale.
+清理器被允许：
 
-**Fix**: any PR that changes a configurator's emitted path / field name / comment phrasing in a scrubber-targeted file MUST update the matching scrubber in the same commit. Add a regression test that round-trips configure → scrub → assert empty.
-
-### Marker block partially edited by user
-
-**Symptom**: After `trellis uninstall`, a `.codex/config.toml` retains half of the Trellis comment block (e.g. the user deleted `# NOTE:` but left `# Without this flag, …`).
-
-**Cause**: `scrubCodexConfigToml` matches on **per-line exact text**, not on a block boundary. Any surviving Trellis-known line will be removed individually; any user-edited line whose text no longer matches the allowlist will be preserved.
-
-**Mitigation**: this is the correct behavior — we cannot tell whether a near-miss line is a typo or an intentional user customization. Documentation should warn users: editing Trellis-emitted comments may leave fragments after uninstall. They can always delete manually.
-
-### Hook command with trailing args
-
-**Symptom**: A future configurator emits `python3 .claude/hooks/session-start.py --verbose` and `commandMatchesDeletedPath` no longer matches because the trailing token is now `--verbose`, not the script path.
-
-**Mitigation**: today, all hook commands are exactly two tokens (`<python-cmd> <script-path>`). If we ever add trailing args, `commandMatchesDeletedPath` needs to scan all tokens, not just the last. Update the helper and add a regression test.
-
-### Nested marker / duplicate matcher block
-
-**Symptom**: A platform's `hooks.{Event}` array contains two matcher blocks that both target Trellis. After scrubbing, both should be removed.
-
-**Mitigation**: `scrubHooksJson` already filters per-entry independently. Duplicate Trellis entries are handled correctly. Nested-within-nested is not a real shape any platform emits — the schema is exactly two levels deep — but the scrubber's per-entry filter wouldn't blow up either; it just wouldn't recurse further.
-
-### External tool rewrites the file before uninstall
-
-**Symptom**: A user's editor or formatter normalized `.codex/config.toml` (e.g. reordered keys, changed comment wrapping). The scrubber leaves Trellis content behind because it didn't match the allowlist exactly.
-
-**Mitigation**: the line-allowlist approach is intentionally strict to avoid false positives. If a user's formatter has rewritten Trellis content, we treat it as user-customized and preserve it. Document the workaround: re-run `trellis init` to restore canonical content, then `trellis uninstall` to remove it cleanly.
-
-### Caller forgets to pass `deletedPaths`
-
-**Symptom**: Hooks-JSON scrubber preserves all hook entries because the `deletedPaths` argument is empty.
-
-**Mitigation**: TypeScript catches this — `scrubHooksJson` requires the argument. The plumbing in `commands/uninstall.ts:buildPlan` constructs `deletedPaths` from `Object.keys(hashes)` so every manifest entry is in the list. If a hook command refers to a script that is NOT in the manifest, we deliberately leave the entry alone (it might be user-added, even if it points at a Trellis-shaped path).
-
-### Scrubber called on a file outside the manifest
-
-**Symptom**: not a real symptom — `commands/uninstall.ts:buildPlan` only dispatches to scrubbers for paths that appear both in `.template-hashes.json` AND in `buildStructuredFileSpecs`. Files outside the manifest are never scrubbed.
-
-**Rule**: do not bypass this gate. Adding "scrub any file with this shape" logic outside the manifest gate would risk modifying user files Trellis never wrote.
+- 重新规范化 JSON 输出（重新缩进、排序等）— 当前实现使用 2 空格缩进重新美化打印。
+- 丢弃由删除创建的空行连续运行（TOML 清理器这样做）。
+- 在最后一个子项消失后删除兄弟字段（例如，在移除最后一个 dep 后丢弃空的 `dependencies`）。
 
 ---
 
-## Test conventions
+## 常见陷阱
 
-Tests for scrubbers live alongside the implementation as pure-function tests — no `tmp` directories, no filesystem. Each scrubber test follows this shape:
+### 配置器发出新路径；清理器不知道
 
-1. **Fixture** — a string literal of the file content (with a Trellis section + a user-owned section).
-2. **Call** — invoke the scrubber directly.
-3. **Assert** — Trellis section is gone, user section is intact, `fullyEmpty` matches expectation.
+**症状**：`trellis uninstall` 在平台配置文件中留下过时的 Trellis 字段，因为清理器的硬编码匹配器（`PI_TRELLIS_EXTENSION`、`trellisCommentMarkers`）不识别新发出。
 
-### Required test cases per scrubber
+**原因**：配置器和清理器维护「Trellis 写入什么」的并行硬编码表。当配置器更改时（例如，将 Pi 扩展移动到新路径），清理器的表变得过时。
 
-| Case | What to assert |
+**修复**：任何更改配置器在清理器目标文件中发出的路径 / 字段名 / 注释措辞的 PR 必须在相同提交中更新匹配的清理器。添加一个回归测试，进行 configure → scrub → 断言为空的往返。
+
+### 标记块被用户部分编辑
+
+**症状**：`trellis uninstall` 后，`.codex/config.toml` 保留了 Trellis 注释块的一半（例如，用户删除了 `# NOTE:` 但留下了 `# Without this flag, …`）。
+
+**原因**：`scrubCodexConfigToml` 在**每行精确文本**上匹配，而不是块边界。任何存活的 Trellis 已知行将被单独移除；任何其文本不再匹配允许列表的用户编辑行将被保留。
+
+**缓解**：这是正确的行为 — 我们无法判断一个接近匹配的行是拼写错误还是有意的用户自定义。文档应警告用户：编辑 Trellis 发出的注释可能在卸载后留下片段。他们总是可以手动删除。
+
+### 带尾随参数的 Hook 命令
+
+**症状**：未来的配置器发出 `python3 .claude/hooks/session-start.py --verbose`，而 `commandMatchesDeletedPath` 不再匹配，因为尾随 token 现在是 `--verbose`，而不是脚本路径。
+
+**缓解**：今天，所有 hook 命令恰好是两个 token（`<python-cmd> <script-path>`）。如果我们添加尾随参数，`commandMatchesDeletedPath` 需要扫描所有 token，而不仅仅是最后一个。更新辅助函数并添加回归测试。
+
+### 嵌套标记 / 重复匹配器块
+
+**症状**：平台的 `hooks.{Event}` 数组包含两个都针对 Trellis 的匹配器块。清理后，两者都应被移除。
+
+**缓解**：`scrubHooksJson` 已经独立过滤每个条目。重复的 Trellis 条目被正确处理。嵌套中的嵌套不是任何平台发出的真实形状 — schema 恰好是两层深 — 但清理器的每条目过滤器也不会爆炸；它只是不会进一步递归。
+
+### 外部工具在卸载前重写文件
+
+**症状**：用户的编辑器或格式化器标准化了 `.codex/config.toml`（例如，重新排序键、更改注释换行）。清理器留下 Trellis 内容，因为它不精确匹配允许列表。
+
+**缓解**：行允许列表方法故意严格以避免假阳性。如果用户的格式化器重写了 Trellis 内容，我们将其视为用户自定义并保留它。文档化变通方法：重新运行 `trellis init` 以恢复规范内容，然后 `trellis uninstall` 以干净地移除它。
+
+### 调用者忘记传递 `deletedPaths`
+
+**症状**：Hooks-JSON 清理器保留所有 hook 条目，因为 `deletedPaths` 参数为空。
+
+**缓解**：TypeScript 捕获此 — `scrubHooksJson` 要求该参数。`commands/uninstall.ts:buildPlan` 中的管道从 `Object.keys(hashes)` 构造 `deletedPaths`，因此每个清单条目都在列表中。如果 hook 命令引用不在清单中的脚本，我们故意保留该条目（它可能是用户添加的，即使它指向 Trellis 形状的路径）。
+
+### 清理器在清单之外的文件上被调用
+
+**症状**：不是真正的症状 — `commands/uninstall.ts:buildPlan` 仅对同时出现在 `.template-hashes.json` 和 `buildStructuredFileSpecs` 中的路径分派清理器。清单之外的文件永远不会被清理。
+
+**规则**：不要绕过此门控。在清单门控之外添加「清理具有此形状的任何文件」逻辑将冒修改 Trellis 从未写入的用户文件的风险。
+
+---
+
+## 测试约定
+
+清理器的测试与实现并排作为纯函数测试 — 无 `tmp` 目录，无文件系统。每个清理器测试遵循此形状：
+
+1. **Fixture** — 文件内容的字符串字面量（包含 Trellis 部分 + 用户拥有的部分）。
+2. **调用** — 直接调用清理器。
+3. **断言** — Trellis 部分已消失，用户部分完整，`fullyEmpty` 匹配预期。
+
+### 每个清理器所需的测试案例
+
+| 案例 | 要断言什么 |
 |------|----------------|
-| Pure Trellis content | After scrub, `fullyEmpty === true` |
-| Mixed Trellis + user content | After scrub, `fullyEmpty === false`; user content survives byte-for-byte (modulo JSON re-pretty-print) |
-| User-only content | After scrub, content is unchanged-ish (modulo re-stringify) and `fullyEmpty === false` |
-| Empty file | `fullyEmpty === true` |
-| Malformed input (broken JSON / weird shape) | Returns original content with `fullyEmpty: false` — never throws |
-| Idempotency | `scrub(scrub(x)).content === scrub(x).content` |
+| 纯 Trellis 内容 | 清理后，`fullyEmpty === true` |
+| 混合 Trellis + 用户内容 | 清理后，`fullyEmpty === false`；用户内容逐字节存活（模 JSON 重新美化打印） |
+| 仅用户内容 | 清理后，内容基本不变（模重新 stringify）且 `fullyEmpty === false` |
+| 空文件 | `fullyEmpty === true` |
+| 格式错误的输入（损坏的 JSON / 奇怪的形状） | 返回原始内容，`fullyEmpty: false` — 永不抛出异常 |
+| 幂等性 | `scrub(scrub(x)).content === scrub(x).content` |
 
-### Scrubber-specific cases
+### 清理器特定案例
 
-- `scrubHooksJson`:
-  - User hook entry whose command body merely *mentions* a deleted path inside an `echo` or comment argument → preserved (last-token rule).
-  - Hook entry with `bash` field instead of `command` (Copilot flat schema) → still matched.
-  - Multiple deleted paths in `deletedPaths` → all matching entries dropped in one pass.
-  - Both modes (`"nested"`, `"flat"`) covered separately.
-- `scrubCodexConfigToml`:
-  - User added their own TOML keys above/below the Trellis block → preserved.
-  - User edited a Trellis comment line (typo) → that single line preserved as user content; rest of Trellis block removed.
-- `scrubPiSettings`:
-  - User has their own entry in `extensions`/`skills`/`prompts` → kept; only Trellis entries removed.
-- `scrubOpencodePackageJson`:
-  - User has other dev/runtime deps → kept.
+- `scrubHooksJson`：
+  - 用户 hook 条目，其命令主体仅在 `echo` 或注释参数中*提及*已删除路径 → 保留（最后 token 规则）。
+  - 带有 `bash` 字段而非 `command` 的 Hook 条目（Copilot 扁平 schema）→ 仍然匹配。
+  - `deletedPaths` 中的多个已删除路径 → 所有匹配条目在一次传递中丢弃。
+  - 两种模式（`"nested"`、`"flat"`）分别覆盖。
+- `scrubCodexConfigToml`：
+  - 用户在 Trellis 块之上/之下添加了自己的 TOML 键 → 保留。
+  - 用户编辑了 Trellis 注释行（拼写错误）→ 该单行作为用户内容保留；Trellis 块的其余部分被移除。
+- `scrubPiSettings`：
+  - 用户在 `extensions`/`skills`/`prompts` 中有自己的条目 → 保留；仅移除 Trellis 条目。
+- `scrubOpencodePackageJson`：
+  - 用户有其他 dev/runtime deps → 保留。
 
-### Cross-cutting integration test
+### 跨领域集成测试
 
-`commands/uninstall.ts` integration tests should cover the **full** init → uninstall round-trip per platform: confirm that after `init({ <platform>: true })` followed by `uninstall({ yes: true })`, the platform config dir is either gone (if Trellis was the only writer) or contains only the user's pre-existing content. This catches regressions where a configurator change isn't mirrored in a scrubber update.
-
----
-
-## Reference
-
-Source: `packages/cli/src/utils/uninstall-scrubbers.ts`
-
-Caller: `packages/cli/src/commands/uninstall.ts` (`buildStructuredFileSpecs`, `buildPlan`)
-
-Related specs:
-- `commands-uninstall.md` — orchestration, plan-render-execute flow, prompts
-- `migrations.md` — `safe-file-delete` and hash-gated removal during `update`
-- `platform-integration.md` — the configurator side: where each scrubber-targeted file is emitted
+`commands/uninstall.ts` 集成测试应覆盖每个平台的**完整** init → uninstall 往返：确认在 `init({ <platform>: true })` 后跟 `uninstall({ yes: true })`，平台配置目录要么不存在（如果 Trellis 是唯一写入者），要么仅包含用户之前存在的内容。这捕获了配置器更改未在清理器更新中镜像的回归。
 
 ---
 
-## Potential TODOs surfaced while reading
+## 参考
 
-- `commandMatchesDeletedPath` assumes the Trellis-emitted command has the exact shape `<python-cmd> <script-path>`. If we ever add launcher flags or wrappers, the helper needs a richer parser (full token scan, possibly drop known shell prefixes like `env VAR=val`).
-- The Pi exact-string constants (`PI_TRELLIS_EXTENSION`, `PI_TRELLIS_SKILLS`, `PI_TRELLIS_PROMPTS`) duplicate values that live in the Pi configurator. A shared module exporting these would prevent drift; today they are independently hard-coded in two places.
-- `scrubCodexConfigToml`'s comment-line allowlist (`trellisCommentMarkers`) is a hand-maintained list mirroring the configurator's emitted comment block. Same drift risk as Pi. Consider deriving the list from the same template file the configurator uses.
-- No legacy-marker compatibility layer exists yet. As soon as one configurator changes its emission, the scrubber will need a "match old OR new" branch and a deprecation window. Document the rule in this spec when the first migration lands.
-- All hooks-JSON scrubbers re-pretty-print with 2-space indent on every call, even when no change was made. This silently rewrites user formatting (e.g. tab-indented JSON). Acceptable today; flag if users complain.
+源码：`packages/cli/src/utils/uninstall-scrubbers.ts`
+
+调用者：`packages/cli/src/commands/uninstall.ts`（`buildStructuredFileSpecs`、`buildPlan`）
+
+相关规范：
+- `commands-uninstall.md` — 编排、plan-render-execute 流程、提示
+- `migrations.md` — `safe-file-delete` 和 `update` 期间的哈希门控删除
+- `platform-integration.md` — 配置器端：每个清理器目标文件被发出的位置
+
+---
+
+## 阅读时发现的潜在 TODO
+
+- `commandMatchesDeletedPath` 假设 Trellis 发出的命令具有精确形状 `<python-cmd> <script-path>`。如果我们添加启动器标志或包装器，辅助函数需要更丰富的解析器（完整 token 扫描，可能丢弃已知 shell 前缀，如 `env VAR=val`）。
+- Pi 精确字符串常量（`PI_TRELLIS_EXTENSION`、`PI_TRELLIS_SKILLS`、`PI_TRELLIS_PROMPTS`）复制了 Pi 配置器中存在的值。导出这些的共享模块将防止漂移；今天它们在两个地方独立硬编码。
+- `scrubCodexConfigToml` 的注释行允许列表（`trellisCommentMarkers`）是手动维护的列表，镜像了配置器发出的注释块。与 Pi 相同的漂移风险。考虑从配置器使用的相同模板文件派生该列表。
+- 尚无遗留标记兼容层。一旦一个配置器更改其发出，清理器将需要「匹配旧或新」分支和弃用窗口。在第一个迁移落地时在此规范中记录规则。
+- 所有 hooks-JSON 清理器在每次调用时使用 2 空格缩进重新美化打印，即使没有进行更改。这静默地重写用户格式化（例如，制表符缩进的 JSON）。今天可接受；如果用户抱怨则标记。

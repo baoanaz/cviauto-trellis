@@ -1,35 +1,35 @@
-# How To: Change Verify Commands
+# How To：修改验证命令
 
-Add or modify Ralph Loop verification commands.
+添加或修改 Ralph Loop 验证命令。
 
-**Platform**: Claude Code only (Ralph Loop)
+**平台**：仅 Claude Code（Ralph Loop）
 
 ---
 
-## Files to Modify
+## 需修改的文件
 
-| File | Action | Required |
+| 文件 | 操作 | 是否必需 |
 |------|--------|----------|
-| `.trellis/worktree.yaml` | Modify | Yes |
+| `.trellis/worktree.yaml` | 修改 | 是 |
 
 ---
 
-## Step 1: Edit worktree.yaml
+## 步骤 1：编辑 worktree.yaml
 
-Open `.trellis/worktree.yaml` and modify the `verify` section:
+打开 `.trellis/worktree.yaml`，修改 `verify` 部分：
 
 ```yaml
 verify:
   - pnpm lint
   - pnpm typecheck
-  - pnpm test          # Add this
+  - pnpm test          # 添加此行
 ```
 
 ---
 
-## Common Scenarios
+## 常见场景
 
-### Add Test Verification
+### 添加测试验证
 
 ```yaml
 verify:
@@ -38,7 +38,7 @@ verify:
   - pnpm test
 ```
 
-### Add Build Verification
+### 添加构建验证
 
 ```yaml
 verify:
@@ -47,16 +47,16 @@ verify:
   - pnpm build
 ```
 
-### Add Specific Test Suite
+### 添加特定测试套件
 
 ```yaml
 verify:
   - pnpm lint
   - pnpm typecheck
-  - pnpm test:unit        # Fast unit tests only
+  - pnpm test:unit        # 仅快速单元测试
 ```
 
-### Different Languages
+### 不同语言
 
 **Go:**
 ```yaml
@@ -85,92 +85,92 @@ verify:
 
 ---
 
-## Execution Details
+## 执行细节
 
-### Order
+### 执行顺序
 
-Commands run in order. First failure stops execution.
+命令按顺序执行。首个失败即停止执行。
 
-**Recommended order**: fast → slow
+**推荐顺序**：快 → 慢
 
 ```yaml
 verify:
-  - pnpm lint        # ~2 seconds
-  - pnpm typecheck   # ~10 seconds
-  - pnpm test:unit   # ~30 seconds
-  - pnpm build       # ~60 seconds
+  - pnpm lint        # ~2 秒
+  - pnpm typecheck   # ~10 秒
+  - pnpm test:unit   # ~30 秒
+  - pnpm build       # ~60 秒
 ```
 
-### Timeout
+### 超时
 
-Each command has 120 second timeout.
+每个命令有 120 秒超时。
 
-For long-running commands:
-- Split into smaller chunks
-- Use faster subset for Ralph Loop
-- Run full suite manually
+对于长时间运行的命令：
+- 拆分为更小的块
+- 为 Ralph Loop 使用更快的子集
+- 手动运行完整套件
 
-### Exit Codes
+### 退出码
 
-- Exit 0 = Pass
-- Non-zero = Fail, agent continues
+- 退出 0 = 通过
+- 非零 = 失败，agent 继续执行
 
 ---
 
-## Testing
+## 测试
 
-### Manual Test
+### 手动测试
 
 ```bash
-# Run commands manually
+# 手动运行命令
 pnpm lint && pnpm typecheck && pnpm test
 
-# Should all pass for Ralph Loop to allow stop
+# 应全部通过，Ralph Loop 才允许停止
 ```
 
-### Integration Test
+### 集成测试
 
-1. Make a change that fails linting
-2. Run check agent
-3. Verify Ralph Loop blocks and shows error
-4. Fix the issue
-5. Verify Ralph Loop allows stop
+1. 制造一个会导致 lint 失败的变更
+2. 运行 check agent
+3. 验证 Ralph Loop 阻止并显示错误
+4. 修复问题
+5. 验证 Ralph Loop 允许停止
 
 ---
 
-## Troubleshooting
+## 故障排查
 
-### Command Not Found
+### 命令未找到
 
-Ensure command is available:
+确保命令可用：
 
 ```bash
-which pnpm  # or npm, yarn, etc.
+which pnpm  # 或 npm、yarn 等
 ```
 
-### Timeout Issues
+### 超时问题
 
-Increase timeout in `ralph-loop.py`:
+在 `ralph-loop.py` 中增加超时：
 
 ```python
-COMMAND_TIMEOUT = 180  # Default is 120
+COMMAND_TIMEOUT = 180  # 默认值为 120
 ```
 
-### Skip Verify Temporarily
+### 临时跳过验证
 
-Comment out commands:
+注释掉命令：
 
 ```yaml
 verify:
   - pnpm lint
-  # - pnpm typecheck  # Skip temporarily
+  # - pnpm typecheck  # 临时跳过
 ```
 
 ---
 
-## Checklist
+## 检查清单
 
-- [ ] Commands added to worktree.yaml
-- [ ] Commands tested manually
-- [ ] Order is fast → slow
-- [ ] No timeout issues
+- [ ] 命令已添加到 worktree.yaml
+- [ ] 命令已手动测试
+- [ ] 顺序为快 → 慢
+- [ ] 无超时问题

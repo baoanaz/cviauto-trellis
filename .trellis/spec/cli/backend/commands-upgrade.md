@@ -1,98 +1,88 @@
-# `cviauto upgrade` Command
+# `cviauto upgrade` 命令
 
-How `cviauto upgrade` upgrades the globally installed Cviauto CLI package.
+`cviauto upgrade` 如何升级全局安装的 Cviauto CLI 包。
 
-This command is intentionally separate from `cviauto update`:
+此命令有意与 `cviauto update` 分离：
 
-- `cviauto upgrade` updates the **CLI binary** by running npm's global install.
-- `cviauto update` updates a **project's bundled Cviauto files** under `.cviauto/`
-  and platform directories.
+- `cviauto upgrade` 通过运行 npm 的全局安装来更新 **CLI 二进制文件**。
+- `cviauto update` 更新 `.cviauto/` 和平台目录下的**项目捆绑 Cviauto 文件**。
 
 ---
 
-## User-facing contract
+## 面向用户的契约
 
 ```text
 cviauto upgrade [--tag <tag-or-version>] [--dry-run]
 ```
 
-Behavior:
+行为：
 
-- Builds and runs `npm install -g @baoanaz/cviauto@<tag>`.
-- POSIX execution must spawn `npm` directly without shell execution.
-- Windows execution must route through `cmd.exe /d /s /c npm install -g ...`
-  instead of directly spawning `npm.cmd`.
-- Uses the current CLI channel by default:
-  - stable versions install `@latest`
-  - `-beta.*` versions install `@beta`
-  - `-rc.*` versions install `@rc`
-- `--tag <tag-or-version>` overrides the inferred channel. Accept simple npm
-  dist-tags or versions such as `latest`, `beta`, `rc`, or `0.6.0-beta.8`.
-- `--dry-run` prints the exact npm command and exits without changing anything.
+- 构建并运行 `npm install -g @baoanaz/cviauto@<tag>`。
+- POSIX 执行必须直接 spawn `npm`，不使用 shell 执行。
+- Windows 执行必须通过 `cmd.exe /d /s /c npm install -g ...` 路由，而不是直接 spawn `npm.cmd`。
+- 默认使用当前 CLI 通道：
+  - 稳定版本安装 `@latest`
+  - `-beta.*` 版本安装 `@beta`
+  - `-rc.*` 版本安装 `@rc`
+- `--tag <tag-or-version>` 覆盖推断的通道。接受简单的 npm dist-tags 或版本，如 `latest`、`beta`、`rc` 或 `0.6.0-beta.8`。
+- `--dry-run` 打印确切的 npm 命令并退出而不进行任何更改。
 
-The implementation does not detect or preserve the original installer. Cviauto
-is published as an npm package, so npm is the upgrade backend even when the user
-installed Node through pnpm, Homebrew, Volta, proto, or another manager.
+实现不会检测或保留原始安装器。Cviauto 作为 npm 包发布，因此 npm 是升级后端，即使用户通过 pnpm、Homebrew、Volta、proto 或其他管理器安装了 Node。
 
 ---
 
-## Failure behavior
+## 失败行为
 
-- If npm is unavailable, fail with the manual npm command.
-- If npm exits non-zero, surface the exit code.
-- If npm is interrupted by a signal, report the signal.
-- Append troubleshooting guidance for npm global prefix / PATH mismatches,
-  permissions, existing-bin or locked-file conflicts, and the manual command.
-- Do not automatically run `sudo`, pass `--force`, rewrite npm prefix, delete
-  files, or detect package managers.
-- Reject shell-shaped `--tag` input before spawning npm. Never build a shell
-  command string for POSIX execution.
+- 如果 npm 不可用，以手动 npm 命令失败。
+- 如果 npm 以非零退出，展示退出代码。
+- 如果 npm 被信号中断，报告信号。
+- 为 npm 全局前缀 / PATH 不匹配、权限、现有二进制或锁定文件冲突以及手动命令追加故障排除指导。
+- 不要自动运行 `sudo`、传递 `--force`、重写 npm 前缀、删除文件或检测包管理器。
+- 在 spawn npm 之前拒绝 shell 形状的 `--tag` 输入。永远不要为 POSIX 执行构建 shell 命令字符串。
 
-## Success behavior
+## 成功行为
 
-After npm reports success, print both:
+在 npm 报告成功后，打印两者：
 
 ```text
 cviauto --version
 ```
 
-and a platform-specific binary-resolution check:
+和一个平台特定的二进制解析检查：
 
 ```text
 which cviauto   # POSIX
 where cviauto   # Windows
 ```
 
-This catches the common case where npm installed into one global prefix while
-the user's shell still resolves an older `cviauto` binary earlier on PATH.
+这捕获了常见情况：npm 安装到一个全局前缀，而用户的 shell 仍在 PATH 上较早解析到更旧的 `cviauto` 二进制文件。
 
 ---
 
-## Update hints
+## 更新提示
 
-Any user-facing hint that previously said:
+任何之前说：
 
 ```text
 npm install -g @baoanaz/cviauto@latest
 ```
 
-should now prefer:
+的面向用户提示现在应改为：
 
 ```text
 cviauto upgrade
 ```
 
-This applies to CLI startup warnings, `cviauto update` downgrade guidance, and
-session-start update hints.
+这适用于 CLI 启动警告、`cviauto update` 降级指导以及会话开始更新提示。
 
 ---
 
-## Test requirements
+## 测试要求
 
-- Tag inference: stable → `latest`, beta → `beta`, RC → `rc`.
-- Explicit tag override.
-- Invalid tag rejection.
-- POSIX direct npm command with `shell: false`.
-- Windows `cmd.exe /d /s /c npm ...` command plan with `shell: false`.
-- Dry-run does not spawn npm.
-- Non-zero npm exit becomes a command failure with troubleshooting guidance.
+- 标签推断：stable → `latest`，beta → `beta`，RC → `rc`。
+- 显式标签覆盖。
+- 无效标签拒绝。
+- POSIX 直接 npm 命令，使用 `shell: false`。
+- Windows `cmd.exe /d /s /c npm ...` 命令计划，使用 `shell: false`。
+- Dry-run 不 spawn npm。
+- 非零 npm 退出变为带有故障排除指导的命令失败。

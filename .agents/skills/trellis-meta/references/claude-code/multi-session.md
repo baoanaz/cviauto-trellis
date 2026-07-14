@@ -1,42 +1,42 @@
-# Multi-Session Reference
+# 多会话参考（Multi-Session Reference）
 
-Documentation for parallel isolated sessions using Git worktrees.
-
----
-
-## Overview
-
-Multi-Session enables **parallel, isolated development sessions** using Git worktrees. Each session runs in its own directory with its own branch.
-
-**Key Distinction**:
-- **Multi-Agent** = Multiple agents in current directory (dispatch → implement → check)
-- **Multi-Session** = Parallel sessions in separate worktrees (this document)
+使用 Git worktree 实现并行隔离会话的文档。
 
 ---
 
-## When to Use Multi-Session
+## 概述
 
-| Scenario | Use Multi-Session? |
+多会话（Multi-Session）通过 Git worktree 实现**并行、隔离的开发会话**。每个会话在各自的目录中运行，拥有独立的分支。
+
+**关键区分**：
+- **Multi-Agent** = 当前目录下的多个 agent（dispatch → implement → check）
+- **Multi-Session** = 独立 worktree 中的并行会话（本文档）
+
+---
+
+## 何时使用多会话
+
+| 场景 | 是否使用 Multi-Session？ |
 |----------|-------------------|
-| Normal task in current branch | No - use Multi-Agent |
-| Long-running task, want to work on other things | Yes |
-| Multiple independent tasks in parallel | Yes |
-| Task needs clean isolated environment | Yes |
-| Quick fix or small change | No |
+| 当前分支上的普通任务 | 否 - 使用 Multi-Agent |
+| 长时间运行的任务，希望同时做其他事情 | 是 |
+| 多个并行的独立任务 | 是 |
+| 任务需要干净的隔离环境 | 是 |
+| 快速修复或小改动 | 否 |
 
 ---
 
-## Architecture
+## 架构
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
-│                         MAIN REPOSITORY                                     │
-│                         (your current directory)                            │
+│                         主仓库（MAIN REPOSITORY）                            │
+│                         （当前目录）                                         │
 │                                                                             │
-│  /trellis:parallel → Configure task → start.py                             │
+│  /trellis:parallel → 配置任务 → start.py                                   │
 │                                           │                                 │
-│                                           │ Creates worktree               │
-│                                           │ Starts agent                   │
+│                                           │ 创建 worktree                   │
+│                                           │ 启动 agent                      │
 │                                           ▼                                 │
 └───────────────────────────────────────────┼─────────────────────────────────┘
                                             │
@@ -61,76 +61,76 @@ Multi-Session enables **parallel, isolated development sessions** using Git work
 │ PID: 12345           │  │ PID: 12346           │  │ PID: 12347           │
 └──────────────────────┘  └──────────────────────┘  └──────────────────────┘
 
-Location: ../worktrees/  (default)
+位置：../worktrees/（默认）
 ```
 
 ---
 
 ## Git Worktree
 
-### What is a Worktree?
+### 什么是 Worktree？
 
-Git worktrees allow multiple working directories from one repository:
+Git worktree 允许从一个仓库创建多个工作目录：
 
 ```
-/project/                              # Main repo (main branch)
-/project/../worktrees/                 # Default: ../worktrees
-├── feature/add-login/                # Worktree 1 (own branch)
-├── feature/user-profile/             # Worktree 2 (own branch)
-└── fix/api-bug/                      # Worktree 3 (own branch)
+/project/                              # 主仓库（main 分支）
+/project/../worktrees/                 # 默认：../worktrees
+├── feature/add-login/                # Worktree 1（独立分支）
+├── feature/user-profile/             # Worktree 2（独立分支）
+└── fix/api-bug/                      # Worktree 3（独立分支）
 ```
 
-### Benefits
+### 优势
 
-| Benefit | Description |
+| 优势 | 描述 |
 |---------|-------------|
-| **True isolation** | Separate filesystem per session |
-| **Own branch** | Each worktree on its own branch |
-| **Parallel execution** | Multiple agents work simultaneously |
-| **Clean state** | Start fresh, no interference |
-| **Session persistence** | Each has `.session-id` for resume |
-| **Easy cleanup** | Remove worktree = remove everything |
+| **真正隔离** | 每个会话有独立的文件系统 |
+| **独立分支** | 每个 worktree 在自己的分支上 |
+| **并行执行** | 多个 agent 同时工作 |
+| **干净状态** | 从零开始，无干扰 |
+| **会话持久化** | 每个都有 `.session-id` 用于恢复 |
+| **易于清理** | 删除 worktree = 删除所有内容 |
 
 ---
 
-## Configuration
+## 配置
 
 ### worktree.yaml
 
-Location: `.trellis/worktree.yaml`
+位置：`.trellis/worktree.yaml`
 
 ```yaml
-# Where worktrees are created (relative to project)
-# Default: ../worktrees
+# worktree 创建位置（相对于项目根目录）
+# 默认：../worktrees
 worktree_dir: ../worktrees
 
-# Files to copy to each worktree (default: [])
+# 要复制到每个 worktree 的文件（默认：[]）
 copy:
-  - .trellis/.developer      # Developer identity
-  - .env                      # Environment variables
-  - .env.local                # Local overrides
+  - .trellis/.developer      # 开发者身份
+  - .env                      # 环境变量
+  - .env.local                # 本地覆盖
 
-# Commands after worktree creation (default: [])
+# worktree 创建后执行的命令（默认：[]）
 post_create:
-  - npm install               # Install dependencies
+  - npm install               # 安装依赖
   # - pnpm install --frozen-lockfile
 
-# Verification commands for Ralph Loop (default: [])
+# Ralph Loop 的验证命令（默认：[]）
 verify:
   - pnpm lint
   - pnpm typecheck
 ```
 
-### Task Configuration
+### 任务配置
 
-Each session needs a configured task:
+每个会话需要一个已配置的任务：
 
 ```json
 // task.json
 {
-  "branch": "feature/add-login",     // Required for worktree
+  "branch": "feature/add-login",     // worktree 必需
   "base_branch": "main",
-  "worktree_path": null,             // Set by start.py
+  "worktree_path": null,             // 由 start.py 设置
   "current_phase": 0,
   "next_action": [
     {"phase": 1, "action": "implement"},
@@ -143,27 +143,27 @@ Each session needs a configured task:
 
 ---
 
-## Scripts
+## 脚本
 
-### start.py - Start Session
+### start.py - 启动会话
 
-Creates worktree and starts agent.
+创建 worktree 并启动 agent。
 
 ```bash
 python3 .trellis/scripts/multi_agent/start.py <task-dir>
 ```
 
-**Actions**:
-1. Read `task.json` for branch name
-2. Create git worktree:
+**操作**：
+1. 读取 `task.json` 获取分支名称
+2. 创建 git worktree：
    ```bash
    git worktree add -b <branch> ../trellis-worktrees/<branch>
    ```
-3. Copy files from `worktree.yaml` copy list
-4. Copy task directory to worktree
-5. Run `post_create` hooks
-6. Set the session-scoped active task for the worktree run
-7. Start Claude Dispatch Agent:
+3. 从 `worktree.yaml` 的 copy 列表中复制文件
+4. 将任务目录复制到 worktree
+5. 运行 `post_create` 钩子
+6. 为 worktree 运行设置会话级活动任务
+7. 启动 Claude Dispatch Agent：
    ```bash
    claude -p --agent dispatch \
      --session-id <uuid> \
@@ -171,38 +171,38 @@ python3 .trellis/scripts/multi_agent/start.py <task-dir>
      --output-format stream-json \
      --verbose "Start the pipeline"
    ```
-8. Register to `registry.json`
+8. 注册到 `registry.json`
 
-**Example**:
+**示例**：
 ```bash
 python3 .trellis/scripts/multi_agent/start.py .trellis/tasks/01-31-add-login-taosu
-# Output: Started agent in ../trellis-worktrees/feature/add-login
+# 输出：Started agent in ../trellis-worktrees/feature/add-login
 ```
 
 ---
 
-### status.py - Monitor Sessions
+### status.py - 监控会话
 
-Check all running sessions.
+查看所有运行中的会话。
 
 ```bash
-# Overview
+# 概览
 python3 .trellis/scripts/multi_agent/status.py
 
-# Detailed view
+# 详细视图
 python3 .trellis/scripts/multi_agent/status.py --detail <task-name>
 
-# Watch mode
+# 监视模式
 python3 .trellis/scripts/multi_agent/status.py --watch <task-name>
 
-# View logs
+# 查看日志
 python3 .trellis/scripts/multi_agent/status.py --log <task-name>
 
-# Show registry
+# 显示注册表
 python3 .trellis/scripts/multi_agent/status.py --registry
 ```
 
-**Output**:
+**输出**：
 ```
 Active Sessions:
 ┌──────────────┬──────────┬────────────────┬──────────┬───────────┐
@@ -218,50 +218,50 @@ Resume stopped sessions:
 
 ---
 
-### create_pr.py - Create PR
+### create_pr.py - 创建 PR
 
-Creates PR from worktree changes.
+从 worktree 的变更创建 PR。
 
 ```bash
 python3 .trellis/scripts/multi_agent/create_pr.py [--dry-run]
 ```
 
-**Actions**:
-1. Stage changes: `git add -A`
-2. Exclude: `git reset .trellis/workspace/`
-3. Commit: `feat(<scope>): <task-name>`
-4. Push to remote
-5. Create Draft PR: `gh pr create --draft`
-6. Update task.json: `status: "completed"`, `pr_url`
+**操作**：
+1. 暂存变更：`git add -A`
+2. 排除：`git reset .trellis/workspace/`
+3. 提交：`feat(<scope>): <task-name>`
+4. 推送到远程
+5. 创建 Draft PR：`gh pr create --draft`
+6. 更新 task.json：`status: "completed"`, `pr_url`
 
 ---
 
-### cleanup.py - Remove Worktrees
+### cleanup.py - 删除 Worktree
 
-Clean up after completion.
+完成后清理。
 
 ```bash
-# Specific worktree
+# 指定 worktree
 python3 .trellis/scripts/multi_agent/cleanup.py <branch-name>
 
-# All merged worktrees
+# 所有已合并的 worktree
 python3 .trellis/scripts/multi_agent/cleanup.py --merged
 
-# All worktrees (with confirmation)
+# 所有 worktree（需确认）
 python3 .trellis/scripts/multi_agent/cleanup.py --all
 ```
 
-**Actions**:
-1. Archive task to `.trellis/tasks/archive/YYYY-MM/`
-2. Remove from registry
-3. Remove worktree: `git worktree remove <path>`
-4. Optionally delete branch
+**操作**：
+1. 归档任务到 `.trellis/tasks/archive/YYYY-MM/`
+2. 从注册表中移除
+3. 删除 worktree：`git worktree remove <path>`
+4. 可选删除分支
 
 ---
 
-### plan.py - Auto-Configure Task
+### plan.py - 自动配置任务
 
-Launches Plan Agent to create task configuration.
+启动 Plan Agent 来创建任务配置。
 
 ```bash
 python3 .trellis/scripts/multi_agent/plan.py \
@@ -270,20 +270,20 @@ python3 .trellis/scripts/multi_agent/plan.py \
   --requirement "<description>"
 ```
 
-**Plan Agent**:
-1. Evaluates requirements (can REJECT)
-2. Calls Research Agent
-3. Creates `prd.md`
-4. Configures `task.json`
-5. Initializes JSONL files
+**Plan Agent**：
+1. 评估需求（可以 REJECT）
+2. 调用 Research Agent
+3. 创建 `prd.md`
+4. 配置 `task.json`
+5. 初始化 JSONL 文件
 
 ---
 
-## Session Registry
+## 会话注册表（Session Registry）
 
-Tracks all running sessions.
+跟踪所有运行中的会话。
 
-**Location**: `.trellis/workspace/<developer>/.agents/registry.json`
+**位置**：`.trellis/workspace/<developer>/.agents/registry.json`
 
 ```json
 {
@@ -299,7 +299,7 @@ Tracks all running sessions.
 }
 ```
 
-**API** (`common/registry.py`):
+**API**（`common/registry.py`）：
 ```python
 registry_add_agent(agent_id, worktree_path, pid, task_dir)
 registry_remove_by_id(agent_id)
@@ -310,81 +310,81 @@ registry_list_agents()
 
 ---
 
-## Complete Workflow
+## 完整工作流
 
-### 1. Configure Task
+### 1. 配置任务
 
 ```bash
-# Create task
+# 创建任务
 python3 .trellis/scripts/task.py create "Add login" --slug add-login
 
-# Configure
+# 配置
 python3 .trellis/scripts/task.py init-context <task-dir> fullstack
 python3 .trellis/scripts/task.py set-branch <task-dir> feature/add-login
 
-# Write prd.md
+# 编写 prd.md
 # ...
 ```
 
-### 2. Start Session
+### 2. 启动会话
 
 ```bash
 python3 .trellis/scripts/multi_agent/start.py <task-dir>
 ```
 
-### 3. Monitor
+### 3. 监控
 
 ```bash
 python3 .trellis/scripts/multi_agent/status.py --watch add-login
 ```
 
-### 4. After Completion
+### 4. 完成后
 
 ```bash
-# PR auto-created
-# Review on GitHub, merge
+# PR 自动创建
+# 在 GitHub 上审查，合并
 
-# Cleanup
+# 清理
 python3 .trellis/scripts/multi_agent/cleanup.py feature/add-login
 ```
 
 ---
 
-## Parallel Execution
+## 并行执行
 
-Start multiple sessions:
+启动多个会话：
 
 ```bash
-# Session 1
+# 会话 1
 python3 .trellis/scripts/multi_agent/start.py .trellis/tasks/01-31-add-login
 
-# Session 2 (immediately)
+# 会话 2（立即）
 python3 .trellis/scripts/multi_agent/start.py .trellis/tasks/01-31-fix-api
 
-# Session 3
+# 会话 3
 python3 .trellis/scripts/multi_agent/start.py .trellis/tasks/01-31-update-docs
 
-# Monitor all
+# 监控全部
 python3 .trellis/scripts/multi_agent/status.py
 ```
 
-Each runs independently:
-- Own worktree
-- Own branch
-- Own Claude process
-- Own registry entry
+每个独立运行：
+- 独立的 worktree
+- 独立的分支
+- 独立的 Claude 进程
+- 独立的注册表条目
 
 ---
 
-## Resuming Sessions
+## 恢复会话
 
-If a session stops:
+如果会话停止：
 
 ```bash
-# Find session info
+# 查找会话信息
 python3 .trellis/scripts/multi_agent/status.py --detail <task-name>
 
-# Resume
+# 恢复
 cd ../trellis-worktrees/feature/task-name
 claude --resume <session-id>
 ```
@@ -393,30 +393,30 @@ claude --resume <session-id>
 
 ## Ralph Loop
 
-Quality enforcement for Check Agent in sessions.
+会话中 Check Agent 的质量保障机制。
 
-**Mechanism**:
-1. Check Agent completes
-2. SubagentStop hook fires
-3. `ralph-loop.py` runs verify commands
-4. All pass → allow stop
-5. Any fail → block, continue agent
+**机制**：
+1. Check Agent 完成
+2. SubagentStop 钩子触发
+3. `ralph-loop.py` 运行验证命令
+4. 全部通过 → 允许停止
+5. 任一失败 → 阻止，继续 agent
 
-**Constants**:
-| Constant | Value | Description |
+**常量**：
+| 常量 | 值 | 描述 |
 |----------|-------|-------------|
-| `MAX_ITERATIONS` | 5 | Maximum loop iterations |
-| `STATE_TIMEOUT_MINUTES` | 30 | State timeout |
-| Command timeout | 120s | Per verify command |
+| `MAX_ITERATIONS` | 5 | 最大循环迭代次数 |
+| `STATE_TIMEOUT_MINUTES` | 30 | 状态超时时间 |
+| Command timeout | 120s | 每个验证命令的超时 |
 
-**Configuration** (`worktree.yaml`):
+**配置**（`worktree.yaml`）：
 ```yaml
 verify:
   - pnpm lint
   - pnpm typecheck
 ```
 
-**State** (`.trellis/.ralph-state.json`):
+**状态**（`.trellis/.ralph-state.json`）：
 ```json
 {
   "task": ".trellis/tasks/01-31-add-login",
@@ -425,45 +425,45 @@ verify:
 }
 ```
 
-**Limits**: Max 5 iterations (`MAX_ITERATIONS`), 30min timeout (`STATE_TIMEOUT_MINUTES`), 120s per command
+**限制**：最大 5 次迭代（`MAX_ITERATIONS`），30 分钟超时（`STATE_TIMEOUT_MINUTES`），每条命令 120 秒
 
 ---
 
-## Troubleshooting
+## 故障排查
 
-### Session Not Starting
+### 会话无法启动
 
-1. Check `worktree.yaml` exists
-2. Verify branch name doesn't exist
-3. Check `post_create` hooks
-4. Look at start.py output
+1. 检查 `worktree.yaml` 是否存在
+2. 确认分支名称不存在
+3. 检查 `post_create` 钩子
+4. 查看 start.py 输出
 
-### Session Stuck
+### 会话卡住
 
-1. Check Ralph Loop iteration (max 5)
-2. Verify `verify` commands
-3. Manually run verify commands
-4. Check `.trellis/.ralph-state.json`
+1. 检查 Ralph Loop 迭代次数（最大 5）
+2. 验证 `verify` 命令
+3. 手动运行验证命令
+4. 检查 `.trellis/.ralph-state.json`
 
-### Worktree Issues
+### Worktree 问题
 
 ```bash
-# Force remove
+# 强制删除
 git worktree remove --force <path>
 
-# Prune stale
+# 清理过期项
 git worktree prune
 
-# List all
+# 列出全部
 git worktree list
 ```
 
-### Registry Out of Sync
+### 注册表不同步
 
 ```bash
-# View
+# 查看
 python3 .trellis/scripts/multi_agent/status.py --registry
 
-# Manual edit
+# 手动编辑
 vim .trellis/workspace/<dev>/.agents/registry.json
 ```

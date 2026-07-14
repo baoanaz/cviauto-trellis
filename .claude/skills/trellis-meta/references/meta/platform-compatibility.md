@@ -1,43 +1,44 @@
-# Platform Compatibility Reference
+# 平台兼容性参考
 
-Detailed guide on Trellis feature availability across different AI coding platforms.
-
----
-
-## Overview
-
-Trellis is designed primarily for **Claude Code** but provides partial support for **Cursor**. Future support for **OpenCode** is under consideration.
-
-The key differentiator is **hooks support** - Claude Code's hook system enables automatic context injection and quality enforcement, while other platforms require manual workarounds.
+详细介绍 Trellis 功能在不同 AI 编码平台上的可用性。
 
 ---
 
-## Platform Architecture
+## 概述
+
+Trellis 主要为 **Claude Code** 设计，但对 **Cursor** 提供部分支持。未来考虑支持 **OpenCode**。
+
+关键区别在于 **hooks 支持**——Claude Code 的 hook 系统可实现自动上下文注入和质量强制执行，而其他平台需要手动变通方案。
+
+---
+
+## 平台架构
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         TRELLIS FEATURE LAYERS                           │
+│                         TRELLIS 功能分层                                  │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                          │
 │  ┌────────────────────────────────────────────────────────────────────┐ │
-│  │                    LAYER 3: AUTOMATION                              │ │
-│  │  Hooks, Ralph Loop, Auto-injection, Multi-Session                  │ │
+│  │                    第 3 层：自动化                                   │ │
+│  │  Hooks、Ralph Loop、自动注入、多会话（Multi-Session）               │ │
 │  │  ─────────────────────────────────────────────────────────────────│ │
-│  │  Platform: Claude Code ONLY                                        │ │
+│  │  平台：仅限 Claude Code                                             │ │
 │  └────────────────────────────────────────────────────────────────────┘ │
 │                                    │                                     │
 │  ┌────────────────────────────────▼───────────────────────────────────┐ │
-│  │                    LAYER 2: AGENTS                                  │ │
-│  │  Agent definitions, Task tool, Subagent invocation                 │ │
+│  │                    第 2 层：Agent                                    │ │
+│  │  Agent 定义、Task 工具、Subagent 调用                               │ │
 │  │  ─────────────────────────────────────────────────────────────────│ │
-│  │  Platform: Claude Code (full), Cursor (manual)                     │ │
+│  │  平台：Claude Code（完整）、Cursor（手动）                          │ │
 │  └────────────────────────────────────────────────────────────────────┘ │
 │                                    │                                     │
 │  ┌────────────────────────────────▼───────────────────────────────────┐ │
-│  │                    LAYER 1: PERSISTENCE                             │ │
-│  │  Workspace, Tasks, Specs, Commands, JSONL files                    │ │
+│  │                    第 1 层：持久化                                   │ │
+│  │  工作区（Workspace）、任务（Tasks）、规范（Specs）、命令（Commands）、│ │
+│  │  JSONL 文件                                                         │ │
 │  │  ─────────────────────────────────────────────────────────────────│ │
-│  │  Platform: ALL (file-based, portable)                              │ │
+│  │  平台：全部（基于文件，可移植）                                      │ │
 │  └────────────────────────────────────────────────────────────────────┘ │
 │                                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -45,56 +46,56 @@ The key differentiator is **hooks support** - Claude Code's hook system enables 
 
 ---
 
-## Detailed Feature Breakdown
+## 详细功能分解
 
-### Layer 1: Persistence (All Platforms)
+### 第 1 层：持久化（所有平台）
 
-These features work on all platforms because they're file-based.
+这些功能在所有平台上均可使用，因为它们基于文件。
 
-| Feature | Location | Description |
+| 功能 | 位置 | 描述 |
 |---------|----------|-------------|
-| Workspace system | `.trellis/workspace/` | Journals, session history |
-| Task system | `.trellis/tasks/` | Task tracking, requirements |
-| Spec system | `.trellis/spec/` | Coding guidelines |
-| Slash commands | `.claude/commands/` | Command prompts (read manually on Cursor) |
-| JSONL context | `*.jsonl` in task dirs | Context file lists |
-| Developer identity | `.trellis/.developer` | Who is working |
-| Current task | `.trellis/.runtime/sessions/` | Session-scoped active task state |
+| 工作区系统 | `.trellis/workspace/` | 日志、会话历史 |
+| 任务系统 | `.trellis/tasks/` | 任务跟踪、需求 |
+| 规范系统 | `.trellis/spec/` | 编码指南 |
+| 斜杠命令 | `.claude/commands/` | 命令提示词（在 Cursor 上需手动读取） |
+| JSONL 上下文 | 任务目录中的 `*.jsonl` | 上下文文件列表 |
+| 开发者身份 | `.trellis/.developer` | 谁在操作 |
+| 当前任务 | `.trellis/.runtime/sessions/` | 会话作用域的活动任务状态 |
 
-**Cursor workaround**: Manually read these files at session start.
+**Cursor 变通方案**：在会话开始时手动读取这些文件。
 
-### Layer 2: Agents (Claude Code Full, Cursor Limited)
+### 第 2 层：Agent（Claude Code 完整，Cursor 有限）
 
-| Feature | Claude Code | Cursor |
+| 功能 | Claude Code | Cursor |
 |---------|-------------|--------|
-| Agent definitions | Auto-loaded via `--agent` flag | Read `.claude/agents/*.md` manually |
-| Task tool | Full subagent support | No Task tool |
-| Context injection | Automatic via hooks | Manual copy-paste |
-| Agent restrictions | Enforced by definition | Honor code only |
+| Agent 定义 | 通过 `--agent` 标志自动加载 | 手动读取 `.claude/agents/*.md` |
+| Task 工具 | 完整 Subagent 支持 | 无 Task 工具 |
+| 上下文注入 | 通过 hooks 自动注入 | 手动复制粘贴 |
+| Agent 限制 | 由定义强制执行 | 仅靠自觉遵守 |
 
-**Cursor workaround**:
-1. Read the agent definition file manually
-2. Copy relevant context from JSONL files
-3. Follow agent restrictions manually
+**Cursor 变通方案**：
+1. 手动读取 Agent 定义文件
+2. 从 JSONL 文件中复制相关上下文
+3. 手动遵守 Agent 限制
 
-### Layer 3: Automation (Claude Code Only)
+### 第 3 层：自动化（仅限 Claude Code）
 
-| Feature | Dependency | Why Claude Code Only |
+| 功能 | 依赖 | 为何仅限 Claude Code |
 |---------|------------|---------------------|
-| SessionStart hook | `.claude/settings.json` | Claude Code hook system |
-| PreToolUse hook | Hook system | Intercepts tool calls |
-| SubagentStop hook | Hook system | Controls agent lifecycle |
-| Auto context injection | PreToolUse:Task | Hooks inject JSONL content |
-| Ralph Loop | SubagentStop:check | Blocks agent until verify passes |
-| Multi-Session | claude CLI + hooks | `claude --resume`, worktree scripts |
+| SessionStart hook | `.claude/settings.json` | Claude Code hook 系统 |
+| PreToolUse hook | Hook 系统 | 拦截工具调用 |
+| SubagentStop hook | Hook 系统 | 控制 Agent 生命周期 |
+| 自动上下文注入 | PreToolUse:Task | Hook 注入 JSONL 内容 |
+| Ralph Loop | SubagentStop:check | 阻止 Agent 直到验证通过 |
+| 多会话（Multi-Session） | claude CLI + hooks | `claude --resume`、worktree 脚本 |
 
-**No workaround**: These features fundamentally require Claude Code's hook system.
+**无变通方案**：这些功能从根本上依赖 Claude Code 的 hook 系统。
 
 ---
 
-## Claude Code Features Used
+## 使用的 Claude Code 功能
 
-### Hook System
+### Hook 系统
 
 ```json
 // .claude/settings.json
@@ -107,19 +108,19 @@ These features work on all platforms because they're file-based.
 }
 ```
 
-Claude Code executes these hooks at specific lifecycle points. No other platform currently supports this.
+Claude Code 在特定生命周期节点执行这些 hooks。目前没有其他平台支持此功能。
 
-### CLI Features
+### CLI 功能
 
-| Command | Purpose |
+| 命令 | 用途 |
 |---------|---------|
-| `claude --agent <name>` | Load agent definition |
-| `claude --resume <id>` | Resume session |
-| `claude -p` | Print mode (non-interactive) |
-| `claude --dangerously-skip-permissions` | Automation mode |
-| `claude --output-format stream-json` | Machine-readable output |
+| `claude --agent <name>` | 加载 Agent 定义 |
+| `claude --resume <id>` | 恢复会话 |
+| `claude -p` | 打印模式（非交互） |
+| `claude --dangerously-skip-permissions` | 自动化模式 |
+| `claude --output-format stream-json` | 机器可读输出 |
 
-### Task Tool
+### Task 工具
 
 ```javascript
 Task(
@@ -129,96 +130,96 @@ Task(
 )
 ```
 
-Claude Code's Task tool spawns subagents with isolated context. The PreToolUse hook intercepts this to inject specs.
+Claude Code 的 Task 工具可以在隔离上下文中生成 Subagent。PreToolUse hook 拦截此操作以注入规范。
 
 ---
 
-## Cursor Usage Guide
+## Cursor 使用指南
 
-For teams using Cursor, here's how to get partial Trellis benefits:
+对于使用 Cursor 的团队，以下是获取部分 Trellis 优势的方法：
 
-### What Works
+### 可用的功能
 
-1. **Workspace tracking**: Journals and sessions work normally
-2. **Task organization**: Task directories and PRDs work
-3. **Spec reading**: Read specs manually at session start
-4. **Commands as prompts**: Read command files as reference
+1. **工作区跟踪**：日志和会话正常工作
+2. **任务组织**：任务目录和 PRD 正常工作
+3. **规范读取**：在会话开始时手动读取规范
+4. **命令作为提示词**：将命令文件作为参考读取
 
-### Recommended Workflow
+### 推荐工作流
 
 ```
-1. Session Start
-   - Read .trellis/workflow.md
-   - Read relevant specs from .trellis/spec/
-   - Run `task.py current --source`
+1. 会话开始
+   - 读取 .trellis/workflow.md
+   - 从 .trellis/spec/ 读取相关规范
+   - 运行 `task.py current --source`
 
-2. Before Implementation
-   - Read implement.jsonl for session files
-   - Manually read each file listed
-   - Follow spec guidelines
+2. 实现前
+   - 读取 implement.jsonl 获取会话文件
+   - 手动读取列出的每个文件
+   - 遵循规范指南
 
-3. Before Commit
-   - Run verify commands manually (pnpm lint, pnpm typecheck)
-   - Self-review against check.jsonl specs
+3. 提交前
+   - 手动运行验证命令（pnpm lint、pnpm typecheck）
+   - 对照 check.jsonl 规范进行自我审查
 ```
 
-### What Doesn't Work
+### 不可用的功能
 
-- No automatic spec injection
-- No Ralph Loop (manual verification only)
-- No Multi-Session (no worktree automation)
-- No session resume
+- 无自动规范注入
+- 无 Ralph Loop（仅手动验证）
+- 无多会话（Multi-Session）（无 worktree 自动化）
+- 无会话恢复
 
 ---
 
-## OpenCode Considerations (Future)
+## OpenCode 考虑（未来）
 
-### Requirements for Support
+### 支持所需的条件
 
-To support OpenCode, we would need:
+要支持 OpenCode，我们需要：
 
-1. **Hook equivalent**: Some way to intercept agent lifecycle events
-2. **Agent system**: Subagent invocation with context
-3. **CLI integration**: Scripting and automation support
+1. **Hook 等价物**：某种拦截 Agent 生命周期事件的方式
+2. **Agent 系统**：带上下文的 Subagent 调用
+3. **CLI 集成**：脚本和自动化支持
 
-### Potential Approaches
+### 潜在方案
 
-| Approach | Pros | Cons |
+| 方案 | 优点 | 缺点 |
 |----------|------|------|
-| Native integration | Best UX, full features | Requires OpenCode changes |
-| Adapter layer | Works with current OpenCode | Maintenance burden |
-| File-based polling | No OpenCode changes needed | Hacky, latency issues |
-| MCP server | Standard protocol | May not cover all hooks |
+| 原生集成 | 最佳 UX，完整功能 | 需要 OpenCode 更改 |
+| 适配器层 | 与当前 OpenCode 兼容 | 维护负担 |
+| 基于文件的轮询 | 无需 OpenCode 更改 | 取巧，延迟问题 |
+| MCP 服务器 | 标准协议 | 可能无法覆盖所有 hooks |
 
-### Minimum Viable Support
+### 最低可行支持
 
-If OpenCode adds hook support similar to Claude Code:
+如果 OpenCode 添加了类似 Claude Code 的 hook 支持：
 
-1. Port `session-start.py` to OpenCode format
-2. Port `inject-subagent-context.py` for context injection
-3. Port `ralph-loop.py` for quality enforcement
+1. 将 `session-start.py` 移植到 OpenCode 格式
+2. 移植 `inject-subagent-context.py` 用于上下文注入
+3. 移植 `ralph-loop.py` 用于质量强制执行
 
-Without hooks, only Layer 1 (persistence) features would work.
+没有 hooks，只有第 1 层（持久化）功能可用。
 
 ---
 
-## Version Compatibility Matrix
+## 版本兼容性矩阵
 
-| Trellis Version | Claude Code | Cursor | OpenCode |
+| Trellis 版本 | Claude Code | Cursor | OpenCode |
 |-----------------|-------------|--------|----------|
-| 0.3.x | Full support | Partial | Not supported |
-| 0.4.x (planned) | Full support | Partial | TBD |
+| 0.3.x | 完整支持 | 部分支持 | 不支持 |
+| 0.4.x（计划中） | 完整支持 | 部分支持 | 待定 |
 
-### Breaking Changes
+### 破坏性变更
 
-| Version | Change | Impact |
+| 版本 | 变更 | 影响 |
 |---------|--------|--------|
-| 0.3.0 | New hook format | Update settings.json |
-| 0.3.0-beta.3 | worktree.yaml schema | Update config |
+| 0.3.0 | 新 hook 格式 | 更新 settings.json |
+| 0.3.0-beta.3 | worktree.yaml 架构 | 更新配置 |
 
 ---
 
-## Checking Your Platform
+## 检查你的平台
 
 ### Claude Code
 
@@ -237,12 +238,12 @@ cat .claude/settings.json | grep -A 5 '"hooks"'
 # Verify by checking if hooks execute (they won't)
 ```
 
-### Determining Support Level
+### 判断支持级别
 
 ```
 Is hooks system available?
-├── YES → Full Trellis support (Claude Code)
-└── NO  → Partial support only
-         ├── Can read files → Layer 1 works
-         └── Has agent system → Layer 2 partial
+├── YES → 完整 Trellis 支持（Claude Code）
+└── NO  → 仅部分支持
+         ├── 可读取文件 → 第 1 层可用
+         └── 有 Agent 系统 → 第 2 层部分可用
 ```

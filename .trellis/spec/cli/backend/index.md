@@ -1,81 +1,82 @@
-# Backend Development Guidelines
+# 后端开发指南
 
-> Best practices for backend development in this project.
-
----
-
-## Overview
-
-This directory contains guidelines for backend development. Fill in each file with your project's specific conventions.
+> 本项目中后端开发的最佳实践。
 
 ---
 
-## Guidelines Index
+## 概述
 
-| Guide | Description | Status |
+本目录包含后端开发指南。用你项目的特定约定填写每个文件。
+
+---
+
+## 指南索引
+
+| 指南 | 描述 | 状态 |
 |-------|-------------|--------|
-| [Directory Structure](./directory-structure.md) | Module organization, file layout, design decisions | Done |
-| [Script Conventions](./script-conventions.md) | Python script standards for .trellis/scripts/ | Done |
-| [Error Handling](./error-handling.md) | Error types, handling strategies | Done |
-| [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | Done |
-| [Logging Guidelines](./logging-guidelines.md) | Structured logging, log levels | Done |
-| [Migrations](./migrations.md) | Version migration system for template files | Done |
-| [Release Process](./release-process.md) | CI-only publishing, package versioning, release tracks, manifest continuity, submodule ordering | Done |
-| [Trellis Core SDK](./trellis-core-sdk.md) | `@baoanaz/cviauto-core` / CLI package boundary, public exports, build and versioning contracts | Done |
-| [Platform Integration](./platform-integration.md) | How to add support for new AI CLI platforms | Done |
-| [Workflow-State Contract](./workflow-state-contract.md) | Per-turn breadcrumb subsystem: marker syntax, status writers, lifecycle events, reachability | Done |
-| [Configurator Shared Helpers](./configurator-shared.md) | `configurators/shared.ts` public surface: placeholder substitution, write helpers, pull-based prelude, cross-configurator invariants | Done |
-| [`tl mem` Command](./commands-mem.md) | Cross-platform AI session memory: subcommands, schemas, indexing, cleaning pipeline, search relevance | Done |
-| [`trellis upgrade` Command](./commands-upgrade.md) | Global CLI self-upgrade wrapper: channel inference, npm invocation, failure behavior | Done |
-| [`trellis update` Command](./commands-update.md) | Update pipeline: flags, plan composition, migration trigger semantics, apply phase, idempotency, boundaries with `migrations.md` | Done |
-| [`trellis workflow` Command](./commands-workflow.md) | Workflow marketplace templates, project-local workflow switching, hash ownership contract, and parser compatibility | Done |
-| [`trellis uninstall` Command](./commands-uninstall.md) | Uninstall orchestration: plan composition, structured-file dispatch, execute phases, `.trellis/` removal | Done |
-| [Uninstall Scrubbers](./uninstall-scrubbers.md) | Pure scrubber contract for structured config files (`settings.json`, `hooks.json`, `package.json`, `config.toml`) | Done |
-| [`trellis channel` Command](./commands-channel.md) | Multi-agent collaboration runtime: events.jsonl protocol, per-worker supervisor, provider adapters (claude / codex), project buckets, ephemeral / run lifecycle, ShutdownController state machine | Done |
----
-
-## Pre-Development Checklist
-
-Before writing backend code, read the relevant guidelines based on your task:
-
-- Error handling → [error-handling.md](./error-handling.md)
-- Logging → [logging-guidelines.md](./logging-guidelines.md)
-- Adding a platform → [platform-integration.md](./platform-integration.md)
-- Modifying `init.ts` flow (new triggers, dispatch branches, bootstrap/joiner) → [platform-integration.md "Bootstrap & Joiner Task Auto-Generation"](./platform-integration.md) — two-point wiring + `.developer` signal
-- Script work → [script-conventions.md](./script-conventions.md)
-- Migration system → [migrations.md](./migrations.md)
-- Cutting a release / cross-branch submodule coordination / manifest continuity / npm publishing → [release-process.md](./release-process.md)
-- Editing `packages/core/**`, moving reusable CLI logic into core, or changing CLI imports from `@baoanaz/cviauto-core` → [trellis-core-sdk.md](./trellis-core-sdk.md)
-- Adding any native (`.node` / C++ / `node-gyp`) dependency → [quality-guidelines.md "Native dependency policy"](./quality-guidelines.md)
-- Editing `[workflow-state:STATUS]` breadcrumb blocks / `task.json.status` writers / lifecycle hooks → [workflow-state-contract.md](./workflow-state-contract.md)
-- Editing `configurators/shared.ts` (placeholder substitution, write helpers, prelude injection) → [configurator-shared.md](./configurator-shared.md)
-- Editing `commands/mem.ts` (subcommands, platform indexers, search/cleaning pipeline) → [commands-mem.md](./commands-mem.md)
-- Editing `commands/upgrade.ts` (global CLI self-upgrade behavior) → [commands-upgrade.md](./commands-upgrade.md)
-- Editing `commands/update.ts` (flags, plan, apply phases, idempotency) → [commands-update.md](./commands-update.md) — manifest mechanics still in [migrations.md](./migrations.md)
-- Editing `commands/workflow.ts`, `utils/workflow-resolver.ts`, workflow marketplace entries, or `init --workflow` behavior → [commands-workflow.md](./commands-workflow.md)
-- Editing `commands/uninstall.ts` or `utils/uninstall-scrubbers.ts` → [commands-uninstall.md](./commands-uninstall.md) + [uninstall-scrubbers.md](./uninstall-scrubbers.md)
-- Editing `commands/channel/**` (events.jsonl protocol, supervisors, adapters, project buckets, channel-lifecycle commands) → [commands-channel.md](./commands-channel.md)
-
-Also read [unit-test/conventions.md](../unit-test/conventions.md) — specifically the "When to Write Tests" section.
+| [目录结构](./directory-structure.md) | 模块组织、文件布局、设计决策 | 完成 |
+| [脚本约定](./script-conventions.md) | .trellis/scripts/ 的 Python 脚本标准 | 完成 |
+| [错误处理](./error-handling.md) | 错误类型、处理策略 | 完成 |
+| [质量指南](./quality-guidelines.md) | 代码标准、禁止模式 | 完成 |
+| [日志指南](./logging-guidelines.md) | 结构化日志、日志级别 | 完成 |
+| [迁移系统](./migrations.md) | 模板文件的版本迁移系统 | 完成 |
+| [发布流程](./release-process.md) | CI 独享发布、包版本化、发布轨道、清单连续性、子模块排序 | 完成 |
+| [Trellis Core SDK](./trellis-core-sdk.md) | `@baoanaz/cviauto-core` / CLI 包边界、公共导出、构建和版本化契约 | 完成 |
+| [平台集成](./platform-integration.md) | 如何添加对新 AI CLI 平台的支持 | 完成 |
+| [Workflow-State 契约](./workflow-state-contract.md) | 每回合面包屑子系统：标记语法、状态写入器、生命周期事件、可达性 | 完成 |
+| [Configurator 共享辅助函数](./configurator-shared.md) | `configurators/shared.ts` 公共接口：占位符替换、写入辅助函数、pull-based 序言、跨配置器不变量 | 完成 |
+| [`tl mem` 命令](./commands-mem.md) | 跨平台 AI 会话记忆：子命令、schema、索引、清理管道、搜索相关性 | 完成 |
+| [`trellis upgrade` 命令](./commands-upgrade.md) | 全局 CLI 自升级包装器：通道推断、npm 调用、失败行为 | 完成 |
+| [`trellis update` 命令](./commands-update.md) | 更新管道：标志、计划编写、迁移触发器语义、应用阶段、幂等性、与 `migrations.md` 的边界 | 完成 |
+| [`trellis workflow` 命令](./commands-workflow.md) | Workflow marketplace 模板、项目本地 workflow 切换、哈希所有权契约和解析器兼容性 | 完成 |
+| [`trellis uninstall` 命令](./commands-uninstall.md) | 卸载编排：计划编写、结构化文件分发、执行阶段、`.trellis/` 移除 | 完成 |
+| [Uninstall Scrubbers](./uninstall-scrubbers.md) | 结构化配置文件的纯清理器契约（`settings.json`、`hooks.json`、`package.json`、`config.toml`） | 完成 |
+| [`trellis channel` 命令](./commands-channel.md) | 多智能体协作运行时：events.jsonl 协议、每 worker supervisor、provider adapter（claude / codex）、项目桶、临时/运行生命周期、ShutdownController 状态机 | 完成 |
 
 ---
 
-## Quality Check
+## 开发前检查清单
 
-After writing code, verify against these guidelines:
+编写后端代码前，根据你的任务阅读相关指南：
 
-1. Run `git diff --name-only` to see what you changed
-2. Read the relevant guidelines above for each changed area
-3. Always check [quality-guidelines.md](./quality-guidelines.md)
-4. Check if tests need to be added or updated:
-   - New pure function → needs unit test
-   - Bug fix → needs regression test
-   - Changed init/update behavior → needs integration test update
-5. Run lint and typecheck:
+- 错误处理 → [error-handling.md](./error-handling.md)
+- 日志 → [logging-guidelines.md](./logging-guidelines.md)
+- 添加平台 → [platform-integration.md](./platform-integration.md)
+- 修改 `init.ts` 流程（新触发器、分发分支、bootstrap/joiner）→ [platform-integration.md "Bootstrap & Joiner Task Auto-Generation"](./platform-integration.md) — 两点连接 + `.developer` 信号
+- 脚本工作 → [script-conventions.md](./script-conventions.md)
+- 迁移系统 → [migrations.md](./migrations.md)
+- 构建发布 / 跨分支子模块协调 / 清单连续性 / npm 发布 → [release-process.md](./release-process.md)
+- 编辑 `packages/core/**`，将可复用 CLI 逻辑移入 core，或更改来自 `@baoanaz/cviauto-core` 的 CLI 导入 → [trellis-core-sdk.md](./trellis-core-sdk.md)
+- 添加任何原生（`.node` / C++ / `node-gyp`）依赖 → [quality-guidelines.md "Native dependency policy"](./quality-guidelines.md)
+- 编辑 `[workflow-state:STATUS]` 面包屑块 / `task.json.status` 写入器 / 生命周期 hooks → [workflow-state-contract.md](./workflow-state-contract.md)
+- 编辑 `configurators/shared.ts`（占位符替换、写入辅助函数、序言注入）→ [configurator-shared.md](./configurator-shared.md)
+- 编辑 `commands/mem.ts`（子命令、平台索引器、搜索/清理管道）→ [commands-mem.md](./commands-mem.md)
+- 编辑 `commands/upgrade.ts`（全局 CLI 自升级行为）→ [commands-upgrade.md](./commands-upgrade.md)
+- 编辑 `commands/update.ts`（标志、计划、应用阶段、幂等性）→ [commands-update.md](./commands-update.md) — 清单机制仍在 [migrations.md](./migrations.md) 中
+- 编辑 `commands/workflow.ts`、`utils/workflow-resolver.ts`、workflow marketplace 条目或 `init --workflow` 行为 → [commands-workflow.md](./commands-workflow.md)
+- 编辑 `commands/uninstall.ts` 或 `utils/uninstall-scrubbers.ts` → [commands-uninstall.md](./commands-uninstall.md) + [uninstall-scrubbers.md](./uninstall-scrubbers.md)
+- 编辑 `commands/channel/**`（events.jsonl 协议、supervisor、adapter、项目桶、channel 生命周期命令）→ [commands-channel.md](./commands-channel.md)
+
+也阅读 [unit-test/conventions.md](../unit-test/conventions.md) — 特别是「When to Write Tests」章节。
+
+---
+
+## 质量检查
+
+编写代码后，对照这些指南进行验证：
+
+1. 运行 `git diff --name-only` 查看你更改了什么
+2. 阅读上述每个已更改区域的相应指南
+3. 始终检查 [quality-guidelines.md](./quality-guidelines.md)
+4. 检查是否需要添加或更新测试：
+   - 新纯函数 → 需要单元测试
+   - Bug 修复 → 需要回归测试
+   - 已更改的 init/update 行为 → 需要更新集成测试
+5. 运行 lint 和 typecheck：
    ```bash
    pnpm lint && pnpm typecheck
    ```
 
 ---
 
-**Language**: All documentation should be written in **English**.
+**语言**: 所有文档应使用 **中文** 编写。

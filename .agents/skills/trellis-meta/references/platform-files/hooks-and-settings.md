@@ -1,20 +1,20 @@
-# Hooks And Settings
+# Hooks And Settings（钩子与设置）
 
-Hooks/settings are the entry layer that connects a platform to Trellis. They decide which scripts, plugins, or extensions a platform runs for which events.
+Hooks/settings 是将平台连接到 Trellis 的入口层。它们决定平台在哪些事件上运行哪些脚本、插件或扩展。
 
-## Settings Responsibilities
+## Settings Responsibilities（Settings 的职责）
 
-settings/config files usually register:
+settings/config 文件通常注册：
 
-- session-start hook: injects a Trellis overview when a new session starts or context resets.
-- workflow-state hook: parses `[workflow-state:STATUS]` blocks from `.trellis/workflow.md` and emits the body matching the current task `status` on each user input. Parser-only; the script does not embed fallback content.
-- sub-agent context hook: injects task context when implementation/check/research agents start.
-- shell/session bridge: lets shell commands see the same Trellis session identity.
-- platform plugin or extension entry points.
+- session-start hook（会话启动钩子）：在新会话启动或上下文重置时注入 Trellis 概览。
+- workflow-state hook（工作流状态钩子）：解析 `.trellis/workflow.md` 中的 `[workflow-state:STATUS]` 块，在每次用户输入时输出与当前任务 `status` 匹配的正文。仅做解析；脚本不嵌入回退内容。
+- sub-agent context hook（子代理上下文钩子）：在 implementation/check/research agent 启动时注入任务上下文。
+- shell/session bridge（shell/会话桥接）：让 shell 命令看到相同的 Trellis 会话身份。
+- platform plugin or extension entry points（平台插件或扩展入口点）。
 
-Common files:
+常见文件：
 
-| Platform | settings/config |
+| Platform（平台） | settings/config（设置/配置） |
 | --- | --- |
 | Claude Code | `.claude/settings.json` |
 | Cursor | `.cursor/hooks.json` |
@@ -28,44 +28,44 @@ Common files:
 | Factory Droid | `.factory/settings.json` |
 | Pi Agent | `.pi/settings.json`, `.pi/extensions/trellis/` |
 
-Reasonix and ZCode are pull-based platforms that do not use hooks or settings files; their agent files contain prelude instructions to read context after startup.
+Reasonix 和 ZCode 是拉取模式平台，不使用 hooks 或 settings 文件；它们的 agent 文件包含启动后读取上下文的序言指令。
 
-Whether these files exist in a project depends on which `trellis init --<platform>` flags the user ran.
+这些文件是否存在于项目中，取决于用户运行了哪些 `trellis init --<platform>` 标志。
 
-## Hook Script Types
+## Hook Script Types（Hook 脚本类型）
 
-| Script | Purpose |
+| Script（脚本） | Purpose（用途） |
 | --- | --- |
-| `session-start.py` | Generates session-start context. |
-| `inject-workflow-state.py` | Parses `[workflow-state:STATUS]` blocks in `.trellis/workflow.md` and emits the body matching the current task status. Falls back to `Refer to workflow.md for current step.` when no matching block exists. |
-| `inject-subagent-context.py` | Injects PRD, JSONL context, and related spec/research into sub-agents. |
-| `inject-shell-session-context.py` | Lets shell commands inherit Trellis session identity. |
+| `session-start.py` | 生成会话启动上下文。 |
+| `inject-workflow-state.py` | 解析 `.trellis/workflow.md` 中的 `[workflow-state:STATUS]` 块，输出与当前任务状态匹配的正文。当没有匹配块时，回退到 `Refer to workflow.md for current step.`。 |
+| `inject-subagent-context.py` | 将 PRD、JSONL 上下文及相关 spec/research 注入 sub-agent。 |
+| `inject-shell-session-context.py` | 让 shell 命令继承 Trellis 会话身份。 |
 
-Not every platform has every hook. Do not copy files from another platform just because a platform lacks a hook; first confirm whether that platform supports the corresponding event.
+并非每个平台都有所有 hook。不要因为某个平台缺少 hook 就从其他平台复制文件；先确认该平台是否支持相应的事件。
 
-## Local Change Scenarios
+## Local Change Scenarios（本地修改场景）
 
-| User need | Edit location |
+| User need（用户需求） | Edit location（编辑位置） |
 | --- | --- |
-| AI should see more/less context in a new session | Platform `session-start` hook. |
-| Per-turn hint policy should change | `[workflow-state:STATUS]` block in `.trellis/workflow.md`. The hook parses workflow.md verbatim — no script edit required. |
-| Sub-agent cannot read PRD/spec | `inject-subagent-context` hook or agent prelude. |
-| `task.py current` in shell has no active task | Shell/session bridge hook or platform environment variable configuration. |
-| Disable an automatic injection | The corresponding hook registration in settings/config. |
+| AI 在新会话中应看到更多/更少上下文 | 平台 `session-start` hook。 |
+| 每轮提示策略应更改 | `.trellis/workflow.md` 中的 `[workflow-state:STATUS]` 块。hook 逐字解析 workflow.md — 无需编辑脚本。 |
+| Sub-agent 无法读取 PRD/spec | `inject-subagent-context` hook 或 agent 序言。 |
+| shell 中 `task.py current` 无当前任务 | Shell/session bridge hook 或平台环境变量配置。 |
+| 禁用自动注入 | settings/config 中对应的 hook 注册。 |
 
-## Modification Principles
+## Modification Principles（修改原则）
 
-1. **Settings wire things up; hooks define behavior**. If only the hook changes, the platform may never call it. If only settings change, behavior may not change.
-2. **Confirm platform event names first**. Different platforms use different names for SessionStart, UserPromptSubmit, AgentSpawn, shell execution, and similar events.
-3. **Hooks read local `.trellis/`, not upstream source**. `.trellis/scripts/` and `.trellis/workflow.md` in the user project are the default targets.
-4. **Errors must be visible**. Hook failures should tell the user what was not injected instead of silently leaving the AI without context.
+1. **Settings wire things up; hooks define behavior（Settings 负责接线；hooks 定义行为）**。如果只改了 hook，平台可能根本不会调用它。如果只改了 settings，行为可能不会改变。
+2. **Confirm platform event names first（先确认平台事件名称）**。不同平台对 SessionStart、UserPromptSubmit、AgentSpawn、shell 执行及类似事件使用不同的名称。
+3. **Hooks read local `.trellis/`, not upstream source（Hooks 读取本地 `.trellis/`，而非上游源）**。用户项目中的 `.trellis/scripts/` 和 `.trellis/workflow.md` 是默认目标。
+4. **Errors must be visible（错误必须可见）**。Hook 失败时应告知用户什么没有被注入，而不是静默地让 AI 缺少上下文。
 
-## Troubleshooting Path
+## Troubleshooting Path（排查路径）
 
-If the user says "AI did not read Trellis state":
+如果用户说"AI 没有读取 Trellis 状态"：
 
-1. Check whether the platform settings register the hook.
-2. Check whether the hook file exists.
-3. Manually run the `.trellis/scripts/get_context.py` or `task.py current --source` command that the hook depends on.
-4. Check whether active task state exists in `.trellis/.runtime/sessions/`.
-5. Check whether the platform shell passes session identity.
+1. 检查平台 settings 是否注册了该 hook。
+2. 检查 hook 文件是否存在。
+3. 手动运行该 hook 依赖的 `.trellis/scripts/get_context.py` 或 `task.py current --source` 命令。
+4. 检查 `.trellis/.runtime/sessions/` 中是否存在当前任务状态。
+5. 检查平台 shell 是否传递了会话身份。

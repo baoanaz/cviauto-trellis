@@ -1,293 +1,293 @@
-# Axiom-Based First Principles Reasoning
+# 基于公理（Axiom）的第一性原理推理
 
-## 1. Why First Principles Thinking?
+## 1. 为什么需要第一性原理思维？
 
-There are two fundamental modes of reasoning, and most people default to only one.
+存在两种基本的推理模式，而大多数人默认只使用其中一种。
 
-**Inductive reasoning** observes specific cases and summarizes patterns. You look at how ten companies solved a problem, find commonalities, and apply them to your situation. This tells you "how others do it." It is fast, practical, and works well when conditions are stable. But it silently inherits every assumption those ten companies made — assumptions that may not hold for you.
+**归纳推理（Inductive reasoning）** 观察具体案例并总结模式。你研究十家公司如何解决某个问题，找出共性，然后将其应用到你的场景中。这告诉你「别人是怎么做的」。它快速、实用，在条件稳定时效果很好。但它会默默继承那十家公司所做的所有假设——这些假设可能并不适用于你。
 
-**Deductive reasoning** starts from irreducible truths and derives conclusions. You identify what must be true regardless of context, then build solutions from those truths forward. This tells you "why this way, and can we do better." It is slower, harder, and sometimes uncomfortable because it forces you to question things everyone accepts.
+**演绎推理（Deductive reasoning）** 从不可约简的真理出发，推导出结论。你先确定哪些事无论上下文如何都必然成立，然后从这些真理出发构建解决方案。这告诉你「为什么这样做，以及我们能否做得更好」。它更慢、更难，有时令人不适，因为它迫使你质疑那些所有人都接受的事情。
 
-First principles thinking is deductive reasoning applied to problem-solving:
+第一性原理思维是将演绎推理应用于问题解决：
 
-1. **Deconstruct** the problem down to its irreducible facts
-2. **Challenge** every assumption that isn't provably true
-3. **Rebuild** the solution from scratch using only verified truths
+1. **解构（Deconstruct）** 问题，将其分解为不可约简的事实
+2. **挑战（Challenge）** 每一个无法被证明为真的假设
+3. **重建（Rebuild）** 解决方案，仅使用经过验证的真理从头构建
 
-The two modes are complementary, not competing. Induction is how you gather raw material — real-world evidence, patterns, heuristics. Deduction is how you stress-test that material and discover when the patterns break. The best decisions use induction to generate hypotheses and deduction to validate them.
+这两种模式是互补的，而非对立的。归纳是你收集原始素材的方式——现实世界的证据、模式、启发式方法。演绎是你对这些素材进行压力测试、发现模式何时失效的方式。最佳决策使用归纳来生成假设，使用演绎来验证假设。
 
-The danger is using only induction. When you reason exclusively from "what works for others," you optimize within someone else's constraint set. First principles thinking breaks you out of inherited constraints and lets you find solutions that are genuinely optimal for your situation.
+危险在于仅使用归纳。当你仅从「对别人有效的做法」来推理时，你是在别人设定的约束条件内做优化。第一性原理思维能让你跳出继承而来的约束，找到真正适用于你自身场景的最优解。
 
-Elon Musk's battery cost example illustrates this concretely: industry consensus said battery packs cost $600/kWh and would decline slowly. Inductive reasoning accepted this as given. First principles reasoning decomposed a battery into raw materials (cobalt, nickel, lithium, carbon, steel, polymers) and asked what those materials cost on the London Metal Exchange — roughly $80/kWh. The gap between $80 and $600 was not physics; it was inherited process assumptions. That gap was the opportunity space.
-
----
-
-## 2. The Axiom-Based Method
-
-The axiom-based method is a systematic four-step process for applying first principles thinking to any domain. It transforms an intuitive practice ("think from scratch") into a repeatable, auditable methodology.
-
-### Step 1: Establish Axioms
-
-Axioms are irreducible truths — statements that are independently verifiable and cannot be further decomposed into simpler components. They are the bedrock on which everything else is built.
-
-**How to identify axioms:**
-- Ask: "Can this be further decomposed into simpler truths?"
-- Ask: "Is this provably true, or is it just commonly believed?"
-- Ask: "If someone violated this, would failure be guaranteed?"
-- Ask: "Does this hold true regardless of context, technology, or era?"
-
-An axiom is not a best practice, not a rule of thumb, and not an industry norm. It is a fact that survives all attempts to disprove it.
-
-**Example axioms for decision-making:**
-- **Axiom: Every decision is a resource allocation.** You cannot decide without spending time, money, attention, or opportunity cost. This is irreducible — even "deciding not to decide" consumes time and forecloses options.
-- **Axiom: Information degrades with transmission.** Every time information passes through a human intermediary, it loses fidelity. This is verifiable through any game of telephone and holds regardless of technology.
-- **Axiom: Complex systems fail at interfaces.** Failures cluster at boundaries between subsystems, teams, or processes — not within well-understood components. This is independently verifiable across engineering, organizations, and biology.
-
-When establishing axioms, aim for 3-5 per problem domain. Fewer than 3 usually means you haven't decomposed enough. More than 7 usually means some of your "axioms" are actually derived conclusions.
-
-**Common pitfalls in axiom identification:**
-- Mistaking industry conventions for axioms ("quarterly planning cycles are necessary" is a convention, not an axiom)
-- Stating axioms too broadly ("people are rational" is unfalsifiable at this level of generality)
-- Stating axioms too narrowly ("our API response time must be under 200ms" is a requirement, not an axiom)
-- Confusing axioms with goals ("we need to grow 3x this year" is a target, not a ground truth)
-
-### Step 2: Identify and Challenge Assumptions
-
-Most "best practices" are actually assumptions disguised as facts. They were true once, in one context, and have been passed forward uncritically ever since.
-
-For each assumption in your problem space, use the axioms as judgment criteria:
-
-**Structure the challenge:**
-1. State the assumption explicitly
-2. Examine it against each relevant axiom
-3. Determine the verdict: holds, partially holds, or fails
-
-The most dangerous assumptions are the ones everyone agrees on. Universal agreement often means nobody has tested the assumption recently — it has become invisible infrastructure that everyone builds on without questioning.
-
-**How to surface hidden assumptions:**
-- List everything you are treating as "given" or "obvious"
-- Ask: "Why do we do it this way?" If the answer is "because we always have" or "because everyone does," you have found an assumption
-- Ask: "What would a newcomer with no industry knowledge question about this?"
-- Look for phrases like "obviously," "of course," "everyone knows" — these are markers of untested assumptions
-- Examine constraints you treat as fixed: "We can't do X because Y" — is Y actually immovable, or just expensive to change?
-- Look at what competitors do identically — uniform behavior across an industry often signals shared assumptions rather than shared truths
-
-### Step 3: Derive Corrected Positions
-
-For each challenged assumption, derive a corrected position based on the axiom analysis. A corrected position is not merely the negation of the assumption — it is a constructive statement about what should replace it.
-
-**Format:**
-> Assumption X fails because Axiom Y shows Z. Corrected position: [actionable statement].
-
-The corrected position must be:
-- **Specific enough to act on** — "be more careful" is not a corrected position
-- **Traceable to axioms** — you should be able to point to exactly which axiom(s) support it
-- **Falsifiable** — there should be evidence that could prove the corrected position wrong
-
-If you cannot derive a clear corrected position, the assumption may actually be valid, or your axioms may need refinement.
-
-### Step 4: Synthesize Practices
-
-From corrected positions, derive concrete practices — actions, processes, or policies that implement the corrected understanding.
-
-**Requirements for derived practices:**
-- Each practice must trace back to one or more axioms (no orphan practices)
-- Each practice must address one or more corrected positions
-- No practice may contradict any established axiom
-
-**Validation checklist:**
-- Does every challenged assumption have at least one corresponding practice?
-- Can every practice's rationale be traced to an axiom in under 30 seconds?
-- If you removed one axiom, which practices would need to change? (This tests that the tracing is real, not cosmetic.)
-- Are there any practices that feel right but cannot be traced to any axiom? If so, either an axiom is missing or the practice is unjustified.
-- Does any practice contradict another practice? If so, the underlying axioms may be in tension — make the tension explicit.
+Elon Musk 的电池成本案例具体说明了这一点：行业共识认为电池组成本为 $600/kWh，且下降缓慢。归纳推理将其视为既定事实。第一性原理推理将电池分解为原材料（钴、镍、锂、碳、钢、聚合物），并询问这些材料在伦敦金属交易所（London Metal Exchange）上的价格——大约 $80/kWh。$80 与 $600 之间的差距不是物理定律，而是继承而来的工艺假设。这个差距就是机会空间。
 
 ---
 
-### When to Use the Full Method vs. a Quick Check
+## 2. 基于公理的方法
 
-The full four-step method is appropriate for high-stakes decisions — strategy changes, major investments, organizational redesigns. For lower-stakes decisions, a quick version suffices:
+基于公理的方法是一个系统化的四步流程，用于将第一性原理思维应用于任何领域。它将一种直觉式的实践（「从零开始思考」）转变为一套可重复、可审计的方法论。
 
-1. **Quick check:** State the assumption. Ask "what would have to be true for this to hold?" Check whether those conditions exist. If yes, proceed. If no, flag for full analysis.
-2. **Full derivation:** Use all four steps when the decision is expensive to reverse, affects many people, or when quick checks keep surfacing doubts.
+### 步骤 1：建立公理（Establish Axioms）
 
-The method's cost should be proportional to the decision's cost. Applying the full framework to choose a lunch spot is waste; failing to apply it to a market entry decision is negligence.
+公理是不可约简的真理——它们是可独立验证的、无法进一步分解为更简单组成部分的陈述。它们是构建一切其他内容的基石。
 
-**Rules of thumb for choosing depth:**
-- Reversible decision under $10K impact: quick check only (5 minutes)
-- Partially reversible, $10K-$500K impact: abbreviated derivation with 2-3 axioms (1-2 hours)
-- Irreversible or >$500K impact: full four-step derivation with team review (half-day to full day)
-- Strategic direction change: full derivation plus external validation against real-world data (multi-day)
+**如何识别公理：**
+- 问：「这个还能进一步分解为更简单的真理吗？」
+- 问：「这是可被证明为真的，还是仅仅被普遍相信的？」
+- 问：「如果有人违反了这个，失败是否必然发生？」
+- 问：「无论上下文、技术或时代如何变化，这个都成立吗？」
+
+公理不是最佳实践，不是经验法则，也不是行业惯例。它是一个经得起所有反驳尝试的事实。
+
+**决策领域的公理示例：**
+- **公理：每个决策都是一次资源分配。** 你无法在不花费时间、金钱、注意力或机会成本的情况下做出决策。这是不可约简的——即使「决定不做决定」也会消耗时间并排除选项。
+- **公理：信息在传递过程中会衰减。** 每次信息通过一个人工中介传递时，都会损失保真度。这可以通过任何传话游戏验证，且无论技术如何都成立。
+- **公理：复杂系统在接口处失效。** 故障集中在子系统、团队或流程之间的边界处——而非在已被充分理解的组件内部。这可以在工程、组织和生物学中独立验证。
+
+在建立公理时，每个问题领域目标为 3-5 个。少于 3 个通常意味着你分解得不够。超过 7 个通常意味着你的一些「公理」实际上是推导出的结论。
+
+**公理识别中的常见陷阱：**
+- 将行业惯例误认为公理（「季度规划周期是必要的」是惯例，不是公理）
+- 公理陈述过于宽泛（「人是理性的」在这个概括层级上不可证伪）
+- 公理陈述过于狭窄（「我们的 API 响应时间必须低于 200ms」是需求，不是公理）
+- 将公理与目标混淆（「我们今年需要增长 3 倍」是目标，不是基本事实）
+
+### 步骤 2：识别并挑战假设（Identify and Challenge Assumptions）
+
+大多数「最佳实践」实际上是伪装成事实的假设。它们曾经在某个上下文中是真实的，此后一直被不加批判地沿用。
+
+对于问题空间中的每个假设，使用公理作为判断标准：
+
+**构建挑战结构：**
+1. 明确陈述假设
+2. 对照每个相关公理进行检验
+3. 确定结论：成立、部分成立或不成立
+
+最危险的假设是那些所有人都同意的假设。普遍共识通常意味着最近没有人测试过这个假设——它已经变成了隐性的基础设施，每个人都在其上构建而不加质疑。
+
+**如何浮出隐藏的假设：**
+- 列出所有你视为「既定」或「显而易见」的事项
+- 问：「我们为什么这样做？」如果答案是「因为我们一直这样做」或「因为所有人都这样做」，你就找到了一个假设
+- 问：「一个没有行业知识的新人会对此提出什么质疑？」
+- 寻找像「显然」「当然」「大家都知道」这样的短语——这些是未经测试的假设的标志
+- 审视你视为固定的约束：「我们不能做 X，因为 Y」——Y 真的是不可移动的，还是只是改变成本高？
+- 观察竞争对手做了什么相同的事——整个行业的统一行为通常意味着共享的假设，而非共享的真理
+
+### 步骤 3：推导修正立场（Derive Corrected Positions）
+
+对于每个被挑战的假设，基于公理分析推导出一个修正立场。修正立场不仅仅是假设的否定——它是一个建设性的陈述，说明应该用什么来替代它。
+
+**格式：**
+> 假设 X 不成立，因为公理 Y 表明 Z。修正立场：[可执行的陈述]。
+
+修正立场必须：
+- **足够具体，可据此行动**——「更加小心」不是修正立场
+- **可追溯到公理**——你应该能够明确指出支持它的具体公理
+- **可证伪**——应该存在能够证明修正立场错误的证据
+
+如果你无法推导出明确的修正立场，那么这个假设实际上可能是有效的，或者你的公理可能需要完善。
+
+### 步骤 4：综合实践（Synthesize Practices）
+
+从修正立场出发，推导出具体的实践——实现修正后理解的具体行动、流程或政策。
+
+**推导实践的要点：**
+- 每个实践必须追溯到一个或多个公理（没有孤立的实践）
+- 每个实践必须解决一个或多个修正立场
+- 任何实践不得与任何已建立的公理相矛盾
+
+**验证清单：**
+- 每个被挑战的假设是否至少有一个对应的实践？
+- 每个实践的依据是否能在 30 秒内追溯到一个公理？
+- 如果移除一个公理，哪些实践需要改变？（这测试追溯是真实的，而非表面功夫。）
+- 是否存在感觉正确但无法追溯到任何公理的实践？如果有，要么缺少某个公理，要么该实践缺乏依据。
+- 是否有任何实践与另一个实践相矛盾？如果有，底层公理可能存在张力——明确说明这种张力。
 
 ---
 
-## 3. Worked Example: 5 Common Assumptions Challenged
+### 何时使用完整方法 vs. 快速检查
 
-The following demonstrates the axiom-based method applied to five assumptions that appear across nearly every domain. Each assumption is widespread, rarely questioned, and at least partially wrong.
+完整的四步方法适用于高风险决策——战略变更、重大投资、组织重新设计。对于低风险决策，快速版本即可：
 
-**Working axioms for this example:**
-- **A1: Decisions are constrained by attention, not information.** Human cognitive bandwidth is finite and non-scalable. Adding information beyond processing capacity degrades outcomes.
-- **A2: Tools amplify intent — they do not create it.** A tool produces output proportional to the quality of intent and understanding fed into it. No tool compensates for unclear thinking.
-- **A3: Systems optimize for what they measure.** Unmeasured dimensions are neglected, regardless of their importance. Measurement is not neutral — it shapes behavior.
-- **A4: Error accumulation is nonlinear in autonomous systems.** Unchecked small errors compound into large systemic failures. The relationship is exponential, not additive.
-- **A5: Conditions are non-stationary.** The environment in which a solution was optimal changes continuously. Fitness to past conditions provides no guarantee of fitness to current conditions.
+1. **快速检查：** 陈述假设。问「要使这个假设成立，什么必须为真？」检查这些条件是否存在。如果存在，继续。如果不存在，标记为需要完整分析。
+2. **完整推导：** 当决策难以逆转、影响很多人、或快速检查持续浮现疑虑时，使用全部四个步骤。
+
+方法的成本应与决策的成本成比例。用完整框架来选择午餐地点是浪费；未能将其应用于市场进入决策是失职。
+
+**选择深度的经验法则：**
+- 影响低于 $10K 的可逆决策：仅快速检查（5 分钟）
+- 部分可逆，$10K-$500K 影响：使用 2-3 个公理的简化推导（1-2 小时）
+- 不可逆或影响超过 $500K：完整四步推导加团队评审（半天到一整天）
+- 战略方向变更：完整推导加外部真实数据验证（多天）
 
 ---
 
-### Assumption 1: "More information leads to better decisions"
+## 3. 实例演示：挑战 5 个常见假设
 
-| Aspect | Detail |
+以下展示了将基于公理的方法应用于五个几乎出现在每个领域的假设。每个假设都广泛存在，很少被质疑，且至少部分错误。
+
+**本示例使用的工作公理：**
+- **A1：决策受注意力约束，而非信息。** 人类认知带宽有限且不可扩展。在处理能力之外添加信息会降低结果质量。
+- **A2：工具放大意图——它们不创造意图。** 工具产出的输出与投入的意图和理解的质量成正比。没有任何工具能弥补不清晰的思维。
+- **A3：系统会优化其所衡量的内容。** 未被衡量的维度会被忽视，无论其重要性如何。衡量不是中立的——它会塑造行为。
+- **A4：自治系统中的错误累积是非线性的。** 未经检查的小错误会复合成大规模的系统性故障。这种关系是指数级的，而非加性的。
+- **A5：条件是非平稳的。** 一个解决方案最优时所处的环境会持续变化。对过去条件的适应性不能保证对当前条件的适应性。
+
+---
+
+### 假设 1：「更多信息带来更好的决策」
+
+| 方面 | 详情 |
 |--------|--------|
-| **Assumption** | More information leads to better decisions |
-| **Key Challenge** | Quality (signal-to-noise ratio) matters more than quantity; information overload degrades decision quality |
-| **Corrected Position** | Curate high-relevance information; filter ruthlessly |
+| **假设** | 更多信息带来更好的决策 |
+| **关键挑战** | 质量（信噪比）比数量更重要；信息过载会降低决策质量 |
+| **修正立场** | 筛选高相关性信息；无情地过滤 |
 
-**Analysis:** Axiom A1 states that decisions are constrained by attention, not information. If attention is the bottleneck, adding more information without increasing processing capacity merely dilutes the signal. Research on information overload consistently shows that decision quality peaks at moderate information levels and declines beyond that point. The assumption conflates "information available" with "information processed" — these are different quantities.
+**分析：** 公理 A1 指出决策受注意力约束，而非信息。如果注意力是瓶颈，添加更多信息而不增加处理能力只会稀释信号。关于信息过载的研究一致表明，决策质量在中等信息水平达到峰值，之后会下降。该假设混淆了「可用信息」与「已处理信息」——它们是不同的量。
 
-Applying the "what would have to be true" test: for this assumption to hold, humans would need unlimited processing bandwidth, or every additional piece of information would need to be net-positive after accounting for the cognitive cost of processing it. Neither condition is true. The corrected position is not "use less information" but rather "invest in filtering before consuming." The marginal cost of processing one more piece of information must be weighed against the marginal value it adds, and in most contexts, aggressive curation outperforms exhaustive collection.
+应用「什么必须为真」测试：要使该假设成立，人类需要拥有无限的处理带宽，或者每增加一条信息，在考虑处理它的认知成本后，必须净值为正。这两个条件都不成立。修正立场不是「使用更少的信息」，而是「在消费之前先投资于过滤」。处理多一条信息的边际成本必须与其增加的边际价值进行权衡，在大多数情况下，主动筛选优于穷举收集。
 
 ---
 
-### Assumption 2: "Expert tools can handle any complex problem"
+### 假设 2：「专家工具可以处理任何复杂问题」
 
-| Aspect | Detail |
+| 方面 | 详情 |
 |--------|--------|
-| **Assumption** | Expert tools can handle any complex problem |
-| **Key Challenge** | Tools are constrained by their inputs; without proper context and domain knowledge, even the best tool produces mediocre output |
-| **Corrected Position** | Invest in understanding the problem space before choosing tools |
+| **假设** | 专家工具可以处理任何复杂问题 |
+| **关键挑战** | 工具受其输入约束；没有适当的上下文和领域知识，即使最好的工具也只能产出平庸的结果 |
+| **修正立场** | 在选择工具之前，先投资于理解问题空间 |
 
-**Analysis:** Axiom A2 establishes that tools amplify intent — they do not create it. A sophisticated tool given vague inputs will produce sophisticated-looking but fundamentally vague outputs. This is especially pernicious because the output looks authoritative, which masks the underlying weakness.
+**分析：** 公理 A2 确立了工具放大意图——它们不创造意图。给一个复杂的工具输入模糊的指令，它会产出看起来复杂但本质上模糊的输出。这尤其有害，因为输出看起来很有权威性，掩盖了底层的弱点。
 
-The assumption treats tools as solution generators when they are actually solution amplifiers. Applying axiom-based challenge: "What would have to be true for expert tools to handle any complex problem?" The tool would need to generate its own context, understand unstated constraints, and compensate for gaps in the operator's understanding. No tool does this — tools transform inputs into outputs. The corrected position redirects investment: spend 70% of effort on understanding the problem and 30% on tool selection and usage, not the reverse. An expert who deeply understands the problem with a simple tool will outperform a novice with the most advanced tool available.
+该假设将工具视为解决方案生成器，而它们实际上是解决方案放大器。应用基于公理的挑战：「要使专家工具能处理任何复杂问题，什么必须为真？」工具需要自行生成上下文、理解未陈述的约束、并弥补操作者理解中的空白。没有工具能做到这一点——工具将输入转换为输出。修正立场重新分配了投资方向：花 70% 的精力理解问题，30% 用于工具选择和使用，而非反过来。一个深刻理解问题的专家使用简单工具，胜过拥有最先进工具的新手。
 
 ---
 
-### Assumption 3: "Speed is the primary measure of productivity"
+### 假设 3：「速度是衡量生产力的首要标准」
 
-| Aspect | Detail |
+| 方面 | 详情 |
 |--------|--------|
-| **Assumption** | Speed is the primary measure of productivity |
-| **Key Challenge** | Speed without direction amplifies errors; moving fast on the wrong problem wastes more resources than moving slowly on the right one |
-| **Corrected Position** | Measure value delivered, not velocity |
+| **假设** | 速度是衡量生产力的首要标准 |
+| **关键挑战** | 没有方向的速度会放大错误；在错误的问题上快速推进比在正确的问题上缓慢推进浪费更多资源 |
+| **修正立场** | 衡量交付的价值，而非速度 |
 
-**Analysis:** Axiom A3 tells us that systems optimize for what they measure. If you measure speed, people will move fast — including fast in the wrong direction. The assumption confuses activity with progress.
+**分析：** 公理 A3 告诉我们系统会优化其所衡量的内容。如果你衡量速度，人们就会快速行动——包括朝着错误的方向快速前进。该假设混淆了活动与进展。
 
-Speed is a multiplier, not a value in itself: speed multiplied by correct direction produces value, but speed multiplied by wrong direction produces waste at an accelerated rate. This is not a marginal effect — it is multiplicative. A team moving at 2x speed on the wrong problem produces 2x waste, not 2x value. The corrected position reframes the metric entirely. "We shipped 47 features this quarter" is meaningless without "and they collectively increased customer retention by 12%." Organizations that measure velocity without direction invariably accumulate fast-produced waste that later requires slow, expensive correction. The axiom predicts this outcome: what you measure is what you get, nothing more.
+速度是一个乘数，而非价值本身：速度乘以正确方向产出价值，但速度乘以错误方向以加速的方式产出浪费。这不是边际效应——它是乘法效应。一个团队在错误的问题上以 2 倍速度前进，产出的是 2 倍浪费，而非 2 倍价值。修正立场完全重新定义了衡量标准。「我们本季度交付了 47 个功能」在缺少「并且它们共同将客户留存率提高了 12%」的情况下是毫无意义的。衡量速度而不衡量方向的组织，不可避免地积累了大量快速产出的浪费，之后需要缓慢、昂贵的修正。公理预测了这一结果：你衡量什么，你就得到什么，仅此而已。
 
 ---
 
-### Assumption 4: "The solution should be fully autonomous"
+### 假设 4：「解决方案应该是完全自治的」
 
-| Aspect | Detail |
+| 方面 | 详情 |
 |--------|--------|
-| **Assumption** | The solution should be fully autonomous |
-| **Key Challenge** | Autonomous systems accumulate unchecked errors; complex problems require human judgment at key checkpoints |
-| **Corrected Position** | Design for human-in-the-loop at critical decision points |
+| **假设** | 解决方案应该是完全自治的 |
+| **关键挑战** | 自治系统会累积未经检查的错误；复杂问题需要在关键检查点引入人类判断 |
+| **修正立场** | 在关键决策点设计人机协同（Human-in-the-Loop） |
 
-**Analysis:** Axiom A4 establishes that error accumulation in autonomous systems is nonlinear. A 1% error rate per step becomes a 26% cumulative error rate after 30 steps (1 - 0.99^30). With a 2% error rate, it reaches 45% after 30 steps. The math is unforgiving.
+**分析：** 公理 A4 确立了自治系统中的错误累积是非线性的。每一步 1% 的错误率在 30 步后变成 26% 的累积错误率（1 - 0.99^30）。2% 的错误率在 30 步后达到 45%。数学是无情的。
 
-Autonomous systems are excellent at executing well-defined processes but poor at detecting when the process itself has become inappropriate — they lack the meta-awareness to ask "should I still be doing this?" The assumption treats autonomy as an unqualified good, when it is actually a tradeoff between efficiency and error correction. Applying the axiom-based challenge: for full autonomy to work, either the error rate per step must be effectively zero, or the cost of accumulated errors must be trivially low. Neither condition holds for complex problems. The corrected position identifies the leverage points: let the system run autonomously through well-understood steps, but insert human checkpoints at branching decisions, ambiguous inputs, and irreversible actions. Full autonomy is appropriate only when the error cost of any single step is trivially low and fully reversible.
+自治系统在执行定义明确的流程方面表现出色，但在检测流程本身是否已不合适方面表现糟糕——它们缺乏元认知能力来问「我还应该继续这样做吗？」该假设将自治视为无条件的优点，而它实际上是在效率和错误纠正之间的权衡。应用基于公理的挑战：要使完全自治有效，要么每一步的错误率必须实际上为零，要么累积错误的代价必须微不足道。对于复杂问题，这两个条件都不成立。修正立场确定了杠杆点：让系统在已被充分理解的步骤中自治运行，但在分支决策、模糊输入和不可逆操作处插入人类检查点。完全自治仅适用于每一步的错误代价微不足道且完全可逆的情况。
 
 ---
 
-### Assumption 5: "Past solutions should guide future decisions"
+### 假设 5：「过去的解决方案应该指导未来的决策」
 
-| Aspect | Detail |
+| 方面 | 详情 |
 |--------|--------|
-| **Assumption** | Past solutions should guide future decisions |
-| **Key Challenge** | Conditions change; solutions optimized for past constraints may be suboptimal or harmful under new conditions |
-| **Corrected Position** | Re-derive solutions from current ground truths, not historical precedent |
+| **假设** | 过去的解决方案应该指导未来的决策 |
+| **关键挑战** | 条件会变化；为过去约束优化的解决方案在新条件下可能次优甚至有害 |
+| **修正立场** | 从当前的基本事实重新推导解决方案，而非依据历史先例 |
 
-**Analysis:** Axiom A5 states that conditions are non-stationary. A solution that was optimal under Condition Set A may be actively harmful under Condition Set B. The assumption treats past success as evidence of future success, but what it actually evidences is fitness to past conditions — which may no longer exist.
+**分析：** 公理 A5 指出条件是非平稳的。在条件集 A 下最优的解决方案在条件集 B 下可能是有害的。该假设将过去的成功视为未来成功的证据，但它实际证明的是对过去条件的适应性——而这些条件可能已不复存在。
 
-This is the assumption that most often masquerades as "wisdom" or "experience." The more successful the past solution, the harder it is to question — and the more dangerous it becomes when conditions shift. Resistance to re-examination is proportional to past success, which is exactly backwards from what rationality demands. This does not mean past experience is worthless. It means past experience should be treated as a hypothesis ("this approach might work here because conditions are similar"), not a conclusion ("this approach will work here because it worked before"). The corrected position demands re-derivation: use historical solutions as one input, but validate them against current axioms and current conditions before adopting them. The question is never "did this work before?" but always "do the conditions that made this work still exist?"
+这是最常伪装成「智慧」或「经验」的假设。过去的解决方案越成功，就越难质疑——而当条件变化时，它也越危险。对重新审视的抵抗与过去的成功程度成正比，这与理性所要求的恰好相反。这并不意味着过去的经验毫无价值。这意味着过去的经验应该被视为假设（「这种方法可能在这里有效，因为条件相似」），而非结论（「这种方法会在这里有效，因为它以前有效过」）。修正立场要求重新推导：将历史解决方案作为一个输入，但在采纳之前，对照当前公理和当前条件进行验证。问题永远不是「这以前有效吗？」，而是「使这有效的条件仍然存在吗？」
 
 ---
 
-## 4. The Derivation Template
+## 4. 推导模板
 
-Use this template to apply axiom-based first principles reasoning to any topic.
+使用此模板将基于公理的第一性原理推理应用于任何主题。
 
 ```markdown
-## First Principles Derivation: [Topic]
+## 第一性原理推导：[主题]
 
-### Axioms (Irreducible Truths)
-1. [Axiom 1] — [Why irreducible]
-2. [Axiom 2] — [Why irreducible]
-3. [Axiom 3] — [Why irreducible]
+### 公理（不可约简的真理）
+1. [公理 1] — [为何不可约简]
+2. [公理 2] — [为何不可约简]
+3. [公理 3] — [为何不可约简]
 
-### Assumptions Challenged
-| Assumption | Axiom(s) Used | Analysis | Corrected Position |
+### 被挑战的假设
+| 假设 | 使用的公理 | 分析 | 修正立场 |
 |-----------|--------------|---------|-------------------|
-| [Common belief] | A1, A3 | [Why it fails] | [What replaces it] |
-| [Industry norm] | A2 | [Why it fails] | [What replaces it] |
+| [常见信念] | A1, A3 | [为何不成立] | [用什么替代] |
+| [行业惯例] | A2 | [为何不成立] | [用什么替代] |
 
-### Derived Practices
-| Practice | Traces to Axiom(s) | Covers Assumption(s) |
+### 推导出的实践
+| 实践 | 追溯到公理 | 覆盖假设 |
 |---------|-------------------|---------------------|
-| [Concrete action] | A1, A3 | #1, #3 |
-| [Process change] | A2 | #2 |
+| [具体行动] | A1, A3 | #1, #3 |
+| [流程变更] | A2 | #2 |
 
-### Validation
-- [ ] Every corrected position leads to at least one practice
-- [ ] Every practice traces to at least one axiom
-- [ ] No practice contradicts any axiom
-- [ ] Removing any single axiom changes at least one practice (no cosmetic axioms)
-- [ ] Each practice is specific enough to implement this week
+### 验证
+- [ ] 每个修正立场至少对应一个实践
+- [ ] 每个实践至少追溯到一个公理
+- [ ] 没有任何实践与任何公理相矛盾
+- [ ] 移除任意一个公理会改变至少一个实践（无表面公理）
+- [ ] 每个实践足够具体，可在一周内开始实施
 ```
 
-### Template Usage Notes
+### 模板使用说明
 
-**Establishing axioms:** Start with 3-5. If you struggle to find 3, you may not understand the domain deeply enough. If you find more than 7, some are likely derived conclusions, not axioms — test each by asking whether it can be derived from a combination of the others.
+**建立公理：** 从 3-5 个开始。如果你难以找到 3 个，你可能对领域理解不够深入。如果你找到超过 7 个，部分可能是推导出的结论，而非公理——通过问每个是否可以从其他公理的组合中推导出来来测试。
 
-**Challenging assumptions:** Work through assumptions in order of impact. Start with the assumption whose correction would change the most about your current approach. This ensures that even if you only complete half the analysis, you have addressed the highest-leverage items.
+**挑战假设：** 按影响程度排序处理假设。从修正后会对当前方法改变最大的假设开始。这确保即使你只完成了一半的分析，你也已经处理了最高杠杆的项目。
 
-**Deriving practices:** Each practice should be concrete enough that someone could begin implementing it within one week. "Improve communication" is not a practice. "Hold a 15-minute daily sync where each person states their top blocker" is a practice.
+**推导实践：** 每个实践应该足够具体，使某人能够在一周内开始实施。「改善沟通」不是实践。「每天举行 15 分钟同步会议，每个人陈述自己的首要阻碍」是实践。
 
-**Validation:** The validation checklist is not bureaucratic overhead — it is the mechanism that ensures your reasoning is sound. If any check fails, the derivation has a gap that needs to be closed before the practices can be trusted.
+**验证：** 验证清单不是官僚主义的形式——它是确保你的推理可靠的机制。如果任何检查未通过，推导就存在需要填补的空白，然后才能信任这些实践。
 
-**Common failure modes when using the template:**
-- **Axioms that are actually conclusions:** If an axiom can be derived by combining two other axioms, it is not an axiom — demote it to a derived conclusion
-- **Circular reasoning:** The corrected position merely restates the axiom in different words rather than applying it to the specific assumption
-- **Practices too abstract to implement:** "Improve alignment" is not a practice; "Hold weekly 30-minute cross-team syncs with a shared agenda template" is
-- **Missing the validation step:** Skipping validation feels efficient but produces derivations that look rigorous while containing logical gaps
+**使用模板时的常见失败模式：**
+- **公理实际上是结论：** 如果一个公理可以通过组合两个其他公理推导出来，它就不是公理——降级为推导结论
+- **循环推理：** 修正立场仅仅是用不同的措辞重述了公理，而非将其应用于具体假设
+- **实践过于抽象无法实施：** 「改善对齐」不是实践；「每周举行 30 分钟跨团队同步会议，使用共享议程模板」才是
+- **跳过验证步骤：** 跳过验证感觉高效，但会产生看起来严格但包含逻辑漏洞的推导
 
 ---
 
-## 5. Key Principles for Axiom-Based Reasoning
+## 5. 基于公理推理的关键原则
 
-These principles govern the effective application of the method.
+这些原则决定了该方法的有效应用。
 
-### 1. Axioms must be independently verifiable
-If you cannot test an axiom — if there is no experiment, observation, or logical proof that could confirm or deny it — it is not an axiom. It is a belief. Beliefs can be useful, but they cannot serve as the foundation of a rigorous derivation. Every axiom should come with an implicit answer to "How would I verify this?"
+### 1. 公理必须是可独立验证的
+如果你无法测试一个公理——如果没有实验、观察或逻辑证明可以确认或否定它——它就不是公理。它是信念。信念可以有用，但无法作为严格推导的基础。每个公理都应附带一个隐含的对「我如何验证这个？」的回答。
 
-### 2. The most valuable axioms are domain-specific, not generic truisms
-"Quality matters" is a truism — it is true but useless because it provides no leverage. "In regulated industries, compliance cost grows quadratically with the number of jurisdictions served" is a domain-specific axiom that directly constrains solution design. Prefer axioms that create specific, actionable constraints over axioms that are merely broadly true.
+### 2. 最有价值的公理是领域特定的，而非泛泛的真理
+「质量很重要」是一条泛泛的真理——它正确但无用，因为它没有提供任何杠杆。「在受监管的行业中，合规成本随服务管辖区域数量的增加呈二次方增长」是一条领域特定的公理，直接约束了解决方案设计。优先选择那些能产生具体、可执行约束的公理，而非仅仅广泛成立的公理。
 
-### 3. Challenge assumptions in order of impact
-Not all assumptions are created equal. An assumption that affects 80% of your operations deserves attention before one that affects 5%. Rank assumptions by the magnitude of change their correction would produce, and work from the top. This ensures maximum return on analytical effort. A practical heuristic: if correcting an assumption would change nothing about your current approach, it is not worth challenging — move to the next one.
+### 3. 按影响程度排序挑战假设
+并非所有假设都是平等的。一个影响你 80% 运营的假设，应优先于一个只影响 5% 的假设。按修正后产生变化的幅度对假设进行排序，从顶部开始。这确保最大的分析投入回报。一个实用的启发式方法：如果修正一个假设不会改变你当前的任何做法，它就不值得挑战——移到下一个。
 
-### 4. "What would have to be true" is the most powerful question
-When evaluating any assumption, ask: "What would have to be true for this assumption to hold?" Then check whether those conditions actually exist. This question transforms vague disagreement ("I don't think that's right") into precise analysis ("That requires X, Y, and Z to be true, and Z is not true in our context"). It is the single most useful question in assumption challenging.
+### 4. 「什么必须为真」是最有力的问题
+在评估任何假设时，问：「要使这个假设成立，什么必须为真？」然后检查这些条件是否实际存在。这个问题将模糊的分歧（「我觉得那不对」）转变为精确的分析（「那需要 X、Y 和 Z 为真，而 Z 在我们的上下文中不成立」）。它是假设挑战中最有用的一个问题。
 
-### 5. Corrected positions must be actionable
-A corrected position that reads "the assumption is wrong" is worthless. A corrected position that reads "instead of X, do Y because axiom Z shows W" is valuable. Every corrected position should pass the test: "Could someone who read only this corrected position change their behavior appropriately?" If not, make it more specific.
+### 5. 修正立场必须是可执行的
+一个写着「假设是错误的」的修正立场毫无价值。一个写着「不做 X，改为做 Y，因为公理 Z 表明 W」的修正立场是有价值的。每个修正立场都应通过这个测试：「如果某人只读了这条修正立场，他能恰当地改变自己的行为吗？」如果不能，就让它更具体。
 
-### 6. The derivation is the documentation
-In axiom-based reasoning, the derivation itself serves as the decision record. Every practice traces to axioms through corrected positions, which means every decision is self-documenting. When someone asks "why do we do it this way?" the answer is in the derivation chain. This eliminates the need for separate justification documents and ensures institutional memory survives personnel changes. It also makes onboarding faster — a new team member can read the derivation and understand not just what to do, but why, in a single document.
+### 6. 推导过程本身就是文档
+在基于公理的推理中，推导过程本身充当决策记录。每个实践通过修正立场追溯到公理，这意味着每个决策都是自我记录的。当有人问「我们为什么这样做？」时，答案就在推导链中。这消除了对单独说明文档的需求，并确保机构记忆在人员变动后得以保留。这也使新人上手更快——新团队成员可以阅读推导过程，在一份文档中不仅了解做什么，还能了解为什么。
 
-### 7. Revisit axioms when conditions change fundamentally
-Axioms are irreducible truths — but they are truths within a context. When the context changes fundamentally (new technology, new market structure, new regulation), axioms must be re-examined. An axiom that was irreducible in 2020 may be decomposable or even false in 2026. Schedule periodic axiom reviews, especially after major environmental shifts. Signs that your axioms need revision: derived practices keep producing unexpected results, new entrants succeed by violating your axioms, or the assumptions you challenge keep passing validation when your intuition says they should not.
+### 7. 当条件发生根本性变化时重新审视公理
+公理是不可约简的真理——但它们是特定上下文中的真理。当上下文发生根本性变化（新技术、新市场结构、新监管），公理必须重新审视。一个在 2020 年不可约简的公理，在 2026 年可能可分解甚至为假。定期安排公理审查，尤其在大环境变化之后。公理需要修订的迹象：推导出的实践持续产生意外结果、新进入者通过违反你的公理而成功、或者你挑战的假设在你直觉告诉你不应该时却持续通过验证。
 
-### 8. Induction validates deduction
-After deriving practices from axioms, check them against real-world evidence. Do organizations that follow similar practices actually outperform? Does the data support the derived conclusions? Deduction tells you what should work; induction tells you what does work. When they agree, you have high confidence. When they disagree, the disagreement itself is the most important finding — it means either your axioms are incomplete or the real-world data has confounding factors worth investigating.
+### 8. 归纳验证演绎
+从公理推导出实践后，对照现实世界证据进行检验。遵循类似实践的组织是否真的表现更好？数据是否支持推导出的结论？演绎告诉你什么应该有效；归纳告诉你什么实际有效。当它们一致时，你有很高的信心。当它们不一致时，分歧本身是最重要的发现——这意味着要么你的公理不完整，要么现实世界数据有值得研究的混淆因素。
 
-Practical validation approach: after completing a derivation, identify 3-5 organizations or cases where similar practices were applied. Did the outcomes match the derivation's predictions? If not, trace the discrepancy back through the axiom chain to find where the model diverges from reality.
+实用验证方法：完成推导后，找出 3-5 个应用了类似实践的组织或案例。结果是否与推导的预测一致？如果不一致，沿着公理链追溯差异，找出模型与现实偏离的地方。
 
-### 9. When axioms conflict, the conflict itself is the most valuable insight
-If two well-established axioms produce contradictory conclusions, resist the urge to discard one. The tension between them usually reveals a nuance that neither axiom alone captures. For example, "move fast" and "verify carefully" both qualify as axioms in certain contexts. The conflict between them is where judgment lives — and mapping that conflict explicitly (under what conditions does each take priority?) produces more useful guidance than either axiom alone.
+### 9. 当公理冲突时，冲突本身是最有价值的洞察
+如果两个经过充分验证的公理产生矛盾的结论，抵制丢弃其中一个的冲动。它们之间的张力通常揭示了任何一个公理单独无法捕捉的细微差别。例如，「快速行动」和「仔细验证」在某些上下文中都符合公理的条件。它们之间的冲突正是判断力所在之处——明确映射这种冲突（在什么条件下每个优先？）比单独任何一个公理都能产生更有用的指导。
 
-To resolve axiom conflicts productively: identify the boundary condition where one axiom's importance overtakes the other. Express this as a conditional: "When [condition], prioritize Axiom A over Axiom B." This conditional itself becomes a derived principle that enriches the framework.
+要有效解决公理冲突：识别一个公理的重要性超过另一个的边界条件。将其表达为条件语句：「当[条件]时，优先选择公理 A 而非公理 B。」这条条件语句本身成为一个丰富该框架的推导原则。
 
-### 10. Separate the method from the conclusion
-The value of axiom-based reasoning is not any particular conclusion — it is the repeatability and auditability of the process. Two people applying the method to the same problem with the same axioms should reach similar conclusions. If they reach different conclusions, the divergence point is identifiable and debatable. This is the fundamental advantage over intuition-based reasoning, where disagreements are unresolvable because the reasoning is opaque. Defend the method rigorously, hold conclusions lightly — they should change whenever better axioms or new evidence emerge.
+### 10. 将方法与结论分开
+基于公理推理的价值不在于任何特定的结论——而在于过程的可重复性和可审计性。两个人在同一问题上应用相同的方法和相同的公理，应该得出相似的结论。如果得出不同的结论，分歧点是可以识别和辩论的。这是相对于基于直觉的推理的根本优势，在直觉推理中，分歧无法解决，因为推理过程是不透明的。严格捍卫方法，轻松持有结论——当更好的公理或新证据出现时，结论应随时改变。

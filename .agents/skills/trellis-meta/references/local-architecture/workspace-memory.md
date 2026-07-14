@@ -1,8 +1,8 @@
-# Local Workspace Memory System
+# 本地工作区记忆系统（Local Workspace Memory System）
 
-`.trellis/workspace/` stores cross-session memory. Its purpose is to let AI and humans understand what happened before across different windows and different days.
+`.trellis/workspace/` 存储跨会话记忆。其目的是让 AI 和人类能够在不同窗口、不同日期之间了解之前发生过什么。
 
-## Directory Structure
+## 目录结构
 
 ```text
 .trellis/workspace/
@@ -13,28 +13,28 @@
     └── journal-2.md
 ```
 
-| File | Purpose |
+| 文件 | 用途 |
 | --- | --- |
-| `.trellis/.developer` | Current developer identity. |
-| `.trellis/workspace/index.md` | Global workspace overview. |
-| `.trellis/workspace/<developer>/index.md` | Session index for a developer. |
-| `.trellis/workspace/<developer>/journal-N.md` | Session journal. |
+| `.trellis/.developer` | 当前开发者身份。 |
+| `.trellis/workspace/index.md` | 全局工作区概览。 |
+| `.trellis/workspace/<developer>/index.md` | 某位开发者的会话索引。 |
+| `.trellis/workspace/<developer>/journal-N.md` | 会话日志。 |
 
-## Developer Identity
+## 开发者身份（Developer Identity）
 
-Run this the first time:
+首次使用时运行：
 
 ```bash
 python3 ./.trellis/scripts/init_developer.py <name>
 ```
 
-This creates `.trellis/.developer` and the corresponding workspace directory. The AI should not change developer identity casually; if the identity is wrong, first confirm who is using the current project.
+此命令会创建 `.trellis/.developer` 和对应的工作区目录。AI 不应随意更改开发者身份；如果身份有误，请先确认当前项目的使用者是谁。
 
-## Journal
+## 日志（Journal）
 
-`journal-N.md` records completed or partially completed work from each session. By default, each journal holds about 2000 lines; after that it rotates to the next file.
+`journal-N.md` 记录每个会话中已完成或部分完成的工作。默认情况下，每个日志文件容纳约 2000 行；超出后自动轮转到下一个文件。
 
-Common command for recording a session:
+记录会话的常用命令：
 
 ```bash
 python3 ./.trellis/scripts/add_session.py \
@@ -43,29 +43,29 @@ python3 ./.trellis/scripts/add_session.py \
   --commit "abc1234"
 ```
 
-Planning or review work without a commit can also be recorded by using `--no-commit` or an empty commit value.
+没有 commit 的计划或审查工作也可以通过 `--no-commit` 或空 commit 值来记录。
 
-## Relationship Between Workspace Memory And Tasks
+## 工作区记忆与任务的关系（Relationship Between Workspace Memory And Tasks）
 
-| System | What it stores |
+| 系统 | 存储内容 |
 | --- | --- |
-| `.trellis/tasks/` | Requirements, design, research, and state for a specific task. |
-| `.trellis/workspace/` | Work records across tasks and sessions. |
-| `.trellis/spec/` | Engineering knowledge preserved as long-term conventions. |
+| `.trellis/tasks/` | 特定任务的需求、设计、研究和状态。 |
+| `.trellis/workspace/` | 跨任务、跨会话的工作记录。 |
+| `.trellis/spec/` | 作为长期约定保存的工程知识。 |
 
-If information is only useful for the current task, put it in the task directory.  
-If information describes what happened in the current session, put it in the workspace journal.  
-If information should be followed every time code is written in the future, put it in spec.
+如果信息仅对当前任务有用，请放入任务目录。  
+如果信息描述了当前会话中发生的事，请放入工作区日志。  
+如果信息应在未来每次编写代码时都遵循，请放入 spec。
 
-## Local Customization Points
+## 本地自定义点（Local Customization Points）
 
-| Need | Edit location |
+| 需求 | 编辑位置 |
 | --- | --- |
-| Change maximum journal lines | `max_journal_lines` in `.trellis/config.yaml`. |
-| Change session auto-commit message | `session_commit_message` in `.trellis/config.yaml`. |
-| Change session content format | `.trellis/scripts/add_session.py`. |
-| Change how workspace is displayed in context | `.trellis/scripts/common/session_context.py`. |
+| 更改日志最大行数 | `.trellis/config.yaml` 中的 `max_journal_lines`。 |
+| 更改会话自动 commit 消息 | `.trellis/config.yaml` 中的 `session_commit_message`。 |
+| 更改会话内容格式 | `.trellis/scripts/add_session.py`。 |
+| 更改工作区在上下文中的展示方式 | `.trellis/scripts/common/session_context.py`。 |
 
-## AI Usage Rules
+## AI 使用规则（AI Usage Rules）
 
-The AI should not treat workspace as the only source of truth. When resuming a task, read the current task first, then use workspace for background. After a task is complete, record important process notes in workspace; if long-term rules emerged, update spec.
+AI 不应将工作区视为唯一的事实来源。恢复任务时，请先阅读当前任务，然后将工作区用作背景信息。任务完成后，在工作区中记录重要的过程笔记；如果产生了长期规则，请更新 spec。
