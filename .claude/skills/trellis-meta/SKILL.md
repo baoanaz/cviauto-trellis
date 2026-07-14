@@ -5,81 +5,81 @@ description: "Understand and customize the local Trellis architecture inside a u
 
 # Trellis Meta
 
-This skill is for local Trellis users who have already run `trellis init` in a project. After reading it, an AI should understand the Trellis architecture, operating model, and customization entry points inside that user project, then modify the generated `.trellis/` and platform directory files according to the user's request.
+此技能面向已运行过 `trellis init` 的本地 Trellis 用户。阅读后，AI 应理解用户项目内的 Trellis 架构、运行模型和自定义入口点，然后根据用户请求修改生成的 `.trellis/` 和平台目录文件。
 
-Trellis v0.6 adds three architectural surfaces on top of the pre-v0.6 workflow / persistence / platform model. First, a multi-agent collaboration runtime: `trellis channel` coordinates multiple AI worker processes through project-scoped JSONL event logs at `~/.trellis/channels/<project>/<channel>/events.jsonl`, with worker OOM guard, forum/thread channels, durable idempotency keys, and bundled `.trellis/agents/{check,implement}.md` runtime definitions. Second, cross-session memory: `trellis mem list | search | context | extract | projects` reads raw Claude Code, Codex, and Pi Agent JSONL already on disk, slices by `--phase brainstorm|implement|all`, and never uploads anything. Third, a dual-package npm release: `@mindfoldhq/trellis` (CLI) and `@mindfoldhq/trellis-core` (SDK with `/channel`, `/task`, `/mem`, `/testing` subpaths) ship in lockstep on one version. Treat these as first-class customization surfaces alongside the per-platform integration files.
+Trellis v0.6 在 v0.6 之前的工作流/持久化/平台模型之上增加了三个架构层面。第一，多 Agent 协作运行时：`trellis channel` 通过项目范围的 JSONL 事件日志（位于 `~/.trellis/channels/<project>/<channel>/events.jsonl`）协调多个 AI worker 进程，具有 worker OOM 守护、forum/thread 频道、持久幂等 key 和打包的 `.trellis/agents/{check,implement}.md` 运行时定义。第二，跨会话记忆：`trellis mem list | search | context | extract | projects` 读取已存在于磁盘上的 Claude Code、Codex 和 Pi Agent JSONL，按 `--phase brainstorm|implement|all` 切片，且绝不上传任何内容。第三，双包 npm 发布：`@mindfoldhq/trellis`（CLI）和 `@mindfoldhq/trellis-core`（SDK，提供 `/channel`、`/task`、`/mem`、`/testing` 子路径）在同一版本上同步发布。将这些视为与各平台集成文件并列的一等自定义层面。
 
-The default operating scope is local files in the user project:
+默认操作范围是用户项目中的本地文件：
 
-- `.trellis/`: workflow, config, tasks, spec, workspace, scripts, bundled runtime agents, and runtime state.
-- Platform directories: `.claude/`, `.codex/`, `.cursor/`, `.opencode/`, `.kiro/`, `.gemini/`, `.qoder/`, `.codebuddy/`, `.github/`, `.factory/`, `.pi/`, `.reasonix/`, `.kilocode/`, `.agent/`, `.devin/`, and similar directories. Pi additionally exposes a native `trellis_subagent` tool with `single` / `parallel` / `chain` dispatch modes, throttled progress cards, and `isTrellisAgent()` validation on top of the file layout. Reasonix stores both workflow skills and subagent skills as `.reasonix/skills/<name>/SKILL.md`; subagent skills carry `runAs: subagent` frontmatter.
-- Shared skill layer: `.agents/skills/`.
-- User-owned channel store outside the project tree: `~/.trellis/channels/<project>/<channel>/events.jsonl`.
-- Raw platform conversation logs queryable via `trellis mem`: `~/.claude/projects/`, `~/.codex/sessions/`, and `~/.pi/agent/sessions/` (OpenCode adapter degraded for the v0.6 line).
+- `.trellis/`：工作流、配置、任务、spec、工作区、脚本、打包的运行时 Agent 和运行时状态。
+- 平台目录：`.claude/`、`.codex/`、`.cursor/`、`.opencode/`、`.kiro/`、`.gemini/`、`.qoder/`、`.codebuddy/`、`.github/`、`.factory/`、`.pi/`、`.reasonix/`、`.kilocode/`、`.agent/`、`.devin/` 和类似目录。Pi 还暴露了原生 `trellis_subagent` 工具，支持 `single` / `parallel` / `chain` 分发模式、节流进度卡和基于文件布局的 `isTrellisAgent()` 验证。Reasonix 将工作流技能和 sub-agent 技能存储为 `.reasonix/skills/<name>/SKILL.md`；sub-agent 技能具有 `runAs: subagent` frontmatter。
+- 共享技能层：`.agents/skills/`。
+- 项目树之外的用户自有频道存储：`~/.trellis/channels/<project>/<channel>/events.jsonl`。
+- 可通过 `trellis mem` 查询的原始平台对话日志：`~/.claude/projects/`、`~/.codex/sessions/` 和 `~/.pi/agent/sessions/`（OpenCode 适配器在 v0.6 系列中降级）。
 
-Do not assume the user has the Trellis source repository. Do not default to modifying the global npm install directory or `node_modules` — both `@mindfoldhq/trellis` and `@mindfoldhq/trellis-core` ship as published packages sharing one version and one git tag per release.
+不要假设用户有 Trellis 源码仓库。不要默认修改全局 npm 安装目录或 `node_modules`——`@mindfoldhq/trellis` 和 `@mindfoldhq/trellis-core` 作为已发布包交付，共享一个版本和每个发布的一个 git tag。
 
-## How To Use
+## 如何使用
 
-1. Read `references/local-architecture/overview.md` first to establish the local Trellis system model.
-2. If the request involves a specific AI tool, read `references/platform-files/platform-map.md` and the relevant platform file notes.
-3. If the request involves multi-agent dispatch or channel workers, read `references/local-architecture/multi-agent-channel.md` and the bundled `.trellis/agents/` files.
-4. If the user wants to change behavior, read `references/customize-local/overview.md`, then open the specific customization topic.
-5. Before editing, read the actual files in the user project and treat local content as authoritative.
+1. 首先阅读 `references/local-architecture/overview.md` 建立本地 Trellis 系统模型。
+2. 如果请求涉及特定 AI 工具，阅读 `references/platform-files/platform-map.md` 和相关平台文件说明。
+3. 如果请求涉及多 Agent 分发或 channel worker，阅读 `references/local-architecture/multi-agent-channel.md` 和打包的 `.trellis/agents/` 文件。
+4. 如果用户想改变行为，阅读 `references/customize-local/overview.md`，然后打开具体的自定义主题。
+5. 编辑前，阅读用户项目中的实际文件，将本地内容视为权威来源。
 
-## References
+## 参考文件
 
-### Local Architecture
+### 本地架构
 
-- `references/local-architecture/overview.md`: The layered local Trellis architecture (workflow / persistence / platform / channel runtime) and customization principles.
-- `references/local-architecture/generated-files.md`: Files generated by `trellis init` and their customization boundaries, including `.trellis/agents/`.
-- `references/local-architecture/workflow.md`: Phases, routing, workflow-state blocks, and selectable workflow templates (`native`, `tdd`, `channel-driven-subagent-dispatch`, marketplace) in `.trellis/workflow.md`.
-- `references/local-architecture/task-system.md`: Task directories, active task, JSONL context, parent/child task trees, and task runtime.
-- `references/local-architecture/spec-system.md`: How `.trellis/spec/` is organized, injected, and refreshed from a `registry.spec` source.
-- `references/local-architecture/workspace-memory.md`: `.trellis/workspace/` journals plus `trellis mem` cross-session recall and the `@mindfoldhq/trellis-core/mem` SDK.
-- `references/local-architecture/context-injection.md`: Hooks, sub-agent preludes, and channel-runtime worker inbox routing.
-- `references/local-architecture/multi-agent-channel.md`: `trellis channel` subcommands, project-scoped event store, forum/thread channels, worker OOM guard, durable idempotency, and bundled `.trellis/agents/` runtime agents.
-- `references/local-architecture/bundled-skills.md`: Auto-dispatched bundled skills (`trellis-meta`, `trellis-spec-bootstrap`, `trellis-session-insight`) and how `getBundledSkillTemplates()` ships them to every platform skill root.
+- `references/local-architecture/overview.md`：分层本地 Trellis 架构（工作流 / 持久化 / 平台 / channel 运行时）和自定义原则。
+- `references/local-architecture/generated-files.md`：由 `trellis init` 生成的文件及其自定义边界，包括 `.trellis/agents/`。
+- `references/local-architecture/workflow.md`：阶段、路由、工作流状态块和可选工作流模板（`native`、`tdd`、`channel-driven-subagent-dispatch`、marketplace），位于 `.trellis/workflow.md`。
+- `references/local-architecture/task-system.md`：任务目录、活动任务、JSONL 上下文、父子任务树和任务运行时。
+- `references/local-architecture/spec-system.md`：`.trellis/spec/` 的组织、注入和从 `registry.spec` 源刷新。
+- `references/local-architecture/workspace-memory.md`：`.trellis/workspace/` 日志加上 `trellis mem` 跨会话回忆和 `@mindfoldhq/trellis-core/mem` SDK。
+- `references/local-architecture/context-injection.md`：Hooks、sub-agent 前置和 channel 运行时 worker 收件箱路由。
+- `references/local-architecture/multi-agent-channel.md`：`trellis channel` 子命令、项目范围事件存储、forum/thread 频道、worker OOM 守护、持久幂等和打包的 `.trellis/agents/` 运行时 Agent。
+- `references/local-architecture/bundled-skills.md`：自动分发的打包技能（`trellis-meta`、`trellis-spec-bootstrap`、`trellis-session-insight`）以及 `getBundledSkillTemplates()` 如何将它们部署到每个平台技能根目录。
 
-### Platform Files
+### 平台文件
 
-- `references/platform-files/overview.md`: How shared `.trellis/` files relate to platform directories and the four platform integration modes (hook-driven, agent prelude, main-session workflow, channel runtime).
-- `references/platform-files/platform-map.md`: Platform directories and paths for skills, agents, hooks, and extensions across all 15 supported platforms including Reasonix and Pi's native `trellis_subagent` extension.
-- `references/platform-files/hooks-and-settings.md`: How settings/config files, hooks, plugins, and extensions connect to Trellis; covers `channel.worker_guard.*` and `codex.dispatch_mode`.
-- `references/platform-files/agents.md`: Per-platform `trellis-research` / `trellis-implement` / `trellis-check` sub-agent files plus bundled `.trellis/agents/{check,implement}.md` for the channel runtime.
-- `references/platform-files/skills-and-commands.md`: Differences between skills, commands, prompts, and workflows, plus how to change them.
+- `references/platform-files/overview.md`：共享 `.trellis/` 文件如何与平台目录关联，以及四种平台集成模式（hook 驱动、Agent 前置、主会话工作流、channel 运行时）。
+- `references/platform-files/platform-map.md`：所有 15 个支持平台（包括 Reasonix 和 Pi 的原生 `trellis_subagent` 扩展）中技能、Agent、hooks 和扩展的平台目录和路径。
+- `references/platform-files/hooks-and-settings.md`：设置/配置文件、hooks、插件和扩展如何连接到 Trellis；涵盖 `channel.worker_guard.*` 和 `codex.dispatch_mode`。
+- `references/platform-files/agents.md`：每个平台的 `trellis-research` / `trellis-implement` / `trellis-check` sub-agent 文件，加上 channel 运行时打包的 `.trellis/agents/{check,implement}.md`。
+- `references/platform-files/skills-and-commands.md`：技能、命令、prompt 和工作流之间的区别，以及如何修改它们。
 
-### Local Customization
+### 本地自定义
 
-- `references/customize-local/overview.md`: Choose the right local customization entry point for the user's request.
-- `references/customize-local/change-workflow.md`: Change phases, routing, next actions, workflow-state, and the selected workflow template.
-- `references/customize-local/change-task-lifecycle.md`: Change task creation, status, archive behavior, parent/child links, archive slug collision handling, and lifecycle hooks.
-- `references/customize-local/change-context-loading.md`: Change how tasks, specs, journals, hook context, channel inbox messages, and `trellis mem` recall are loaded.
-- `references/customize-local/change-hooks.md`: Change platform hooks, settings, task lifecycle hooks (`hooks.after_*`), and shell session bridges.
-- `references/customize-local/change-agents.md`: Change research, implement, and check agent behavior across platform sub-agents, bundled channel runtime agents, and the Codex `dispatch_mode` toggle.
-- `references/customize-local/change-skills-or-commands.md`: Add or modify local skills, commands, prompts, and workflows; covers upstream bundled-skill auto-dispatch.
-- `references/customize-local/change-spec-structure.md`: Adjust the project spec structure under `.trellis/spec/`, including registry-backed sources.
-- `references/customize-local/add-project-local-conventions.md`: Put team rules into project-local specs or local skills.
+- `references/customize-local/overview.md`：为用户请求选择合适的本地自定义入口点。
+- `references/customize-local/change-workflow.md`：更改阶段、路由、下一步操作、工作流状态和选定的工作流模板。
+- `references/customize-local/change-task-lifecycle.md`：更改任务创建、状态、归档行为、父子链接、归档 slug 冲突处理和生命周期 hooks。
+- `references/customize-local/change-context-loading.md`：更改任务、spec、日志、hook 上下文、channel 收件箱消息和 `trellis mem` 回忆的加载方式。
+- `references/customize-local/change-hooks.md`：更改平台 hooks、设置、任务生命周期 hooks（`hooks.after_*`）和 shell 会话桥接。
+- `references/customize-local/change-agents.md`：更改跨平台 sub-agent、打包 channel 运行时 Agent 的 research、implement 和 check Agent 行为，以及 Codex `dispatch_mode` 开关。
+- `references/customize-local/change-skills-or-commands.md`：添加或修改本地技能、命令、prompt 和工作流；涵盖上游打包技能自动分发。
+- `references/customize-local/change-spec-structure.md`：调整 `.trellis/spec/` 下的项目 spec 结构，包括注册表支持的源。
+- `references/customize-local/add-project-local-conventions.md`：将团队规则放入项目本地 spec 或本地技能。
 
-## Current Rules
+## 当前规则
 
-- `.trellis/workflow.md` is the local workflow source of truth; its initial content was selected from a workflow template (built-in `native`, `tdd`, `channel-driven-subagent-dispatch`, or a marketplace template) at `trellis init` time and can be re-selected via `trellis workflow --template <id>`. Missing `.trellis/agents/<name>.md` files referenced by the active template trigger a non-blocking stderr warning pointing at `trellis update`.
-- `.trellis/config.yaml` is the project-level Trellis configuration entry point. It hosts task lifecycle hooks (`hooks.after_create` / `after_start` / `after_finish` / `after_archive`), journal shape (`session_commit_message` / `max_journal_lines` / `session_auto_commit`), channel worker guard (`channel.worker_guard.idle_timeout` / `max_live_workers`), Codex dispatch mode (`codex.dispatch_mode: inline | sub-agent`), and the spec registry block (`registry.spec.source` + `registry.spec.template`).
-- `.trellis/spec/` stores the user's project-specific coding conventions and design constraints. When `registry.spec` is set, files are refreshed by `trellis update`; local edits surface as "modified by user" conflicts in `.trellis/.template-hashes.json`.
-- `.trellis/tasks/` stores task PRDs, design notes, implement plans, research files, and JSONL context. Tasks form parent/child trees: `task.py create --parent <slug>`, `task.py add-subtask <parent> <child>`, `task.py remove-subtask <parent> <child>`, and `task.py list-context <task>`. `task.py create` rejects a slug already present in `.trellis/tasks/archive/**`.
-- `.trellis/workspace/` stores **deliberately written** developer journals. Raw cross-session dialogue is **not** stored here — it lives on disk under `~/.claude/projects/`, `~/.codex/sessions/`, and `~/.pi/agent/sessions/` and is recovered via `trellis mem search|extract|context`. The bundled `trellis-session-insight` skill teaches when to reach for `mem`.
-- `.trellis/agents/{check,implement}.md` are bundled, platform-agnostic channel runtime agent definitions loaded by `trellis channel spawn --agent <name>`. Editable; `trellis update` backfills missing ones. Editing the per-platform `trellis-implement.md` / `trellis-check.md` does **not** change channel-runtime worker behavior.
-- `~/.trellis/channels/<project>/<channel>/events.jsonl` is the channel runtime event log per project per channel. User-owned, file-locked sequence numbering, durable `idempotencyKey` support; never under `.trellis/`.
-- Bundled multi-file skills (`trellis-meta`, `trellis-spec-bootstrap`, `trellis-session-insight`, `trellis-channel`) are auto-dispatched to every platform skill root by `getBundledSkillTemplates()` in `packages/cli/src/templates/common/index.ts`. Dropping a new directory under `packages/cli/src/templates/common/bundled-skills/` (upstream) ships it to every platform on the next `trellis update`.
-- Platform settings/config files decide which hooks, agents, skills, commands, prompts, and workflows actually run. Reasonix has no settings file — behavior is encoded inside skill frontmatter.
-- `.trellis/.template-hashes.json` and `.trellis/.runtime/` are management/runtime state files. Confirm necessity before editing them.
+- `.trellis/workflow.md` 是本地工作流唯一权威来源；其初始内容在 `trellis init` 时从工作流模板（内置 `native`、`tdd`、`channel-driven-subagent-dispatch` 或 marketplace 模板）中选择，并可通过 `trellis workflow --template <id>` 重新选择。活动模板引用但缺失的 `.trellis/agents/<name>.md` 文件会触发非阻塞 stderr 警告，指向 `trellis update`。
+- `.trellis/config.yaml` 是项目级 Trellis 配置入口点。它托管任务生命周期 hooks（`hooks.after_create` / `after_start` / `after_finish` / `after_archive`）、日志形状（`session_commit_message` / `max_journal_lines` / `session_auto_commit`）、channel worker 守护（`channel.worker_guard.idle_timeout` / `max_live_workers`）、Codex 分发模式（`codex.dispatch_mode: inline | sub-agent`）和 spec 注册表块（`registry.spec.source` + `registry.spec.template`）。
+- `.trellis/spec/` 存储用户的项目特定编码规范和设计约束。当设置了 `registry.spec` 时，文件由 `trellis update` 刷新；本地编辑在 `.trellis/.template-hashes.json` 中显示为"用户已修改"冲突。
+- `.trellis/tasks/` 存储任务 PRD、设计笔记、实现计划、研究文件和 JSONL 上下文。任务形成父子树：`task.py create --parent <slug>`、`task.py add-subtask <parent> <child>`、`task.py remove-subtask <parent> <child>` 和 `task.py list-context <task>`。`task.py create` 拒绝 `.trellis/tasks/archive/**` 中已存在的 slug。
+- `.trellis/workspace/` 存储**刻意编写的**开发者日志。原始跨会话对话**不**存储在此——它们存在于 `~/.claude/projects/`、`~/.codex/sessions/` 和 `~/.pi/agent/sessions/` 磁盘中，通过 `trellis mem search|extract|context` 恢复。打包的 `trellis-session-insight` 技能教 AI 何时使用 `mem`。
+- `.trellis/agents/{check,implement}.md` 是打包的、平台无关的 channel 运行时 Agent 定义，由 `trellis channel spawn --agent <name>` 加载。可编辑；`trellis update` 回填缺失的文件。编辑每个平台的 `trellis-implement.md` / `trellis-check.md` **不会**改变 channel 运行时 worker 的行为。
+- `~/.trellis/channels/<project>/<channel>/events.jsonl` 是每个项目每个频道的 channel 运行时事件日志。用户拥有，文件锁定的序列号分配，持久的 `idempotencyKey` 支持；绝不在 `.trellis/` 下。
+- 打包的多文件技能（`trellis-meta`、`trellis-spec-bootstrap`、`trellis-session-insight`、`trellis-channel`）由 `packages/cli/src/templates/common/index.ts` 中的 `getBundledSkillTemplates()` 自动分发到每个平台的技能根目录。在 `packages/cli/src/templates/common/bundled-skills/`（上游）下放置新目录，将在下次 `trellis update` 时将其部署到每个平台。
+- 平台设置/配置文件决定哪些 hooks、Agent、技能、命令、prompt 和工作流实际运行。Reasonix 没有设置文件——行为编码在技能 frontmatter 中。
+- `.trellis/.template-hashes.json` 和 `.trellis/.runtime/` 是管理/运行时状态文件。编辑前请确认必要性。
 
-## Do Not
+## 不要
 
-- Do not treat Trellis upstream source code as the default target for local customization.
-- Do not modify the global npm install directory or `node_modules/@mindfoldhq/trellis` or `node_modules/@mindfoldhq/trellis-core` to implement project needs; both packages ship in lockstep.
-- Do not overwrite user-modified local files with default templates; check `.trellis/.template-hashes.json` first and prefer `.new` sidecar files over destructive overwrites.
-- Do not put team-private project rules into any public bundled skill (`trellis-meta`, `trellis-spec-bootstrap`, `trellis-session-insight`, `trellis-channel`); put project rules in `.trellis/spec/`, a project-local skill, the current task, or the workspace journal — `trellis update` will overwrite anything inside a bundled skill directory.
-- Do not hand-edit `~/.trellis/channels/<project>/<channel>/events.jsonl`; sequence numbers are assigned under a file lock and replay-safe writes go through the `trellis channel` CLI or the `@mindfoldhq/trellis-core/channel` SDK.
-- Do not edit `.claude/agents/trellis-implement.md` (or any other per-platform sub-agent file) when the goal is to change channel runtime worker behavior — edit `.trellis/agents/<name>.md` instead.
-- Do not describe removed or never-shipped mechanisms as current Trellis behavior; cross-check against the local `.trellis/config.yaml` and the installed CLI's `trellis --help` before claiming a knob exists.
+- 不要将 Trellis 上游源码视为本地自定义的默认目标。
+- 不要修改全局 npm 安装目录或 `node_modules/@mindfoldhq/trellis` 或 `node_modules/@mindfoldhq/trellis-core` 来实现项目需求；两个包同步发布。
+- 不要用默认模板覆盖用户已修改的本地文件；先检查 `.trellis/.template-hashes.json`，优先使用 `.new` 侧车文件而非破坏性覆盖。
+- 不要把团队私有项目规则放入任何公共打包技能（`trellis-meta`、`trellis-spec-bootstrap`、`trellis-session-insight`、`trellis-channel`）；将项目规则放入 `.trellis/spec/`、项目本地技能、当前任务或工作区日志——`trellis update` 会覆盖打包技能目录中的所有内容。
+- 不要手动编辑 `~/.trellis/channels/<project>/<channel>/events.jsonl`；序列号在文件锁下分配，可安全重放的写入通过 `trellis channel` CLI 或 `@mindfoldhq/trellis-core/channel` SDK 进行。
+- 当目标是改变 channel 运行时 worker 行为时，不要编辑 `.claude/agents/trellis-implement.md`（或任何其他每个平台的 sub-agent 文件）——改为编辑 `.trellis/agents/<name>.md`。
+- 不要将被移除或从未发布的机制描述为当前 Trellis 行为；在声称某个配置项存在之前，交叉核对本地 `.trellis/config.yaml` 和已安装 CLI 的 `trellis --help`。

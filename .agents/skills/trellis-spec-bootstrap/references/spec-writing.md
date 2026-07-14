@@ -1,70 +1,70 @@
-# Spec Writing
+# Spec 编写
 
-Trellis specs are coding guidance for future agents. They should explain how to work in this repository, not how a generic project might be organized.
+Trellis spec 是面向未来 agent 的编码指导。它们应当解释如何在这个仓库中工作，而不是描述一个通用项目可能如何组织。
 
-## Write From Evidence
+## 基于证据编写
 
-Each important rule should be backed by one of these:
+每条重要规则都应得到以下内容之一的支持：
 
-- A source file that demonstrates the preferred pattern.
-- A test file that shows expected behavior.
-- A project document that defines the convention.
-- A repeated pattern across multiple files.
+- 一个展示了首选模式的源文件。
+- 一个展示了预期行为的测试文件。
+- 一个定义了该约定的项目文档。
+- 跨多个文件重复出现的模式。
 
-Use short snippets only when they make the rule clearer. Prefer linking to the file path and naming the symbol or behavior.
+仅在能使规则更清晰时使用简短代码片段。优先链接到文件路径并命名符号或行为。
 
-## File Structure
+## 文件结构
 
-Keep the spec tree aligned with the project:
+保持 spec 目录树与项目对齐：
 
-- Keep `index.md` as the navigation file for the spec directory.
-- Split topics when developers would look for them independently.
-- Merge topics when separate files would repeat the same rule.
-- Delete template files that do not apply.
-- Add new files for important local patterns the template missed.
+- 保留 `index.md` 作为 spec 目录的导航文件。
+- 当开发者会独立查找某个主题时，将其拆分。
+- 当独立文件会重复同一规则时，将主题合并。
+- 删除不适用的模板文件。
+- 为模板遗漏的重要本地模式添加新文件。
 
-## Content Standards
+## 内容标准
 
-Good spec sections include:
+好的 spec 章节应包含：
 
-- When the rule applies.
-- The local pattern to follow.
-- The source or test files that prove the pattern.
-- Common mistakes or anti-patterns.
-- Verification commands or checks when they are specific and reliable.
+- 规则适用的场景。
+- 应遵循的本地模式。
+- 证明该模式的源文件或测试文件。
+- 常见错误或反模式。
+- 当具体可靠时，提供验证命令或检查方法。
 
-Avoid:
+应避免：
 
-- Placeholder prose.
-- Generic framework advice.
-- Tool instructions that only work in one agent host.
-- Long copied code blocks.
-- Rules based on a single accidental implementation detail.
+- 占位文字。
+- 通用框架建议。
+- 仅在某个 agent 宿主中有效的工具指令。
+- 大段复制的代码块。
+- 基于单个偶然实现细节的规则。
 
-## Example Shape
+## 示例形态
 
 ```markdown
-## Command Handlers
+## 命令处理器（Command Handlers）
 
-Command handlers should keep argument parsing, validation, and side effects separate. The local pattern is:
+命令处理器应将参数解析、验证和副作用分离。本地模式是：
 
-- Parse CLI flags at the command boundary.
-- Convert raw inputs into typed task options before invoking core logic.
-- Keep filesystem writes in the command or service layer, not in template helpers.
+- 在命令边界解析 CLI 标志。
+- 在调用核心逻辑之前，将原始输入转换为类型化的任务选项。
+- 将文件系统写入保留在命令层或服务层，而非模板辅助函数中。
 
-Reference files:
+参考文件：
 - `packages/cli/src/commands/example.ts`
 - `packages/cli/test/commands/example.test.ts`
 
-Avoid passing raw `process.argv` or unvalidated config objects into shared helpers.
+避免将原始 `process.argv` 或未验证的配置对象传递给共享辅助函数。
 ```
 
-## Final Pass
+## 最终检查
 
-Before finishing:
+完成前：
 
 ```bash
 grep -R "To be filled\\|TODO: fill\\|placeholder" .trellis/spec
 ```
 
-Also check links, index files, and whether any spec still describes a template rather than this repository.
+同时检查链接、索引文件，以及是否有 spec 仍然描述模板而非本仓库。

@@ -1,87 +1,87 @@
-# worktree.yaml Configuration Reference
+# worktree.yaml 配置参考
 
-Complete guide to `.trellis/worktree.yaml` configuration.
+`.trellis/worktree.yaml` 配置的完整指南。
 
 ---
 
-## Overview
+## 概述
 
-`worktree.yaml` configures **both** Multi-Session (worktree isolation) **and** some Multi-Agent behaviors (like Ralph Loop).
+`worktree.yaml` 配置**同时**影响 Multi-Session（worktree 隔离）**和**部分 Multi-Agent 行为（如 Ralph Loop）。
 
 ```yaml
 # .trellis/worktree.yaml
 
-# Multi-Session only
-worktree_dir: ../worktrees    # Default value
+# 仅 Multi-Session
+worktree_dir: ../worktrees    # 默认值
 copy:
   - .trellis/.developer
   - .env
 post_create:
   - npm install
 
-# Both Multi-Session AND Multi-Agent
+# Multi-Session 和 Multi-Agent 共用
 verify:
   - pnpm lint
   - pnpm typecheck
 ```
 
-**Note**: Trellis uses a custom YAML parser (not PyYAML). Supports basic key-value pairs and arrays; complex nested structures may not work.
+**注意**：Trellis 使用自定义 YAML 解析器（非 PyYAML）。支持基本的键值对和数组；复杂的嵌套结构可能无法正常工作。
 
 ---
 
-## Configuration Sections
+## 配置节
 
-### Which Config Affects What?
+### 哪些配置影响哪些模式？
 
-| Config | Multi-Agent (current dir) | Multi-Session (worktree) |
+| 配置 | Multi-Agent（当前目录） | Multi-Session（worktree） |
 |--------|---------------------------|--------------------------|
-| `worktree_dir` | ❌ Not used | ✅ Worktree location |
-| `copy` | ❌ Not used | ✅ Files copied to worktree |
-| `post_create` | ❌ Not used | ✅ Commands after worktree creation |
-| `verify` | ✅ Used by Ralph Loop | ✅ Used by Ralph Loop |
+| `worktree_dir` | ❌ 不使用 | ✅ Worktree 位置 |
+| `copy` | ❌ 不使用 | ✅ 复制到 worktree 的文件 |
+| `post_create` | ❌ 不使用 | ✅ Worktree 创建后执行的命令 |
+| `verify` | ✅ Ralph Loop 使用 | ✅ Ralph Loop 使用 |
 
-**Key point**: `verify` config applies to BOTH modes!
+**关键点**：`verify` 配置对两种模式都生效！
 
 ---
 
-## Full Configuration
+## 完整配置
 
 ```yaml
 # =============================================================================
-# MULTI-SESSION ONLY - Only used in worktree mode
+# 仅 MULTI-SESSION - 仅在 worktree 模式下使用
 # =============================================================================
 
-# Worktree creation location (relative to project root)
-# Default: ../worktrees
+# Worktree 创建位置（相对于项目根目录）
+# 默认：../worktrees
 worktree_dir: ../worktrees
 
-# Files to copy to each worktree
-# These files are not in git, need manual copy
-# Default: [] (empty array)
+# 要复制到每个 worktree 的文件
+# 这些文件不在 git 中，需要手动复制
+# 默认：[]（空数组）
 copy:
-  - .trellis/.developer      # Developer identity
-  - .env                      # Environment variables
-  - .env.local                # Local overrides
-  # - .npmrc                  # npm config
-  # - credentials.json        # Credential files
+  - .trellis/.developer      # 开发者身份
+  - .env                      # 环境变量
+  - .env.local                # 本地覆盖
+  # - .npmrc                  # npm 配置
+  # - credentials.json        # 凭证文件
 
-# Commands to run after worktree creation
-# Runs in order, stops on first failure
-# Default: [] (empty array)
+# Worktree 创建后运行的命令
+# 按顺序运行，遇到第一个失败即停止
+# 默认：[]（空数组）
 post_create:
-  - npm install               # or pnpm install
+  - npm install               # 或 pnpm install
   # - pnpm install --frozen-lockfile
   # - cp .env.example .env
   # - npm run db:migrate
 
 # =============================================================================
-# BOTH MODES - Used in both Multi-Agent and Multi-Session
+# 两种模式共用 - 在 Multi-Agent 和 Multi-Session 中均使用
 # =============================================================================
 
-# Verification commands - Used by Ralph Loop
-# Runs when Check Agent stops
-# All must pass to allow stop
-# Default: [] (empty array)
+# 验证命令 - 由 Ralph Loop 使用
+# 在 Check Agent 停止时运行
+# 必须全部通过才允许停止
+# 默认：[]（空数组）
 verify:
   - pnpm lint
   - pnpm typecheck
@@ -89,64 +89,64 @@ verify:
   # - pnpm build
 ```
 
-### Default Values
+### 默认值
 
-| Config | Default | Notes |
+| 配置 | 默认值 | 备注 |
 |--------|---------|-------|
-| `worktree_dir` | `../worktrees` | Relative to project root |
-| `copy` | `[]` | Empty array, no files copied |
-| `post_create` | `[]` | Empty array, no commands run |
-| `verify` | `[]` | Empty array, Ralph Loop uses completion markers |
+| `worktree_dir` | `../worktrees` | 相对于项目根目录 |
+| `copy` | `[]` | 空数组，不复制文件 |
+| `post_create` | `[]` | 空数组，不运行命令 |
+| `verify` | `[]` | 空数组，Ralph Loop 使用完成标记 |
 
 ---
 
-## Scenario: Multi-Agent in Current Directory
+## 场景：当前目录下的 Multi-Agent
 
-**Requirement**: Run dispatch → implement → check in current directory, no worktree
+**需求**：在当前目录运行 dispatch → implement → check，不使用 worktree
 
-**worktree.yaml config**:
+**worktree.yaml 配置**：
 ```yaml
-# These can be omitted (not used in current directory mode)
+# 以下可以省略（当前目录模式下不使用）
 # worktree_dir: ...
 # copy: ...
 # post_create: ...
 
-# This is needed! Ralph Loop uses it
+# 这是必需的！Ralph Loop 会使用它
 verify:
   - pnpm lint
   - pnpm typecheck
 ```
 
-**Workflow**:
-1. Set the session-scoped active task
-2. Call `Task(subagent_type="implement")`
-3. Call `Task(subagent_type="check")`
-4. When Check Agent completes, Ralph Loop runs `verify` commands
-5. Human commits
+**工作流**：
+1. 设置会话级活动任务
+2. 调用 `Task(subagent_type="implement")`
+3. 调用 `Task(subagent_type="check")`
+4. 当 Check Agent 完成时，Ralph Loop 运行 `verify` 命令
+5. 人工提交
 
 ---
 
-## Scenario: Custom Workflows
+## 场景：自定义工作流
 
-### Add test verification
-
-```yaml
-verify:
-  - pnpm lint
-  - pnpm typecheck
-  - pnpm test          # Add tests
-```
-
-### Add build verification
+### 添加测试验证
 
 ```yaml
 verify:
   - pnpm lint
   - pnpm typecheck
-  - pnpm build         # Add build check
+  - pnpm test          # 添加测试
 ```
 
-### Go projects
+### 添加构建验证
+
+```yaml
+verify:
+  - pnpm lint
+  - pnpm typecheck
+  - pnpm build         # 添加构建检查
+```
+
+### Go 项目
 
 ```yaml
 verify:
@@ -155,7 +155,7 @@ verify:
   - go test ./...
 ```
 
-### Python projects
+### Python 项目
 
 ```yaml
 verify:
@@ -164,7 +164,7 @@ verify:
   - pytest
 ```
 
-### Rust projects
+### Rust 项目
 
 ```yaml
 verify:
@@ -175,26 +175,26 @@ verify:
 
 ---
 
-## Scenario: Custom Worktree Creation
+## 场景：自定义 Worktree 创建
 
-### Different package managers
+### 不同的包管理器
 
 ```yaml
 post_create:
   # npm
   - npm install
 
-  # or pnpm
+  # 或 pnpm
   # - pnpm install --frozen-lockfile
 
-  # or yarn
+  # 或 yarn
   # - yarn install --frozen-lockfile
 
-  # or bun
+  # 或 bun
   # - bun install
 ```
 
-### Database migrations required
+### 需要数据库迁移
 
 ```yaml
 post_create:
@@ -203,7 +203,7 @@ post_create:
   - pnpm db:seed
 ```
 
-### Code generation required
+### 需要代码生成
 
 ```yaml
 post_create:
@@ -212,39 +212,39 @@ post_create:
   - pnpm prisma generate
 ```
 
-### Copy additional files
+### 复制额外文件
 
 ```yaml
 copy:
   - .trellis/.developer
   - .env
   - .env.local
-  - .npmrc                    # npm private registry config
-  - firebase-credentials.json # Firebase credentials
-  - google-cloud-key.json     # GCP credentials
+  - .npmrc                    # npm 私有注册表配置
+  - firebase-credentials.json # Firebase 凭证
+  - google-cloud-key.json     # GCP 凭证
 ```
 
 ---
 
-## When worktree.yaml is Missing
+## 当 worktree.yaml 缺失时
 
-If `worktree.yaml` doesn't exist:
+如果 `worktree.yaml` 不存在：
 
-| Feature | Behavior |
+| 功能 | 行为 |
 |---------|----------|
-| Multi-Session | ❌ Cannot start (start.py requires config) |
-| Multi-Agent | ⚠️ Works, but Ralph Loop uses completion markers |
+| Multi-Session | ❌ 无法启动（start.py 需要配置） |
+| Multi-Agent | ⚠️ 可工作，但 Ralph Loop 使用完成标记 |
 
-**Ralph Loop fallback behavior**:
-- Without `verify` config, uses completion markers
-- Generates markers from `check.jsonl` reason field
-- Example: `{"reason": "typecheck"}` → expects `TYPECHECK_FINISH`
+**Ralph Loop 回退行为**：
+- 没有 `verify` 配置时，使用完成标记
+- 从 `check.jsonl` 的 reason 字段生成标记
+- 示例：`{"reason": "typecheck"}` → 期望 `TYPECHECK_FINISH`
 
 ---
 
-## Minimal Configuration
+## 最小配置
 
-### Multi-Agent only (current directory)
+### 仅 Multi-Agent（当前目录）
 
 ```yaml
 # .trellis/worktree.yaml
@@ -253,7 +253,7 @@ verify:
   - pnpm typecheck
 ```
 
-### Multi-Session only (worktree)
+### 仅 Multi-Session（worktree）
 
 ```yaml
 # .trellis/worktree.yaml
@@ -269,9 +269,9 @@ verify:
 
 ---
 
-## Complete Examples
+## 完整示例
 
-### Node.js/TypeScript Project
+### Node.js/TypeScript 项目
 
 ```yaml
 worktree_dir: ../worktrees
@@ -290,7 +290,7 @@ verify:
   - pnpm test
 ```
 
-### Python Project
+### Python 项目
 
 ```yaml
 worktree_dir: ../worktrees
@@ -298,7 +298,7 @@ worktree_dir: ../worktrees
 copy:
   - .trellis/.developer
   - .env
-  - venv/              # or recreate venv
+  - venv/              # 或重新创建 venv
 
 post_create:
   - python -m venv venv
@@ -310,7 +310,7 @@ verify:
   - ./venv/bin/pytest
 ```
 
-### Go Project
+### Go 项目
 
 ```yaml
 worktree_dir: ../worktrees
@@ -329,7 +329,7 @@ verify:
   - go test ./...
 ```
 
-### Monorepo Project
+### Monorepo 项目
 
 ```yaml
 worktree_dir: ../worktrees
@@ -341,7 +341,7 @@ copy:
 
 post_create:
   - pnpm install --frozen-lockfile
-  - pnpm -r build  # Build all packages
+  - pnpm -r build  # 构建所有包
 
 verify:
   - pnpm -r lint
@@ -351,73 +351,73 @@ verify:
 
 ---
 
-## Verification Command Notes
+## 验证命令注意事项
 
-### Ralph Loop Constants
+### Ralph Loop 常量
 
-| Constant | Value | Description |
+| 常量 | 值 | 描述 |
 |----------|-------|-------------|
-| `MAX_ITERATIONS` | 5 | Maximum loop iterations |
-| `STATE_TIMEOUT_MINUTES` | 30 | State timeout (minutes) |
-| Command timeout | 120s | Per verify command timeout |
+| `MAX_ITERATIONS` | 5 | 最大循环迭代次数 |
+| `STATE_TIMEOUT_MINUTES` | 30 | 状态超时时间（分钟） |
+| Command timeout | 120s | 每个验证命令的超时 |
 
-### Timeout
+### 超时
 
-Each verify command has **120 seconds** (2 minutes) timeout. Long-running tests may need:
-- Split tests
-- Run only fast tests
-- Modify `COMMAND_TIMEOUT` constant in `ralph-loop.py`
+每个验证命令有 **120 秒**（2 分钟）超时。长时间运行的测试可能需要：
+- 拆分测试
+- 仅运行快速测试
+- 修改 `ralph-loop.py` 中的 `COMMAND_TIMEOUT` 常量
 
-### Exit Codes
+### 退出码
 
-- Exit code 0 = Pass
-- Non-zero = Fail, blocks Check Agent from stopping
+- 退出码 0 = 通过
+- 非零 = 失败，阻止 Check Agent 停止
 
-### Order
+### 顺序
 
-Commands run in config order, stops on first failure.
+命令按配置顺序运行，遇到第一个失败即停止。
 
-Recommended order: fast → slow
+推荐顺序：快 → 慢
 ```yaml
 verify:
-  - pnpm lint        # Fast (seconds)
-  - pnpm typecheck   # Medium (seconds-minutes)
-  - pnpm test        # Slow (minutes)
+  - pnpm lint        # 快（秒级）
+  - pnpm typecheck   # 中等（秒到分钟级）
+  - pnpm test        # 慢（分钟级）
 ```
 
 ---
 
-## YAML Parser Notes
+## YAML 解析器注意事项
 
-Trellis uses a custom YAML parser (not PyYAML) with these limitations:
+Trellis 使用自定义 YAML 解析器（非 PyYAML），有以下限制：
 
-### Supported Syntax
+### 支持的语法
 
 ```yaml
-# Simple key-value
+# 简单键值对
 worktree_dir: ../worktrees
 
-# Arrays (2-space indent, starts with -)
+# 数组（2 空格缩进，以 - 开头）
 copy:
   - .trellis/.developer
   - .env
 
-# Quoted values
+# 带引号的值
 worktree_dir: "../worktrees with spaces"
 ```
 
-### Unsupported Syntax
+### 不支持的语法
 
 ```yaml
-# ❌ Inline arrays
+# ❌ 内联数组
 copy: [.env, .npmrc]
 
-# ❌ Complex nesting
+# ❌ 复杂嵌套
 nested:
   key:
     subkey: value
 
-# ❌ Multi-line strings
+# ❌ 多行字符串
 description: |
   Multiple
   lines
@@ -425,42 +425,42 @@ description: |
 
 ---
 
-## Debugging Configuration
+## 调试配置
 
-### View current config
+### 查看当前配置
 
 ```bash
 cat .trellis/worktree.yaml
 ```
 
-### Test verify commands
+### 测试验证命令
 
 ```bash
-# Manual run
+# 手动运行
 pnpm lint && pnpm typecheck
 
-# Or view Ralph Loop state
+# 或查看 Ralph Loop 状态
 cat .trellis/.ralph-state.json
 ```
 
-### View worktree status
+### 查看 worktree 状态
 
 ```bash
 git worktree list
 ```
 
-### Ralph Loop debugging
+### Ralph Loop 调试
 
 ```bash
-# View state file
+# 查看状态文件
 cat .trellis/.ralph-state.json
 
-# Example output
+# 示例输出
 # {
 #   "task": ".trellis/tasks/01-31-add-login",
 #   "iteration": 2,
 #   "started_at": "2026-01-31T10:30:00"
 # }
 
-# Ralph Loop auto-stops when exceeding MAX_ITERATIONS (5) or STATE_TIMEOUT_MINUTES (30)
+# Ralph Loop 在超过 MAX_ITERATIONS（5）或 STATE_TIMEOUT_MINUTES（30）时自动停止
 ```

@@ -3,354 +3,354 @@ name: trellis-update-spec
 description: "Captures executable contracts and coding conventions into .trellis/spec/ documents. Use when learning something valuable from debugging, implementing, or discussion that should be preserved for future sessions."
 ---
 
-# Update Code-Spec - Capture Executable Contracts
+# 更新 Code-Spec — 沉淀可执行契约
 
-When you learn something valuable (from debugging, implementing, or discussion), use this to update the relevant code-spec documents.
+当你学到有价值的内容（来自调试、实现或讨论），使用此技能更新相关的 code-spec 文档。
 
-**Timing**: After completing a task, fixing a bug, or discovering a new pattern
-
----
-
-## Code-Spec First Rule (CRITICAL)
-
-In this project, "spec" for implementation work means **code-spec**:
-- Executable contracts (not principle-only text)
-- Concrete signatures, payload fields, env keys, and boundary behavior
-- Testable validation/error behavior
-
-If the change touches infra or cross-layer contracts, code-spec depth is mandatory.
-
-### Mandatory Triggers
-
-Apply code-spec depth when the change includes any of:
-- New/changed command or API signature
-- Cross-layer request/response contract change
-- Database schema/migration change
-- Infra integration (storage, queue, cache, secrets, env wiring)
-
-### Mandatory Output (7 Sections)
-
-For triggered tasks, include all sections below:
-1. Scope / Trigger
-2. Signatures (command/API/DB)
-3. Contracts (request/response/env)
-4. Validation & Error Matrix
-5. Good/Base/Bad Cases
-6. Tests Required (with assertion points)
-7. Wrong vs Correct (at least one pair)
+**时机**：完成任务后、修复 bug 后、或发现新模式后
 
 ---
 
-## When to Update Code-Specs
+## Code-Spec 优先规则（关键）
 
-| Trigger | Example | Target Spec |
+在此项目中，用于实现工作的 "spec" 指 **code-spec**：
+- 可执行契约（而非仅原则性文本）
+- 具体的签名、payload 字段、env key 和边界行为
+- 可测试的验证/错误行为
+
+如果变更涉及基础设施或跨层契约，code-spec 深度是强制性的。
+
+### 强制触发器
+
+当变更包括以下任何内容时，应用 code-spec 深度：
+- 新增/变更的命令或 API 签名
+- 跨层请求/响应契约变更
+- 数据库 schema/迁移变更
+- 基础设施集成（存储、队列、缓存、密钥、环境变量接线）
+
+### 强制输出（7 个部分）
+
+对于触发的任务，包含以下所有部分：
+1. 范围 / 触发器
+2. 签名（命令/API/DB）
+3. 契约（请求/响应/环境变量）
+4. 验证与错误矩阵
+5. 好/基本/坏案例
+6. 需要的测试（含断言点）
+7. 错误 vs 正确（至少一对）
+
+---
+
+## 何时更新 Code-Spec
+
+| 触发器 | 示例 | 目标 Spec |
 |---------|---------|-------------|
-| **Implemented a feature** | Added a new integration or module | Relevant spec file |
-| **Made a design decision** | Chose extensibility pattern over simplicity | Relevant spec + "Design Decisions" section |
-| **Fixed a bug** | Found a subtle issue with error handling | Relevant spec (e.g., error-handling docs) |
-| **Discovered a pattern** | Found a better way to structure code | Relevant spec file |
-| **Hit a gotcha** | Learned that X must be done before Y | Relevant spec + "Common Mistakes" section |
-| **Established a convention** | Team agreed on naming pattern | Quality guidelines |
-| **New thinking trigger** | "Don't forget to check X before doing Y" | `guides/*.md` (as a checklist item) |
+| **实现了一个功能** | 添加了新的集成或模块 | 相关 spec 文件 |
+| **做了一个设计决策** | 选择了可扩展性模式而非简单模式 | 相关 spec + "设计决策"部分 |
+| **修复了一个 bug** | 发现了错误处理中的微妙问题 | 相关 spec（如 error-handling 文档） |
+| **发现了一个模式** | 找到了更好的代码结构方式 | 相关 spec 文件 |
+| **踩了一个坑** | 了解到 X 必须在 Y 之前做 | 相关 spec + "常见错误"部分 |
+| **建立了一个约定** | 团队就命名模式达成一致 | 质量指南 |
+| **新的思维触发器** | "别忘了在做 Y 之前检查 X" | `guides/*.md`（作为检查清单项） |
 
-**Key Insight**: Code-spec updates are NOT just for problems. Every feature implementation contains design decisions and contracts that future AI/developers need to execute safely.
+**关键洞察**：Code-spec 更新不仅是为了问题。每个功能实现都包含设计决策和契约，未来的 AI/开发者需要这些才能安全执行。
 
 ---
 
-## Spec Structure Overview
+## Spec 结构概览
 
 ```
 .trellis/spec/
-├── <layer>/           # Per-layer coding standards (e.g., backend/, frontend/, api/)
-│   ├── index.md       # Overview and links
-│   └── *.md           # Topic-specific guidelines
-└── guides/            # Thinking checklists (NOT coding specs!)
-    ├── index.md       # Guide index
-    └── *.md           # Topic-specific guides
+├── <layer>/           # 每层的编码标准（如 backend/、frontend/、api/）
+│   ├── index.md       # 概览和链接
+│   └── *.md           # 主题特定指南
+└── guides/            # 思维检查清单（不是编码 spec！）
+    ├── index.md       # 指南索引
+    └── *.md           # 主题特定指南
 ```
 
-### CRITICAL: Code-Spec vs Guide - Know the Difference
+### 关键：Code-Spec vs Guide — 了解区别
 
-| Type | Location | Purpose | Content Style |
+| 类型 | 位置 | 目的 | 内容风格 |
 |------|----------|---------|---------------|
-| **Code-Spec** | `<layer>/*.md` | Tell AI "how to implement safely" | Signatures, contracts, matrices, cases, test points |
-| **Guide** | `guides/*.md` | Help AI "what to think about" | Checklists, questions, pointers to specs |
+| **Code-Spec** | `<layer>/*.md` | 告诉 AI"如何安全实现" | 签名、契约、矩阵、案例、测试点 |
+| **Guide** | `guides/*.md` | 帮助 AI"需要考虑什么" | 检查清单、问题、指向 spec 的指针 |
 
-**Decision Rule**: Ask yourself:
+**决策规则**：问自己：
 
-- "This is **how to write** the code" → Put in a spec layer directory
-- "This is **what to consider** before writing" → Put in `guides/`
+- "这是**如何编写**代码" → 放入 spec 层目录
+- "这是编写前**需要考虑什么**" → 放入 `guides/`
 
-**Example**:
+**示例**：
 
-| Learning | Wrong Location | Correct Location |
+| 学到的东西 | 错误位置 | 正确位置 |
 |----------|----------------|------------------|
-| "Use API X not API Y for this task" | ❌ `guides/` (too specific for a thinking guide) | ✅ Relevant spec file (concrete convention) |
-| "Remember to check X when doing Y" | ❌ Spec file (too abstract for a spec) | ✅ `guides/` (thinking checklist) |
+| "对此任务使用 API X 而非 API Y" | ❌ `guides/`（对思维指南太具体） | ✅ 相关 spec 文件（具体约定） |
+| "做 Y 时记得检查 X" | ❌ Spec 文件（对 spec 太抽象） | ✅ `guides/`（思维检查清单） |
 
-**Guides should be short checklists that point to specs**, not duplicate the detailed rules.
+**指南应当是简短的检查清单，指向 spec**，而非重复详细规则。
 
 ---
 
-## Update Process
+## 更新流程
 
-### Step 1: Identify What You Learned
+### 步骤 1：识别你学到了什么
 
-Answer these questions:
+回答以下问题：
 
-1. **What did you learn?** (Be specific)
-2. **Why is it important?** (What problem does it prevent?)
-3. **Where does it belong?** (Which spec file?)
+1. **你学到了什么？**（要具体）
+2. **为什么重要？**（能防止什么问题？）
+3. **它属于哪里？**（哪个 spec 文件？）
 
-### Step 2: Classify the Update Type
+### 步骤 2：分类更新类型
 
-| Type | Description | Action |
+| 类型 | 说明 | 行动 |
 |------|-------------|--------|
-| **Design Decision** | Why we chose approach X over Y | Add to "Design Decisions" section |
-| **Project Convention** | How we do X in this project | Add to relevant section with examples |
-| **New Pattern** | A reusable approach discovered | Add to "Patterns" section |
-| **Forbidden Pattern** | Something that causes problems | Add to "Anti-patterns" or "Don't" section |
-| **Common Mistake** | Easy-to-make error | Add to "Common Mistakes" section |
-| **Convention** | Agreed-upon standard | Add to relevant section |
-| **Gotcha** | Non-obvious behavior | Add warning callout |
+| **设计决策** | 为什么选择方案 X 而非 Y | 添加到"设计决策"部分 |
+| **项目约定** | 此项目中如何做 X | 添加到相关部分并附示例 |
+| **新模式** | 发现的可复用方法 | 添加到"模式"部分 |
+| **禁止模式** | 会引起问题的做法 | 添加到"反模式"或"不要"部分 |
+| **常见错误** | 容易犯的错误 | 添加到"常见错误"部分 |
+| **约定** | 达成一致的标准 | 添加到相关部分 |
+| **陷阱** | 不显然的行为 | 添加警告提示 |
 
-### Step 3: Read the Target Code-Spec
+### 步骤 3：阅读目标 Code-Spec
 
-Before editing, read the current code-spec to:
-- Understand existing structure
-- Avoid duplicating content
-- Find the right section for your update
+编辑前，阅读当前 code-spec 以：
+- 了解现有结构
+- 避免重复内容
+- 找到正确的更新位置
 
 ```bash
 cat .trellis/spec/<category>/<file>.md
 ```
 
-### Step 4: Make the Update
+### 步骤 4：进行更新
 
-Follow these principles:
+遵循以下原则：
 
-1. **Be Specific**: Include concrete examples, not just abstract rules
-2. **Explain Why**: State the problem this prevents
-3. **Show Contracts**: Add signatures, payload fields, and error behavior
-4. **Show Code**: Add code snippets for key patterns
-5. **Keep it Short**: One concept per section
+1. **要具体**：包含具体示例，而非仅仅抽象规则
+2. **解释为什么**：说明能防止什么问题
+3. **展示契约**：添加签名、payload 字段和错误行为
+4. **展示代码**：为关键模式添加代码片段
+5. **保持简短**：每部分一个概念
 
-### Step 5: Update the Index (if needed)
+### 步骤 5：更新索引（如需要）
 
-If you added a new section or the code-spec status changed, update the category's `index.md`.
+如果添加了新部分或 code-spec 状态发生了变化，更新该类别的 `index.md`。
 
 ---
 
-## Update Templates
+## 更新模板
 
-### Mandatory Template for Infra/Cross-Layer Work
+### 基础设施/跨层工作的强制模板
 
 ```markdown
-## Scenario: <name>
+## 场景：<名称>
 
-### 1. Scope / Trigger
-- Trigger: <why this requires code-spec depth>
+### 1. 范围 / 触发器
+- 触发器：<为什么需要 code-spec 深度>
 
-### 2. Signatures
-- Backend command/API/DB signature(s)
+### 2. 签名
+- 后端命令/API/DB 签名
 
-### 3. Contracts
-- Request fields (name, type, constraints)
-- Response fields (name, type, constraints)
-- Environment keys (required/optional)
+### 3. 契约
+- 请求字段（名称、类型、约束）
+- 响应字段（名称、类型、约束）
+- 环境变量 key（必需/可选）
 
-### 4. Validation & Error Matrix
-- <condition> -> <error>
+### 4. 验证与错误矩阵
+- <条件> -> <错误>
 
-### 5. Good/Base/Bad Cases
-- Good: ...
-- Base: ...
-- Bad: ...
+### 5. 好/基本/坏案例
+- 好：...
+- 基本：...
+- 坏：...
 
-### 6. Tests Required
-- Unit/Integration/E2E with assertion points
+### 6. 需要的测试
+- 单元/集成/E2E 及断言点
 
-### 7. Wrong vs Correct
-#### Wrong
+### 7. 错误 vs 正确
+#### 错误
 ...
-#### Correct
+#### 正确
 ...
 ```
 
-### Adding a Design Decision
+### 添加设计决策
 
 ```markdown
-### Design Decision: [Decision Name]
+### 设计决策：[决策名称]
 
-**Context**: What problem were we solving?
+**上下文**：我们在解决什么问题？
 
-**Options Considered**:
-1. Option A - brief description
-2. Option B - brief description
+**考虑的选项**：
+1. 选项 A - 简要说明
+2. 选项 B - 简要说明
 
-**Decision**: We chose Option X because...
+**决策**：我们选择了选项 X，因为...
 
-**Example**:
+**示例**：
 \`\`\`typescript
-// How it's implemented
-code example
+// 如何实现
+代码示例
 \`\`\`
 
-**Extensibility**: How to extend this in the future...
+**可扩展性**：未来如何扩展此方案...
 ```
 
-### Adding a Project Convention
+### 添加项目约定
 
 ```markdown
-### Convention: [Convention Name]
+### 约定：[约定名称]
 
-**What**: Brief description of the convention.
+**是什么**：约定的简要描述。
 
-**Why**: Why we do it this way in this project.
+**为什么**：为什么在此项目中这样做。
 
-**Example**:
+**示例**：
 \`\`\`typescript
-// How to follow this convention
-code example
+// 如何遵循此约定
+代码示例
 \`\`\`
 
-**Related**: Links to related conventions or specs.
+**相关**：相关约定或 spec 的链接。
 ```
 
-### Adding a New Pattern
+### 添加新模式
 
 ```markdown
-### Pattern Name
+### 模式名称
 
-**Problem**: What problem does this solve?
+**问题**：此模式解决什么问题？
 
-**Solution**: Brief description of the approach.
+**解决方案**：方法的简要描述。
 
-**Example**:
+**示例**：
 \`\`\`
-// Good
-code example
+// 好的做法
+代码示例
 
-// Bad
-code example
+// 不好的做法
+代码示例
 \`\`\`
 
-**Why**: Explanation of why this works better.
+**为什么**：解释为什么这种方式更好。
 ```
 
-### Adding a Forbidden Pattern
+### 添加禁止模式
 
 ```markdown
-### Don't: Pattern Name
+### 不要：模式名称
 
-**Problem**:
+**问题**：
 \`\`\`
-// Don't do this
-bad code example
+// 不要这样做
+不好的代码示例
 \`\`\`
 
-**Why it's bad**: Explanation of the issue.
+**为什么不好**：问题的解释。
 
-**Instead**:
+**替代方案**：
 \`\`\`
-// Do this instead
-good code example
+// 改为这样做
+好的代码示例
 \`\`\`
 ```
 
-### Adding a Common Mistake
+### 添加常见错误
 
 ```markdown
-### Common Mistake: Description
+### 常见错误：描述
 
-**Symptom**: What goes wrong
+**症状**：出了什么问题
 
-**Cause**: Why this happens
+**原因**：为什么会发生
 
-**Fix**: How to correct it
+**修复**：如何改正
 
-**Prevention**: How to avoid it in the future
+**预防**：未来如何避免
 ```
 
-### Adding a Gotcha
+### 添加陷阱
 
 ```markdown
-> **Warning**: Brief description of the non-obvious behavior.
+> **警告**：对不显然行为的简要描述。
 >
-> Details about when this happens and how to handle it.
+> 关于何时发生以及如何处理的详细信息。
 ```
 
 ---
 
-## Interactive Mode
+## 交互模式
 
-If you're unsure what to update, answer these prompts:
+如果不确定更新什么，回答以下提示：
 
-1. **What did you just finish?**
-   - [ ] Fixed a bug
-   - [ ] Implemented a feature
-   - [ ] Refactored code
-   - [ ] Had a discussion about approach
+1. **你刚完成了什么？**
+   - [ ] 修复了一个 bug
+   - [ ] 实现了一个功能
+   - [ ] 重构了代码
+   - [ ] 讨论了方法
 
-2. **What did you learn or decide?**
-   - Design decision (why X over Y)
-   - Project convention (how we do X)
-   - Non-obvious behavior (gotcha)
-   - Better approach (pattern)
+2. **你学到了或决定了什么？**
+   - 设计决策（为什么选 X 而非 Y）
+   - 项目约定（我们如何做 X）
+   - 不显然的行为（陷阱）
+   - 更好的方法（模式）
 
-3. **Would future AI/developers need to know this?**
-   - To understand how the code works → Yes, update spec
-   - To maintain or extend the feature → Yes, update spec
-   - To avoid repeating mistakes → Yes, update spec
-   - Purely one-off implementation detail → Maybe skip
+3. **未来的 AI/开发者需要知道这个吗？**
+   - 为了理解代码如何工作 → 是，更新 spec
+   - 为了维护或扩展功能 → 是，更新 spec
+   - 为了避免重复错误 → 是，更新 spec
+   - 纯粹的一次性实现细节 → 也许跳过
 
-4. **Which area does it relate to?**
-   - [ ] Backend code
-   - [ ] Frontend code
-   - [ ] Cross-layer data flow
-   - [ ] Code organization/reuse
-   - [ ] Quality/testing
-
----
-
-## Quality Checklist
-
-Before finishing your code-spec update:
-
-- [ ] Is the content specific and actionable?
-- [ ] Did you include a code example?
-- [ ] Did you explain WHY, not just WHAT?
-- [ ] Did you include executable signatures/contracts?
-- [ ] Did you include validation and error matrix?
-- [ ] Did you include Good/Base/Bad cases?
-- [ ] Did you include required tests with assertion points?
-- [ ] Is it in the right code-spec file?
-- [ ] Does it duplicate existing content?
-- [ ] Would a new team member understand it?
+4. **它与哪个领域相关？**
+   - [ ] 后端代码
+   - [ ] 前端代码
+   - [ ] 跨层数据流
+   - [ ] 代码组织/复用
+   - [ ] 质量/测试
 
 ---
 
-## Relationship to Other Commands
+## 质量检查清单
+
+完成 code-spec 更新前：
+
+- [ ] 内容具体且可操作？
+- [ ] 包含了代码示例？
+- [ ] 解释了为什么，而不仅是什么？
+- [ ] 包含了可执行签名/契约？
+- [ ] 包含了验证和错误矩阵？
+- [ ] 包含了好/基本/坏案例？
+- [ ] 包含了所需测试及断言点？
+- [ ] 在正确的 code-spec 文件中？
+- [ ] 没有重复现有内容？
+- [ ] 新团队成员能理解吗？
+
+---
+
+## 与其他命令的关系
 
 ```
-Development Flow:
-  Learn something → `update-spec` (Trellis command) → Knowledge captured
+开发流程：
+  学到东西 → `update-spec`（Trellis 命令）→ 知识已沉淀
        ↑                                  ↓
-  `break-loop` (Trellis command) ←──────────────────── Future sessions benefit
-  (deep bug analysis)
+  `break-loop`（Trellis 命令）←──────────────────── 未来会话受益
+  （深度 bug 分析）
 ```
 
-- ``break-loop` (Trellis command)` - Analyzes bugs deeply, often reveals spec updates needed
-- ``update-spec` (Trellis command)` - Actually makes the updates
-- ``finish-work` (Trellis command)` - Reminds you to check if specs need updates
+- ``break-loop`（Trellis 命令）` - 深度分析 bug，通常会揭示需要更新的 spec
+- ``update-spec`（Trellis 命令）` - 实际执行更新
+- ``finish-work`（Trellis 命令）` - 提醒你检查是否需要更新 spec
 
 ---
 
-## Core Philosophy
+## 核心理念
 
-> **Code-specs are living documents. Every debugging session, every "aha moment" is an opportunity to make the implementation contract clearer.**
+> **Code-spec 是活文档。每次调试会话、每个"顿悟时刻"都是让实现契约更清晰的机会。**
 
-The goal is **institutional memory**:
-- What one person learns, everyone benefits from
-- What AI learns in one session, persists to future sessions
-- Mistakes become documented guardrails
+目标是**制度记忆**：
+- 一个人学到的东西，所有人受益
+- AI 在一个会话中学到的东西，延续到未来会话
+- 错误变成文档化的护栏

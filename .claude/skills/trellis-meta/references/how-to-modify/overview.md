@@ -1,223 +1,223 @@
-# How-To Modification Guide
+# How-To 修改指南
 
-Common Trellis customization scenarios and what files need to be modified.
+常见 Trellis 定制场景及需要修改的文件。
 
 ---
 
-## Quick Reference
+## 快速参考
 
-| Task | Files to Modify | Platform |
+| 任务 | 需修改的文件 | 平台 |
 |------|-----------------|----------|
-| [Add slash command](#add-slash-command) | commands/, trellis-local | All |
-| [Add agent](#add-agent) | agents/, hook, jsonl, trellis-local | CC |
-| [Modify hook](#modify-hook) | hooks/, settings.json, trellis-local | CC |
-| [Add spec category](#add-spec-category) | spec/, jsonl, trellis-local | All |
-| [Change verify commands](#change-verify-commands) | worktree.yaml | CC |
-| [Add workflow phase](#add-workflow-phase) | task.json, dispatch, trellis-local | CC |
-| [Add post_create step](#add-post_create-step) | worktree.yaml | CC |
-| [Modify session start](#modify-session-start) | session-start.py, trellis-local | CC |
-| [Add core script](#add-core-script) | scripts/, trellis-local | All |
-| [Change task types](#change-task-types) | task.py, jsonl templates | All |
+| [添加斜杠命令](#添加斜杠命令) | commands/、trellis-local | All |
+| [添加 Agent](#添加-agent) | agents/、hook、jsonl、trellis-local | CC |
+| [修改 Hook](#修改-hook) | hooks/、settings.json、trellis-local | CC |
+| [添加 Spec 分类](#添加-spec-分类) | spec/、jsonl、trellis-local | All |
+| [修改验证命令](#修改验证命令) | worktree.yaml | CC |
+| [添加工作流阶段](#添加工作流阶段) | task.json、dispatch、trellis-local | CC |
+| [添加 post_create 步骤](#添加-post_create-步骤) | worktree.yaml | CC |
+| [修改会话启动](#修改会话启动) | session-start.py、trellis-local | CC |
+| [添加核心脚本](#添加核心脚本) | scripts/、trellis-local | All |
+| [修改任务类型](#修改任务类型) | task.py、jsonl 模板 | All |
 
-**Platform**: `All` = All platforms | `CC` = Claude Code only
-
----
-
-## Detailed Guides
-
-### Add Slash Command
-
-**Scenario**: Add a new `/trellis:my-command` command.
-
-**Files to modify**:
-
-```
-.claude/commands/trellis/my-command.md    # Create: Command prompt
-.cursor/commands/my-command.md            # Create: Mirror for Cursor (optional)
-.trellis-local/SKILL.md                   # Update: Document the change
-```
-
-**Steps**:
-1. Create command file with YAML frontmatter
-2. Mirror to Cursor if needed
-3. Document in trellis-local
-
-→ See `add-command.md` for details.
+**平台**：`All` = 所有平台 | `CC` = 仅 Claude Code
 
 ---
 
-### Add Agent
+## 详细指南
 
-**Scenario**: Add a new agent type like `my-agent`.
+### 添加斜杠命令
 
-**Files to modify**:
+**场景**：添加新的 `/trellis:my-command` 命令。
+
+**需修改的文件**：
 
 ```
-.claude/agents/my-agent.md                          # Create: Agent definition
-.claude/hooks/inject-subagent-context.py            # Modify: Add agent handling
-.trellis/tasks/{template}/my-agent.jsonl            # Create: Context template
-.trellis-local/SKILL.md                             # Update: Document the change
+.claude/commands/trellis/my-command.md    # 创建：命令提示词
+.cursor/commands/my-command.md            # 创建：Cursor 镜像（可选）
+.trellis-local/SKILL.md                   # 更新：记录变更
 ```
 
-**Optional**:
-```
-.claude/agents/dispatch.md                          # Modify: If adding to pipeline
-task.json template                                  # Modify: Add to next_action
-```
+**步骤**：
+1. 创建带 YAML frontmatter 的命令文件
+2. 按需镜像到 Cursor
+3. 在 trellis-local 中记录
 
-→ See `add-agent.md` for details.
+→ 详见 `add-command.md`。
 
 ---
 
-### Modify Hook
+### 添加 Agent
 
-**Scenario**: Change hook behavior (context injection, validation, etc.).
+**场景**：添加新的 agent 类型，如 `my-agent`。
 
-**Files to modify**:
+**需修改的文件**：
 
 ```
-.claude/hooks/{hook-name}.py              # Modify: Hook logic
-.claude/settings.json                     # Modify: If changing matcher/timeout
-.trellis-local/SKILL.md                   # Update: Document the change
+.claude/agents/my-agent.md                          # 创建：Agent 定义
+.claude/hooks/inject-subagent-context.py            # 修改：添加 agent 处理逻辑
+.trellis/tasks/{template}/my-agent.jsonl            # 创建：上下文模板
+.trellis-local/SKILL.md                             # 更新：记录变更
 ```
 
-→ See `modify-hook.md` for details.
+**可选**：
+```
+.claude/agents/dispatch.md                          # 修改：如需加入流水线
+task.json 模板                                      # 修改：添加到 next_action
+```
+
+→ 详见 `add-agent.md`。
 
 ---
 
-### Add Spec Category
+### 修改 Hook
 
-**Scenario**: Add a new spec category like `mobile/`.
+**场景**：修改 hook 行为（上下文注入、校验等）。
 
-**Files to modify**:
+**需修改的文件**：
 
 ```
-.trellis/spec/mobile/index.md             # Create: Category index
-.trellis/spec/mobile/*.md                 # Create: Spec files
-.trellis/tasks/{template}/*.jsonl         # Update: Reference new specs
-.trellis-local/SKILL.md                   # Update: Document the change
+.claude/hooks/{hook-name}.py              # 修改：Hook 逻辑
+.claude/settings.json                     # 修改：如修改 matcher/timeout
+.trellis-local/SKILL.md                   # 更新：记录变更
 ```
 
-→ See `add-spec.md` for details.
+→ 详见 `modify-hook.md`。
 
 ---
 
-### Change Verify Commands
+### 添加 Spec 分类
 
-**Scenario**: Add or modify Ralph Loop verification commands.
+**场景**：添加新的 spec 分类，如 `mobile/`。
 
-**Files to modify**:
+**需修改的文件**：
 
 ```
-.trellis/worktree.yaml                    # Modify: verify section
+.trellis/spec/mobile/index.md             # 创建：分类索引
+.trellis/spec/mobile/*.md                 # 创建：Spec 文件
+.trellis/tasks/{template}/*.jsonl         # 更新：引用新 spec
+.trellis-local/SKILL.md                   # 更新：记录变更
 ```
 
-**Example**:
+→ 详见 `add-spec.md`。
+
+---
+
+### 修改验证命令
+
+**场景**：添加或修改 Ralph Loop 验证命令。
+
+**需修改的文件**：
+
+```
+.trellis/worktree.yaml                    # 修改：verify 部分
+```
+
+**示例**：
 ```yaml
 verify:
   - pnpm lint
   - pnpm typecheck
-  - pnpm test        # Add this
+  - pnpm test        # 添加此行
 ```
 
-→ See `change-verify.md` for details.
+→ 详见 `change-verify.md`。
 
 ---
 
-### Add Workflow Phase
+### 添加工作流阶段
 
-**Scenario**: Add a new phase to the task workflow.
+**场景**：向任务工作流添加新阶段。
 
-**Files to modify**:
+**需修改的文件**：
 
 ```
-task.json (in task directories)           # Modify: next_action array
-.claude/agents/dispatch.md                # Modify: Handle new phase
-.claude/agents/{new-phase}.md             # Create: If new agent needed
-.claude/hooks/inject-subagent-context.py  # Modify: If new agent
-.trellis-local/SKILL.md                   # Update: Document the change
+task.json（任务目录中）                    # 修改：next_action 数组
+.claude/agents/dispatch.md                # 修改：处理新阶段
+.claude/agents/{new-phase}.md             # 创建：如需新 agent
+.claude/hooks/inject-subagent-context.py  # 修改：如有新 agent
+.trellis-local/SKILL.md                   # 更新：记录变更
 ```
 
-→ See `add-phase.md` for details.
+→ 详见 `add-phase.md`。
 
 ---
 
-### Add post_create Step
+### 添加 post_create 步骤
 
-**Scenario**: Add setup steps after worktree creation.
+**场景**：在 worktree 创建后添加设置步骤。
 
-**Files to modify**:
+**需修改的文件**：
 
 ```
-.trellis/worktree.yaml                    # Modify: post_create section
+.trellis/worktree.yaml                    # 修改：post_create 部分
 ```
 
-**Example**:
+**示例**：
 ```yaml
 post_create:
   - pnpm install
-  - pnpm db:migrate    # Add this
+  - pnpm db:migrate    # 添加此行
 ```
 
 ---
 
-### Modify Session Start
+### 修改会话启动
 
-**Scenario**: Change what context is injected at session start.
+**场景**：修改会话启动时注入的上下文内容。
 
-**Files to modify**:
+**需修改的文件**：
 
 ```
-.claude/hooks/session-start.py            # Modify: Injection logic
-.trellis-local/SKILL.md                   # Update: Document the change
+.claude/hooks/session-start.py            # 修改：注入逻辑
+.trellis-local/SKILL.md                   # 更新：记录变更
 ```
 
-→ See `modify-session-start.md` for details.
+→ 详见 `modify-session-start.md`。
 
 ---
 
-### Add Core Script
+### 添加核心脚本
 
-**Scenario**: Add a new automation script.
+**场景**：添加新的自动化脚本。
 
-**Files to modify**:
+**需修改的文件**：
 
 ```
-.trellis/scripts/my-script.py             # Create: Script
-.trellis/scripts/common/*.py              # Create/Modify: If shared utilities
-.trellis-local/SKILL.md                   # Update: Document the change
+.trellis/scripts/my-script.py             # 创建：脚本
+.trellis/scripts/common/*.py              # 创建/修改：共享工具
+.trellis-local/SKILL.md                   # 更新：记录变更
 ```
 
-→ See `add-script.md` for details.
+→ 详见 `add-script.md`。
 
 ---
 
-### Change Task Types
+### 修改任务类型
 
-**Scenario**: Add or modify task dev_type (frontend, backend, etc.).
+**场景**：添加或修改任务 dev_type（frontend、backend 等）。
 
-**Files to modify**:
+**需修改的文件**：
 
 ```
-.trellis/scripts/task.py                  # Modify: init-context logic
-.trellis/tasks/{template}/*.jsonl         # Create: New JSONL templates
-.trellis-local/SKILL.md                   # Update: Document the change
+.trellis/scripts/task.py                  # 修改：init-context 逻辑
+.trellis/tasks/{template}/*.jsonl         # 创建：新 JSONL 模板
+.trellis-local/SKILL.md                   # 更新：记录变更
 ```
 
-→ See `change-task-types.md` for details.
+→ 详见 `change-task-types.md`。
 
 ---
 
-## Documents in This Directory
+## 本目录文档
 
-| Document | Scenario |
+| 文档 | 场景 |
 |----------|----------|
-| `add-command.md` | Adding slash commands |
-| `add-agent.md` | Adding new agent types |
-| `modify-hook.md` | Modifying hook behavior |
-| `add-spec.md` | Adding spec categories |
-| `change-verify.md` | Changing verify commands |
-| `add-phase.md` | Adding workflow phases |
-| `modify-session-start.md` | Changing session start injection |
-| `add-script.md` | Adding automation scripts |
-| `change-task-types.md` | Adding task types |
+| `add-command.md` | 添加斜杠命令 |
+| `add-agent.md` | 添加新的 agent 类型 |
+| `modify-hook.md` | 修改 hook 行为 |
+| `add-spec.md` | 添加 spec 分类 |
+| `change-verify.md` | 修改验证命令 |
+| `add-phase.md` | 添加工作流阶段 |
+| `modify-session-start.md` | 修改会话启动注入 |
+| `add-script.md` | 添加自动化脚本 |
+| `change-task-types.md` | 添加任务类型 |

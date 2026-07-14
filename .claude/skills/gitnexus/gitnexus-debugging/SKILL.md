@@ -3,87 +3,87 @@ name: gitnexus-debugging
 description: "Use when the user is debugging a bug, tracing an error, or asking why something fails. Examples: \"Why is X failing?\", \"Where does this error come from?\", \"Trace this bug\""
 ---
 
-# Debugging with GitNexus
+# 使用 GitNexus 进行调试
 
-## When to Use
+## 何时使用
 
-- "Why is this function failing?"
-- "Trace where this error comes from"
-- "Who calls this method?"
-- "This endpoint returns 500"
-- Investigating bugs, errors, or unexpected behavior
+- "这个函数为什么失败？"
+- "追踪这个错误的来源"
+- "谁调用了这个方法？"
+- "这个端点返回 500"
+- 调查 bug、错误或意外行为
 
-## Workflow
-
-```
-1. query({query: "<error or symptom>"})            → Find related execution flows
-2. context({name: "<suspect>"})                    → See callers/callees/processes
-3. READ gitnexus://repo/{name}/process/{name}                → Trace execution flow
-4. cypher({query: "MATCH path..."})                 → Custom traces if needed
-```
-
-> If "Index is stale" → run `node .gitnexus/run.cjs analyze` in terminal.
-
-## Checklist
+## 工作流程
 
 ```
-- [ ] Understand the symptom (error message, unexpected behavior)
-- [ ] query for error text or related code
-- [ ] Identify the suspect function from returned processes
-- [ ] context to see callers and callees
-- [ ] Trace execution flow via process resource if applicable
-- [ ] cypher for custom call chain traces if needed
-- [ ] Read source files to confirm root cause
+1. query({query: "<错误或症状>"})                   → 查找相关的执行流程
+2. context({name: "<嫌疑符号>"})                    → 查看调用者/被调用者/流程
+3. READ gitnexus://repo/{name}/process/{name}                 → 追踪执行流程
+4. cypher({query: "MATCH path..."})                   → 按需自定义追踪
 ```
 
-## Debugging Patterns
+> 如果提示 "Index is stale" → 在终端执行 `node .gitnexus/run.cjs analyze`。
 
-| Symptom              | GitNexus Approach                                          |
-| -------------------- | ---------------------------------------------------------- |
-| Error message        | `query` for error text → `context` on throw sites |
-| Wrong return value   | `context` on the function → trace callees for data flow    |
-| Intermittent failure | `context` → look for external calls, async deps            |
-| Performance issue    | `context` → find symbols with many callers (hot paths)     |
-| Recent regression    | `detect_changes` to see what your changes affect           |
+## 检查清单
 
-## Tools
+```
+- [ ] 理解症状（错误消息、意外行为）
+- [ ] query 搜索错误文本或相关代码
+- [ ] 从返回的流程中识别嫌疑函数
+- [ ] context 查看调用者和被调用者
+- [ ] 如适用，通过 process 资源追踪执行流程
+- [ ] 如需自定义调用链追踪，使用 cypher
+- [ ] 阅读源文件以确认根本原因
+```
 
-**query** — find code related to error:
+## 调试模式
+
+| 症状                 | GitNexus 方法                                                |
+| -------------------- | ------------------------------------------------------------ |
+| 错误消息             | `query` 搜索错误文本 → `context` 检查抛出点                  |
+| 返回值异常           | `context` 检查函数 → 追踪被调用者的数据流                    |
+| 间歇性失败           | `context` → 查找外部调用、异步依赖                           |
+| 性能问题             | `context` → 查找被大量调用者引用的符号（热点路径）           |
+| 近期回归             | `detect_changes` 查看你的改动影响了什么                      |
+
+## 工具
+
+**query** —— 查找与错误相关的代码：
 
 ```
 query({query: "payment validation error"})
-→ Processes: CheckoutFlow, ErrorHandling
-→ Symbols: validatePayment, handlePaymentError, PaymentException
+→ 流程 (Processes): CheckoutFlow, ErrorHandling
+→ 符号 (Symbols): validatePayment, handlePaymentError, PaymentException
 ```
 
-**context** — full context for a suspect:
+**context** —— 获取嫌疑符号的完整上下文：
 
 ```
 context({name: "validatePayment"})
-→ Incoming calls: processCheckout, webhookHandler
-→ Outgoing calls: verifyCard, fetchRates (external API!)
-→ Processes: CheckoutFlow (step 3/7)
+→ 入向调用 (Incoming calls): processCheckout, webhookHandler
+→ 出向调用 (Outgoing calls): verifyCard, fetchRates（外部 API！）
+→ 流程 (Processes): CheckoutFlow（步骤 3/7）
 ```
 
-**cypher** — custom call chain traces:
+**cypher** —— 自定义调用链追踪：
 
 ```cypher
 MATCH path = (a)-[:CodeRelation {type: 'CALLS'}*1..2]->(b:Function {name: "validatePayment"})
 RETURN [n IN nodes(path) | n.name] AS chain
 ```
 
-## Example: "Payment endpoint returns 500 intermittently"
+## 示例："支付端点间歇性返回 500"
 
 ```
 1. query({query: "payment error handling"})
-   → Processes: CheckoutFlow, ErrorHandling
-   → Symbols: validatePayment, handlePaymentError
+   → 流程: CheckoutFlow, ErrorHandling
+   → 符号: validatePayment, handlePaymentError
 
 2. context({name: "validatePayment"})
-   → Outgoing calls: verifyCard, fetchRates (external API!)
+   → 出向调用: verifyCard, fetchRates（外部 API！）
 
 3. READ gitnexus://repo/my-app/process/CheckoutFlow
-   → Step 3: validatePayment → calls fetchRates (external)
+   → 步骤 3: validatePayment → 调用 fetchRates（外部）
 
-4. Root cause: fetchRates calls external API without proper timeout
+4. 根本原因: fetchRates 调用外部 API 时未设置合适的超时时间
 ```

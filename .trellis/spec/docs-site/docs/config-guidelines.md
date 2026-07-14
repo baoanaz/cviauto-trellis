@@ -1,16 +1,16 @@
-# Configuration Guidelines
+# 配置指南（Configuration Guidelines）
 
-> docs.json configuration patterns and conventions.
-
----
-
-## File Location
-
-Main configuration file: `docs.json` (project root)
+> docs.json 的配置模式和规范。
 
 ---
 
-## Schema Reference
+## 文件位置（File Location）
+
+主配置文件：`docs.json`（项目根目录）
+
+---
+
+## Schema 参考（Schema Reference）
 
 ```json
 {
@@ -18,13 +18,13 @@ Main configuration file: `docs.json` (project root)
 }
 ```
 
-Always include the schema for editor autocomplete.
+始终包含 schema 以获得编辑器自动补全。
 
 ---
 
-## Core Configuration
+## 核心配置（Core Configuration）
 
-### Theme and Branding
+### 主题与品牌（Theme and Branding）
 
 ```json
 {
@@ -43,19 +43,19 @@ Always include the schema for editor autocomplete.
 }
 ```
 
-### Color Guidelines
+### 颜色指南（Color Guidelines）
 
-| Color     | Purpose           | Format                |
+| 颜色（Color） | 用途（Purpose） | 格式（Format） |
 | --------- | ----------------- | --------------------- |
-| `primary` | Main brand color  | Hex (e.g., `#16A34A`) |
-| `light`   | Light mode accent | Hex                   |
-| `dark`    | Dark mode accent  | Hex                   |
+| `primary` | 主品牌色 | Hex（如 `#16A34A`） |
+| `light`   | 浅色模式强调色 | Hex |
+| `dark`    | 深色模式强调色 | Hex |
 
 ---
 
-## Navigation
+## 导航（Navigation）
 
-### Tab-Based Navigation
+### 基于 Tab 的导航（Tab-Based Navigation）
 
 ```json
 {
@@ -84,7 +84,7 @@ Always include the schema for editor autocomplete.
 }
 ```
 
-### Group-Based Navigation
+### 基于分组的导航（Group-Based Navigation）
 
 ```json
 {
@@ -103,17 +103,17 @@ Always include the schema for editor autocomplete.
 }
 ```
 
-### Page References
+### 页面引用（Page References）
 
-| Format           | Example                     |
+| 格式（Format） | 示例（Example） |
 | ---------------- | --------------------------- |
-| Root page        | `"index"`                   |
-| Nested page      | `"essentials/settings"`     |
-| OpenAPI endpoint | `"openapi.json GET /users"` |
+| 根页面           | `"index"`                   |
+| 嵌套页面         | `"essentials/settings"`     |
+| OpenAPI 端点     | `"openapi.json GET /users"` |
 
-### Collapsible Nested Groups
+### 可折叠的嵌套分组（Collapsible Nested Groups）
 
-To make a navigation group collapsible (collapsed by default), use the `expanded` property on **nested groups** (groups within groups):
+要使导航分组可折叠（默认折叠），在**嵌套分组**（分组内的分组）上使用 `expanded` 属性：
 
 ```json
 {
@@ -136,28 +136,28 @@ To make a navigation group collapsible (collapsed by default), use the `expanded
 }
 ```
 
-> **Warning**: The `expanded` property **only works on nested groups** (groups within groups). Top-level groups are always expanded and cannot be collapsed. If you put `expanded: false` on a top-level group, it will be silently ignored.
+> **警告**：`expanded` 属性**仅适用于嵌套分组**（分组内的分组）。顶层分组始终展开且不可折叠。如果你在顶层分组上设置 `expanded: false`，它会被静默忽略。
 
-**Common Mistake**: Trying to collapse a top-level group:
+**常见错误**：尝试折叠顶层分组：
 
 ```json
-// ❌ WRONG - This does NOT work
+// ❌ 错误——这不起作用
 {
   "group": "Blog",
-  "expanded": false, // Ignored! Top-level groups can't collapse
+  "expanded": false, // 被忽略！顶层分组无法折叠
   "pages": ["blog/index", "blog/post-one"]
 }
 ```
 
 ```json
-// ✅ CORRECT - Nest it under a parent group
+// ✅ 正确——将其嵌套在父分组下
 {
   "group": "Community",
   "pages": [
     "showcase/index",
     {
       "group": "Blog",
-      "expanded": false, // Works! This is a nested group
+      "expanded": false, // 有效！这是一个嵌套分组
       "pages": ["blog/index", "blog/post-one"]
     }
   ]
@@ -166,9 +166,9 @@ To make a navigation group collapsible (collapsed by default), use the `expanded
 
 ---
 
-## Global Elements
+## 全局元素（Global Elements）
 
-### Anchors (Sidebar Links)
+### 锚点链接 / 侧边栏链接（Anchors）
 
 ```json
 {
@@ -191,7 +191,7 @@ To make a navigation group collapsible (collapsed by default), use the `expanded
 }
 ```
 
-### Navbar
+### 导航栏（Navbar）
 
 ```json
 {
@@ -211,7 +211,7 @@ To make a navigation group collapsible (collapsed by default), use the `expanded
 }
 ```
 
-### Footer
+### 页脚（Footer）
 
 ```json
 {
@@ -227,9 +227,9 @@ To make a navigation group collapsible (collapsed by default), use the `expanded
 
 ---
 
-## API Documentation
+## API 文档（API Documentation）
 
-### OpenAPI Integration
+### OpenAPI 集成
 
 ```json
 {
@@ -251,9 +251,9 @@ To make a navigation group collapsible (collapsed by default), use the `expanded
 
 ---
 
-## Contextual Options
+## 上下文选项（Contextual Options）
 
-Code block right-click menu options:
+代码块右键菜单选项：
 
 ```json
 {
@@ -265,11 +265,11 @@ Code block right-click menu options:
 
 ---
 
-## Internationalization (i18n)
+## 国际化（i18n）
 
-### Language-Based Navigation
+### 基于语言的导航（Language-Based Navigation）
 
-For multi-language support, use `navigation.languages` instead of `navigation.tabs`:
+对于多语言支持，使用 `navigation.languages` 替代 `navigation.tabs`：
 
 ```json
 {
@@ -308,32 +308,32 @@ For multi-language support, use `navigation.languages` instead of `navigation.ta
 }
 ```
 
-### i18n File Structure
+### i18n 文件结构
 
 ```
 docs/
-├── index.mdx           # English homepage
-├── quickstart.mdx      # English quickstart
+├── index.mdx           # 英文首页
+├── quickstart.mdx      # 英文快速开始
 ├── zh/
-│   ├── index.mdx       # Chinese homepage
-│   └── quickstart.mdx  # Chinese quickstart
-└── docs.json           # Both languages configured
+│   ├── index.mdx       # 中文首页
+│   └── quickstart.mdx  # 中文快速开始
+└── docs.json           # 两种语言均已配置
 ```
 
-> **Important**: Each language needs its own complete navigation structure. Pages in `zh/` must be referenced as `"zh/pagename"` in the navigation.
+> **重要**：每种语言都需要自己完整的导航结构。`zh/` 中的页面在导航中必须引用为 `"zh/pagename"`。
 
-### i18n Naming Conventions
+### i18n 命名规范（Naming Conventions）
 
-Use consistent naming for common page types across languages:
+跨语言对常见页面类型使用一致的命名：
 
-| English      | Chinese    | Usage                            |
+| English      | 中文       | 用法（Usage） |
 | ------------ | ---------- | -------------------------------- |
-| `Overview`   | `概览`     | Index/landing pages for sections |
-| `Guides`     | `指南`     | How-to documentation section     |
-| `Quickstart` | `快速开始` | Getting started guides           |
-| `FAQ`        | `常见问题` | Frequently asked questions       |
+| `Overview`   | `概览`     | 章节的索引/入口页面 |
+| `Guides`     | `指南`     | 操作指南文档章节 |
+| `Quickstart` | `快速开始` | 入门指南 |
+| `FAQ`        | `常见问题` | 常见问题解答 |
 
-**Example frontmatter**:
+**frontmatter 示例**：
 
 ```yaml
 # English (templates/specs-index.mdx)
@@ -348,27 +348,27 @@ description: '常见技术栈的规范模板'
 ---
 ```
 
-> **Rule**: Don't mix languages in titles. English pages use English titles, Chinese pages use Chinese titles.
+> **规则**：不要在标题中混合语言。英文页面使用英文标题，中文页面使用中文标题。
 
-### i18n for Content Sections (Blog, Changelog, etc.)
+### 内容章节的 i18n（博客、Changelog 等）
 
-When a content section (like Blog) has language-specific posts, **separate the content by directory**:
+当内容章节（如 Blog）有按语言区分的文章时，**按目录分离内容**：
 
 ```
 docs/
-├── blog/                        # English blog
-│   ├── index.mdx                # Lists ONLY English posts
+├── blog/                        # 英文博客
+│   ├── index.mdx                # 仅列出英文文章
 │   ├── post-one.mdx
 │   └── post-two.mdx
 ├── zh/
-│   └── blog/                    # Chinese blog
-│       ├── index.mdx            # Lists ONLY Chinese posts
-│       ├── post-one.mdx         # Same filename, different content
+│   └── blog/                    # 中文博客
+│       ├── index.mdx            # 仅列出中文文章
+│       ├── post-one.mdx         # 相同文件名，不同内容
 │       └── post-two.mdx
 └── docs.json
 ```
 
-**Navigation configuration**:
+**导航配置**：
 
 ```json
 {
@@ -397,56 +397,56 @@ docs/
 }
 ```
 
-> **Common Mistake**: Putting all blog posts (both languages) in one `blog/` folder and showing them all in both navigations. This clutters each language's view with posts they can't read.
+> **常见错误**：将所有博客文章（两种语言）放在一个 `blog/` 文件夹中，并在两个导航中都显示它们。这会用他们无法阅读的文章混乱每种语言的视图。
 
-**Key principle**: Each language's content section should be **self-contained** — its own directory, its own index, its own navigation entries.
+**核心原则**：每种语言的内容章节应**自包含**——拥有自己的目录、自己的索引、自己的导航条目。
 
 ---
 
-## Custom Styling
+## 自定义样式（Custom Styling）
 
-### Override Default Styles
+### 覆盖默认样式
 
-Create `styles.css` in project root to customize Mintlify appearance:
+在项目根目录创建 `styles.css` 来自定义 Mintlify 外观：
 
 ```css
-/* Example: Hide language switcher flag icons */
+/* 示例：隐藏语言切换器的旗帜图标 */
 img[src*='cloudfront.net/flags'] {
   display: none !important;
 }
 
-/* Example: Customize button styles */
+/* 示例：自定义按钮样式 */
 button[aria-haspopup='menu'] > div:first-child {
   display: none !important;
 }
 ```
 
-> **Tip**: Use browser DevTools to inspect Mintlify elements and find the right selectors.
+> **提示**：使用浏览器 DevTools 检查 Mintlify 元素并找到正确的选择器。
 
 ---
 
-## Best Practices
+## 最佳实践（Best Practices）
 
 ### DO
 
-- Include `$schema` for autocomplete
-- Organize navigation logically (user journey)
-- Use descriptive group names
-- Keep tab count reasonable (2-4 tabs)
+- 包含 `$schema` 以获得自动补全
+- 按逻辑组织导航（以用户旅程为导向）
+- 使用描述性的分组名称
+- 保持合理的 tab 数量（2-4 个 tab）
 
 ### DON'T
 
-- Create deeply nested navigation
-- Use inconsistent naming between pages and nav
-- Forget to add new pages to navigation
-- Mix different navigation patterns unnecessarily
+- 创建过深的嵌套导航
+- 在页面和导航之间使用不一致的命名
+- 忘记将新页面添加到导航中
+- 不必要地混合不同的导航模式
 
 ---
 
-## Checklist: Adding New Content
+## 检查清单：添加新内容（Checklist: Adding New Content）
 
-1. [ ] Create the `.mdx` file
-2. [ ] Add frontmatter with title and description
-3. [ ] Add page to appropriate group in `docs.json`
-4. [ ] Verify navigation order makes sense
-5. [ ] Test locally with `mintlify dev`
+1. [ ] 创建 `.mdx` 文件
+2. [ ] 添加带有 title 和 description 的 frontmatter
+3. [ ] 将页面添加到 `docs.json` 的相应分组中
+4. [ ] 验证导航顺序合理
+5. [ ] 使用 `mintlify dev` 本地测试

@@ -1,33 +1,33 @@
-# Spec System
+# 规范系统（Spec System）
 
-Maintain coding standards that guide AI development.
+维护用于指导 AI 开发的编码规范。
 
 ---
 
-## Directory Structure
+## 目录结构
 
 ```
 .trellis/spec/
-├── cli/                        # Per-package specs (e.g. packages/cli/)
-│   ├── frontend/               # Frontend guidelines
+├── cli/                        # 按包划分的规范（如 packages/cli/）
+│   ├── frontend/               # 前端规范
 │   │   ├── index.md
 │   │   ├── component-guidelines.md
 │   │   ├── hook-guidelines.md
 │   │   ├── state-management.md
 │   │   └── ...
 │   │
-│   ├── backend/                # Backend guidelines
+│   ├── backend/                # 后端规范
 │   │   ├── index.md
 │   │   ├── directory-structure.md
 │   │   ├── error-handling.md
 │   │   ├── api-patterns.md
 │   │   └── ...
 │   │
-│   └── unit-test/              # Unit test guidelines
+│   └── unit-test/              # 单元测试规范
 │       ├── index.md
 │       └── ...
 │
-└── guides/                     # Thinking guides (cross-package)
+└── guides/                     # 思维指南（跨包）
     ├── index.md
     ├── cross-layer-thinking-guide.md
     ├── code-reuse-thinking-guide.md
@@ -36,43 +36,43 @@ Maintain coding standards that guide AI development.
 
 ---
 
-## Spec Categories
+## 规范分类
 
 ### Frontend (`cli/frontend/`)
 
-UI and client-side patterns:
-- Component structure
-- React hooks usage
-- State management
-- Styling conventions
-- Accessibility
+UI 与客户端模式：
+- 组件结构
+- React hooks 用法
+- 状态管理
+- 样式约定
+- 无障碍访问
 
 ### Backend (`cli/backend/`)
 
-Server-side patterns:
-- Directory structure
-- API design
-- Error handling
-- Database access
-- Security
+服务端模式：
+- 目录结构
+- API 设计
+- 错误处理
+- 数据库访问
+- 安全
 
 ### Guides (`guides/`)
 
-Cross-cutting thinking guides:
-- How to think about cross-layer changes
-- Code reuse strategies
-- Platform considerations
+跨领域思维指南：
+- 如何思考跨层变更
+- 代码复用策略
+- 平台考量
 
 ---
 
-## Index Files
+## 索引文件
 
-Each category has an `index.md` that:
-1. Provides category overview
-2. Lists all specs in the category
-3. Gives quick reference for common patterns
+每个分类都有一个 `index.md`，用于：
+1. 提供分类概览
+2. 列出该分类下的所有规范
+3. 提供常见模式的快速参考
 
-### Example: `frontend/index.md`
+### 示例：`frontend/index.md`
 
 ```markdown
 # Frontend Specifications
@@ -94,52 +94,52 @@ Each category has an `index.md` that:
 
 ---
 
-## Spec File Format
+## 规范文件格式
 
 ```markdown
-# [Spec Title]
+# [规范标题]
 
-## Overview
-Brief description of what this spec covers.
+## 概述
+简要描述本规范涵盖的内容。
 
-## Guidelines
+## 规范细则
 
-### 1. [Guideline Name]
-Detailed explanation...
+### 1. [规范名称]
+详细说明...
 
-**Do:**
+**推荐：**
 ```typescript
-// Good example
+// 好的示例
 ```
 
-**Don't:**
+**避免：**
 ```typescript
-// Bad example
+// 不好的示例
 ```
 
-### 2. [Another Guideline]
+### 2. [另一条规范]
 ...
 
-## Related Specs
+## 相关规范
 - [Related Spec 1](./related-spec.md)
 ```
 
 ---
 
-## Using Specs
+## 使用规范
 
-### In JSONL Context Files
+### 在 JSONL 上下文文件中
 
-Reference specs in task context:
+在任务上下文中引用规范：
 
 ```jsonl
 {"file": ".trellis/spec/cli/frontend/index.md", "reason": "Frontend overview"}
 {"file": ".trellis/spec/cli/frontend/component-guidelines.md", "reason": "Component patterns"}
 ```
 
-### Manual Reading (Cursor)
+### 手动读取（Cursor）
 
-Read specs at session start:
+在会话开始时读取规范：
 ```
 1. Read .trellis/spec/{category}/index.md
 2. Read specific guidelines as needed
@@ -148,27 +148,27 @@ Read specs at session start:
 
 ---
 
-## Creating New Specs
+## 创建新规范
 
-### 1. Choose Category
+### 1. 选择分类
 
-- Frontend UI patterns → `frontend/`
-- Backend/API patterns → `backend/`
-- Cross-cutting guides → `guides/`
+- 前端 UI 模式 → `frontend/`
+- 后端/API 模式 → `backend/`
+- 跨领域指南 → `guides/`
 
-### 2. Create Spec File
+### 2. 创建规范文件
 
 ```bash
 touch .trellis/spec/cli/frontend/new-pattern.md
 ```
 
-### 3. Follow Format
+### 3. 遵循格式
 
-Use the spec file format above.
+使用上述规范文件格式。
 
-### 4. Update Index
+### 4. 更新索引
 
-Add to category's `index.md`:
+添加到分类的 `index.md`：
 
 ```markdown
 ## Specifications
@@ -176,40 +176,40 @@ Add to category's `index.md`:
 N. [New Pattern](./new-pattern.md)
 ```
 
-### 5. Reference in JSONL
+### 5. 在 JSONL 中引用
 
-Add to relevant task context files.
+添加到相关任务上下文文件中。
 
 ---
 
-## Adding New Categories
+## 添加新分类
 
-### 1. Create Directory
+### 1. 创建目录
 
 ```bash
 mkdir .trellis/spec/mobile
 ```
 
-### 2. Create Index
+### 2. 创建索引
 
 ```bash
 touch .trellis/spec/mobile/index.md
 ```
 
-### 3. Add Category Specs
+### 3. 添加分类规范
 
-Create individual spec files.
+创建各个规范文件。
 
-### 4. Update Task Templates
+### 4. 更新任务模板
 
-Ensure new category is available in JSONL templates.
+确保新分类在 JSONL 模板中可用。
 
 ---
 
-## Best Practices
+## 最佳实践
 
-1. **Keep specs focused** - One topic per file
-2. **Use examples** - Show do/don't patterns
-3. **Link related specs** - Cross-reference
-4. **Update regularly** - Specs evolve with codebase
-5. **Index everything** - Keep index files current
+1. **保持规范聚焦** - 每个文件一个主题
+2. **使用示例** - 展示推荐/避免模式
+3. **关联相关规范** - 交叉引用
+4. **定期更新** - 规范随代码库演进
+5. **索引一切** - 保持索引文件最新

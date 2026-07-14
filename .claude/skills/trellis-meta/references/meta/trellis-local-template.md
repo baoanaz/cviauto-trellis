@@ -1,19 +1,19 @@
-# Trellis Local Skill Template
+# Trellis 本地技能模板
 
-Copy this template to create a project-specific `trellis-local` skill.
-
----
-
-## How to Use
-
-1. Create directory: `mkdir -p .claude/skills/trellis-local`
-2. Copy the template below to `.claude/skills/trellis-local/SKILL.md`
-3. Replace `[PROJECT_NAME]` with your project name
-4. Update version info
+复制此模板以创建项目特定的 `trellis-local` 技能。
 
 ---
 
-## Template
+## 如何使用
+
+1. 创建目录：`mkdir -p .claude/skills/trellis-local`
+2. 将以下模板复制到 `.claude/skills/trellis-local/SKILL.md`
+3. 将 `[PROJECT_NAME]` 替换为你的项目名称
+4. 更新版本信息
+
+---
+
+## 模板
 
 ```markdown
 ---
@@ -257,9 +257,9 @@ Track any issues with customizations.
 
 ---
 
-## Automation Script
+## 自动化脚本
 
-To auto-create the skill, run:
+要自动创建该技能，运行：
 
 ```bash
 #!/bin/bash

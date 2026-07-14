@@ -1,76 +1,75 @@
-# Code Reuse Thinking Guide
+# 代码复用思维指南（Code Reuse Thinking Guide）
 
-> **Purpose**: Stop and think before creating new code - does it already exist?
-
----
-
-## The Problem
-
-**Duplicated code is the #1 source of inconsistency bugs.**
-
-When you copy-paste or rewrite existing logic:
-- Bug fixes don't propagate
-- Behavior diverges over time
-- Codebase becomes harder to understand
+> **用途**：在创建新代码之前停下来想一想——是否已经存在？
 
 ---
 
-## Before Writing New Code
+## 问题所在（The Problem）
 
-### Step 1: Search First
+**重复代码是不一致性 bug 的第一大来源。**
+
+当你复制粘贴或重写现有逻辑时：
+- Bug 修复不会传播
+- 行为随时间推移产生分歧
+- 代码库变得更难理解
+
+---
+
+## 在编写新代码之前
+
+### 第 1 步：先搜索
 
 ```bash
-# Search for similar function names
+# 搜索类似的函数名
 grep -r "functionName" .
 
-# Search for similar logic
+# 搜索类似的逻辑
 grep -r "keyword" .
 ```
 
-### Step 2: Ask These Questions
+### 第 2 步：问自己这些问题
 
-| Question | If Yes... |
+| 问题（Question） | 如果是…… |
 |----------|-----------|
-| Does a similar function exist? | Use or extend it |
-| Is this pattern used elsewhere? | Follow the existing pattern |
-| Could this be a shared utility? | Create it in the right place |
-| Am I copying code from another file? | **STOP** - extract to shared |
+| 类似的函数是否已存在？ | 使用或扩展它 |
+| 这个模式是否在其他地方使用？ | 遵循现有模式 |
+| 这能否成为共享工具函数？ | 在正确的位置创建它 |
+| 我是否在从另一个文件复制代码？ | **停止**——提取为共享 |
 
 ---
 
-## Common Duplication Patterns
+## 常见重复模式
 
-### Pattern 1: Copy-Paste Functions
+### 模式 1：复制粘贴函数
 
-**Bad**: Copying a validation function to another file
+**坏做法**：将一个验证函数复制到另一个文件
 
-**Good**: Extract to shared utilities, import where needed
+**好做法**：提取到共享工具函数中，在需要的地方导入
 
-### Pattern 2: Similar Components
+### 模式 2：相似组件
 
-**Bad**: Creating a new component that's 80% similar to existing
+**坏做法**：创建一个与现有组件 80% 相似的新组件
 
-**Good**: Extend existing component with props/variants
+**好做法**：使用 props/variants 扩展现有组件
 
-### Pattern 3: Repeated Constants
+### 模式 3：重复常量
 
-**Bad**: Defining the same constant in multiple files
+**坏做法**：在多个文件中定义相同的常量
 
-**Good**: Single source of truth, import everywhere
+**好做法**：单一真实来源，到处导入
 
-### Pattern 4: Repeated Payload Field Extraction
+### 模式 4：重复的有效负载字段提取
 
-**Bad**: Multiple consumers cast the same JSON/event fields locally:
+**坏做法**：多个消费者各自本地转换相同的 JSON/event 字段：
 
 ```typescript
 const description = (ev as { description?: string }).description;
 const context = (ev as { context?: ContextEntry[] }).context;
 ```
 
-This is duplicated contract logic even when the code is only two lines. Each
-consumer now has its own definition of what a valid payload means.
+这是重复的契约逻辑，即使代码只有两行。每个消费者现在都有自己对有效负载含义的定义。
 
-**Good**: Put the decoder, type guard, or projection next to the data owner:
+**好做法**：将解码器、类型守卫或投影放在数据所有者旁边：
 
 ```typescript
 if (isThreadEvent(ev)) {
@@ -78,45 +77,43 @@ if (isThreadEvent(ev)) {
 }
 ```
 
-**Rule**: If the same untyped payload field is read in 2+ places, create a
-shared type guard / normalizer / projection before adding a third reader.
+**规则**：如果相同的非类型化有效负载字段在 2 个以上地方被读取，在添加第三个读取者之前创建共享的类型守卫 / 标准化器 / 投影。
 
 ---
 
-## When to Abstract
+## 何时抽象
 
-**Abstract when**:
-- Same code appears 3+ times
-- Logic is complex enough to have bugs
-- Multiple people might need this
+**抽象当：**
+- 相同代码出现 3 次以上
+- 逻辑足够复杂，可能存在 bug
+- 多个人可能需要这个
 
-**Don't abstract when**:
-- Only used once
-- Trivial one-liner
-- Abstraction would be more complex than duplication
+**不要抽象当：**
+- 仅使用一次
+- 简单的单行代码
+- 抽象比重复更复杂
 
 ---
 
-## After Batch Modifications
+## 批量修改之后
 
-When you've made similar changes to multiple files:
+当你对多个文件进行了类似的修改后：
 
-1. **Review**: Did you catch all instances?
-2. **Search**: Run grep to find any missed
-3. **Consider**: Should this be abstracted?
+1. **审查**：你是否捕获了所有实例？
+2. **搜索**：运行 grep 查找遗漏项
+3. **考虑**：这是否应该被抽象？
 
-### Reducers Should Use Exhaustive Structure
+### Reducer 应使用穷举结构
 
-When state is derived from action-like values (`action`, `kind`, `status`,
-`phase`), prefer a reducer with one `switch` over scattered `if/else` updates.
+当状态从类似动作的值（`action`、`kind`、`status`、`phase`）派生时，优先使用一个带有 `switch` 的 reducer，而非分散的 `if/else` 更新。
 
 ```typescript
-// BAD - action-specific state transitions are hard to audit
+// 坏——特定于动作的状态转换难以审计
 if (action === "opened") { ... }
 else if (action === "comment") { ... }
 else if (action === "status") { ... }
 
-// GOOD - one reducer owns the transition table
+// 好——一个 reducer 拥有转换表
 switch (event.action) {
   case "opened":
     ...
@@ -127,40 +124,38 @@ switch (event.action) {
 }
 ```
 
-This matters when the event log is the source of truth. A reducer is the
-documented replay model; display code and commands should not duplicate pieces
-of that replay model.
+这在事件日志作为真实来源时很重要。Reducer 是文档化的重放模型；显示代码和命令不应重复该重放模型的片段。
 
 ---
 
-## Checklist Before Commit
+## 提交前检查清单
 
-- [ ] Searched for existing similar code
-- [ ] No copy-pasted logic that should be shared
-- [ ] No repeated untyped payload field extraction outside a shared decoder
-- [ ] Constants defined in one place
-- [ ] Similar patterns follow same structure
-- [ ] Reducer/action transitions live in one reducer or command dispatcher
+- [ ] 搜索了现有的类似代码
+- [ ] 没有应该共享的复制粘贴逻辑
+- [ ] 没有在共享解码器之外对非类型化有效负载字段进行重复提取
+- [ ] 常量定义在一个地方
+- [ ] 相似模式遵循相同的结构
+- [ ] Reducer/action 转换位于一个 reducer 或命令分派器中
 
 ---
 
-## Gotcha: Python if/elif/else Exhaustive Check
+## 陷阱：Python if/elif/else 穷举检查
 
-**Problem**: Python's if/elif/else chains have no compile-time exhaustive check. When you add a new value to a `Literal` type (e.g., `Platform`), existing if/elif/else chains silently fall through to `else` with wrong defaults.
+**问题**：Python 的 if/elif/else 链没有编译期穷举检查。当你向 `Literal` 类型（如 `Platform`）添加新值时，现有的 if/elif/else 链会静默地回退到 `else` 并使用错误的默认值。
 
-**Symptom**: New platform works partially — some methods return Claude defaults instead of platform-specific values. No error is raised.
+**症状**：新平台部分工作——某些方法返回 Claude 默认值而非平台特定值。没有错误被抛出。
 
-**Example** (`cli_adapter.py`):
+**示例**（`cli_adapter.py`）：
 ```python
-# BAD: "gemini" falls through to else, returns "claude"
+# 坏："gemini" 回退到 else，返回 "claude"
 @property
 def cli_name(self) -> str:
     if self.platform == "opencode":
         return "opencode"
     else:
-        return "claude"  # gemini silently gets "claude"!
+        return "claude"  # gemini 静默地获得 "claude"！
 
-# GOOD: explicit branch for every platform
+# 好：为每个平台显式分支
 @property
 def cli_name(self) -> str:
     if self.platform == "opencode":
@@ -171,53 +166,53 @@ def cli_name(self) -> str:
         return "claude"
 ```
 
-**Prevention**: When adding a new value to a Python `Literal` type, search for ALL if/elif/else chains that switch on that type and add explicit branches. Don't rely on `else` being correct for new values.
+**预防**：当向 Python `Literal` 类型添加新值时，搜索所有在该类型上切换的 if/elif/else 链，并添加显式分支。不要依赖 `else` 对新值是正确的。
 
 ---
 
-## Gotcha: Asymmetric Mechanisms Producing Same Output
+## 陷阱：产生相同输出的非对称机制
 
-**Problem**: When two different mechanisms must produce the same file set (e.g., recursive directory copy for init vs. manual `files.set()` for update), structural changes (renaming, moving, adding subdirectories) only propagate through the automatic mechanism. The manual one silently drifts.
+**问题**：当两种不同机制必须产生相同的文件集（例如，用于 init 的递归目录复制 vs 用于 update 的手动 `files.set()`），结构变更（重命名、移动、添加子目录）只通过自动机制传播。手动机制会静默漂移。
 
-**Symptom**: Init works perfectly, but update creates files at wrong paths or misses files entirely.
+**症状**：Init 完美运行，但 update 在错误路径创建文件或完全遗漏文件。
 
-**Prevention**:
-- **Best**: Eliminate the asymmetry — have the manual path call the automatic one (e.g., `collectTemplateFiles()` calls `getAllScripts()` instead of maintaining its own list)
-- **If asymmetry is unavoidable**: Add a regression test that compares outputs from both mechanisms
-- When migrating directory structures, search for ALL code paths that reference the old structure
+**预防**：
+- **最佳**：消除非对称性——让手动路径调用自动路径（例如，`collectTemplateFiles()` 调用 `getAllScripts()` 而非维护自己的列表）
+- **如果非对称不可避免**：添加一个回归测试来比较两种机制的输出
+- 在迁移目录结构时，搜索引用旧结构的所有代码路径
 
-**Real example**: `trellis update` had a manual `files.set()` list for 11 scripts that `getAllScripts()` already tracked. Fix: replaced the manual list with a `for..of getAllScripts()` loop. See `update.ts` refactor in v0.4.0-beta.3.
+**真实示例**：`trellis update` 有一个手动 `files.set()` 列表，包含 11 个 `getAllScripts()` 已经追踪的脚本。修复：用 `for..of getAllScripts()` 循环替换手动列表。参见 v0.4.0-beta.3 中的 `update.ts` 重构。
 
 ---
 
-## Template File Registration (Trellis-specific)
+## 模板文件注册（Trellis 特有）
 
-When adding new files to `src/templates/trellis/scripts/`:
+在向 `src/templates/trellis/scripts/` 添加新文件时：
 
-**Single registration point**: `src/templates/trellis/index.ts`
+**单一注册点**：`src/templates/trellis/index.ts`
 
-1. Add `export const xxxScript = readTemplate("scripts/path/file.py");`
-2. Add to `getAllScripts()` Map
+1. 添加 `export const xxxScript = readTemplate("scripts/path/file.py");`
+2. 添加到 `getAllScripts()` Map
 
-That's it. `commands/update.ts` uses `getAllScripts()` directly — no manual sync needed.
+就是这样。`commands/update.ts` 直接使用 `getAllScripts()`——无需手动同步。
 
-**Why this matters**: Without registration in `getAllScripts()`, `trellis update` won't sync the file to user projects. Bug fixes and features won't propagate.
+**为什么这很重要**：没有在 `getAllScripts()` 中注册，`trellis update` 就不会将文件同步到用户项目。Bug 修复和功能不会传播。
 
-**History**: Before v0.4.0-beta.3, `update.ts` had its own hand-maintained file list that frequently fell out of sync with `getAllScripts()`. This caused 11 Python files to be silently skipped during `trellis update`. The fix was to eliminate the duplicate list and use `getAllScripts()` as the single source of truth.
+**历史**：在 v0.4.0-beta.3 之前，`update.ts` 有自己的手动维护的文件列表，经常与 `getAllScripts()` 不同步。这导致 11 个 Python 文件在 `trellis update` 期间被静默跳过。修复方法是消除重复列表，使用 `getAllScripts()` 作为唯一的真实来源。
 
-### Quick Checklist for New Scripts
+### 新脚本快速检查清单
 
 ```bash
-# After adding a new .py file, verify it's in getAllScripts():
-grep -l "newFileName" src/templates/trellis/index.ts  # Should match
+# 添加新的 .py 文件后，验证它在 getAllScripts() 中：
+grep -l "newFileName" src/templates/trellis/index.ts  # 应该匹配
 ```
 
-### Template Sync Convention
+### 模板同步规范
 
-`.trellis/scripts/` (dogfooded) and `packages/cli/src/templates/trellis/scripts/` (template) must stay identical. After editing `.trellis/scripts/`, always sync:
+`.trellis/scripts/`（自用/dogfooded）和 `packages/cli/src/templates/trellis/scripts/`（模板）必须保持相同。编辑 `.trellis/scripts/` 后，始终同步：
 
 ```bash
 rsync -av --delete --exclude='__pycache__' .trellis/scripts/ packages/cli/src/templates/trellis/scripts/
 ```
 
-**Gotcha**: Running rsync with wrong source/destination paths can create nested garbage directories (e.g., `.trellis/scripts/packages/cli/...`). Always double-check paths before running.
+**陷阱**：使用错误的源/目标路径运行 rsync 可能会创建嵌套的垃圾目录（例如 `.trellis/scripts/packages/cli/...`）。运行前始终仔细检查路径。

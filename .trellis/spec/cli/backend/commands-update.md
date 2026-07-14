@@ -1,43 +1,43 @@
-# `trellis update` Command
+# `trellis update` 命令
 
-How `trellis update` upgrades a user project's bundled Trellis assets (Python scripts, workflow.md, AGENTS.md, platform configs) from the version recorded in `.trellis/.version` to the version of the installed CLI.
+`trellis update` 如何将用户项目的捆绑 Trellis 资产（Python 脚本、workflow.md、AGENTS.md、平台配置）从 `.trellis/.version` 中记录的版本升级到已安装 CLI 的版本。
 
-This spec covers the command pipeline, flags, interactive surface, and the subsystems update orchestrates. Manifest mechanics — schema fields, migration types, hash gating semantics — live in `migrations.md`. This document references that one rather than restating it.
-
----
-
-## Overview
-
-User-facing contract:
-
-- Input: a project directory containing `.trellis/`, the CLI binary on `PATH`.
-- Output: bundled templates on disk match the CLI version; `.trellis/.version` advanced; modified files preserved or backed up; renamed/deleted files migrated when `--migrate`; legacy deprecated files cleaned up via hash-verified `safe-file-delete`; a follow-up migration task created when the upgrade crosses a breaking release with a `migrationGuide`.
-- Side effects: snapshot backup at `.trellis/.backup-<timestamp>/`, `.trellis/.template-hashes.json` rewritten, optional `.trellis/tasks/<MM-DD>-migrate-to-<version>/` task tree.
-
-Two big invariants:
-
-1. **Idempotent**: re-running `trellis update` immediately after a successful run prints `✓ Already up to date!` and writes nothing. If you ever see auto-update churn on a clean re-run, the cause is almost always a placeholder unresolved in `collectTemplateFiles` (see Common Pitfalls).
-2. **User edits are never silently overwritten**. Anything outside Trellis-managed templates is in `PROTECTED_PATHS`; anything inside whose hash differs from the recorded one drops to the conflict prompt or `--force` / `--skip-all` / `--create-new` policy.
+本规范涵盖命令管道、标志、交互式接口以及 update 编排的子系统。清单机制 — schema 字段、迁移类型、哈希门控语义 — 位于 `migrations.md`。本文档引用该文档而不是重复它。
 
 ---
 
-## Command Entry
+## 概述
 
-Wired in `cli/index.ts` via Commander:
+面向用户的契约：
+
+- 输入：包含 `.trellis/` 的项目目录、PATH 上的 CLI 二进制文件。
+- 输出：磁盘上的捆绑模板匹配 CLI 版本；`.trellis/.version` 已推进；修改过的文件被保留或备份；当 `--migrate` 时重命名/删除的文件被迁移；通过哈希验证的 `safe-file-delete` 清理了遗留弃用文件；当升级跨越带有 `migrationGuide` 的破坏性版本时创建后续迁移任务。
+- 副作用：`.trellis/.backup-<timestamp>/` 处的快照备份、`.trellis/.template-hashes.json` 被重写、可选的 `.trellis/tasks/<MM-DD>-migrate-to-<version>/` 任务树。
+
+两个大的不变量：
+
+1. **幂等**：成功运行后立即重新运行 `trellis update` 打印 `✓ Already up to date!` 并不写入任何内容。如果你在干净重新运行上看到自动更新反复变化，原因几乎总是 `collectTemplateFiles` 中未解析的占位符（参见常见陷阱）。
+2. **用户编辑永不静默覆盖**。Trellis 管理模板之外的任何内容都在 `PROTECTED_PATHS` 中；任何其哈希与记录值不同的模板内容落入冲突提示或 `--force` / `--skip-all` / `--create-new` 策略。
+
+---
+
+## 命令入口
+
+通过 Commander 在 `cli/index.ts` 中连接：
 
 ```text
 trellis update
-  [--dry-run]            preview only
-  [-f, --force]          overwrite all changed files; also bypasses final "Proceed?" confirm and forces modified migrations
-  [-s, --skip-all]       skip all changed files; also auto-skips modified migrations under --migrate
-  [-n, --create-new]     write `.new` copies for changed files
-  [--allow-downgrade]    permit CLI < project version
-  [--migrate]            apply pending file migrations (renames/deletes)
+  [--dry-run]            仅预览
+  [-f, --force]          覆盖所有已更改的文件；同时绕过最终的 "Proceed?" 确认并强制修改过的迁移
+  [-s, --skip-all]       跳过所有已更改的文件；同时在 --migrate 下自动跳过修改过的迁移
+  [-n, --create-new]     为已更改的文件写入 `.new` 副本
+  [--allow-downgrade]    允许 CLI < 项目版本
+  [--migrate]            应用待处理的文件迁移（重命名/删除）
 ```
 
-The action handler in `cli/index.ts` constructs `UpdateOptions` and calls `commands/update.ts:update`. There is no env override surface today — flags are the only knobs. (Note: `setupProxy()` in `commands/update.ts:update` reads `HTTP_PROXY` / `HTTPS_PROXY` for the npm version check, but that's the only env input.)
+`cli/index.ts` 中的动作处理程序构造 `UpdateOptions` 并调用 `commands/update.ts:update`。今天没有环境变量覆盖接口 — 标志是唯一的旋钮。（注意：`commands/update.ts:update` 中的 `setupProxy()` 为 npm 版本检查读取 `HTTP_PROXY` / `HTTPS_PROXY`，但那是唯一的环境变量输入。）
 
-`UpdateOptions` is the public interface:
+`UpdateOptions` 是公共接口：
 
 ```typescript
 interface UpdateOptions {
@@ -50,128 +50,121 @@ interface UpdateOptions {
 }
 ```
 
-Note that `force` / `skipAll` / `createNew` are mutually exclusive in spirit but the code does not assert mutual exclusivity. They are checked in priority order in `commands/update.ts:promptConflictResolution`. `force` also doubles as "non-interactive" — it skips the global `Proceed?` confirm in `commands/update.ts:update`.
+注意 `force` / `skipAll` / `createNew` 在精神上是互斥的，但代码不强制互斥。它们在 `commands/update.ts:promptConflictResolution` 中按优先级顺序检查。`force` 也兼作「non-interactive」— 它跳过 `commands/update.ts:update` 中的全局 `Proceed?` 确认。
 
 ---
 
-## Update Plan Composition
+## 更新计划编写（Update Plan Composition）
 
-### 1. Collect bundled templates
+### 1. 收集捆绑模板
 
-`commands/update.ts:collectTemplateFiles` is the single place that produces the "what should be on disk" snapshot. Sources, in order:
+`commands/update.ts:collectTemplateFiles` 是产生「磁盘上应该是什么」快照的唯一位置。来源，按顺序：
 
-| Source | Where the bytes come from |
+| 来源 | 字节来自哪里 |
 |---|---|
-| Python scripts under `.trellis/scripts/` | `templates/trellis/index.ts:getAllScripts` |
+| `.trellis/scripts/` 下的 Python 脚本 | `templates/trellis/index.ts:getAllScripts` |
 | `.trellis/config.yaml` | `templates/trellis/index.ts:configYamlTemplate` |
 | `.trellis/.gitignore` | `templates/trellis/index.ts:gitignoreTemplate` |
-| `.trellis/workflow.md` | `templates/trellis/index.ts:workflowMdTemplate` (whole-file hash-gated, see below) |
-| Root `AGENTS.md` | `commands/update.ts:buildAgentsMdTemplate` (managed-block merge) |
-| Per-platform files | `configurators/index.ts:collectPlatformTemplates` for each detected platform via `configurators/index.ts:getConfiguredPlatforms` |
-| `.claude/settings.json` `statusLine` | preserved through `commands/update.ts:preserveExistingClaudeStatusLine` |
+| `.trellis/workflow.md` | `templates/trellis/index.ts:workflowMdTemplate`（整文件哈希门控，见下文） |
+| 根 `AGENTS.md` | `commands/update.ts:buildAgentsMdTemplate`（管理块合并） |
+| 每个平台的文件 | 通过 `configurators/index.ts:getConfiguredPlatforms` 检测到的每个平台的 `configurators/index.ts:collectPlatformTemplates` |
+| `.claude/settings.json` `statusLine` | 通过 `commands/update.ts:preserveExistingClaudeStatusLine` 保留 |
 
-Platforms are auto-discovered by directory existence in `cwd`. There is one exception: if `commands/update.ts:needsCodexUpgrade` returns true (legacy Trellis tracked `.agents/skills/` but no `.codex/` exists yet), `commands/update.ts:update` passes `extraPlatforms: new Set(["codex"])` to force Codex template collection so the upgrade can create `.codex/`.
+平台通过 `cwd` 中的目录存在性自动发现。有一个例外：如果 `commands/update.ts:needsCodexUpgrade` 返回 true（遗留 Trellis 跟踪了 `.agents/skills/` 但尚未存在 `.codex/`），则 `commands/update.ts:update` 传递 `extraPlatforms: new Set(["codex"])` 以强制 Codex 模板收集，以便升级可以创建 `.codex/`。
 
-After collection, `collectTemplateFiles` runs two final passes:
+收集后，`collectTemplateFiles` 运行两个最终遍历：
 
-1. `update.skip` filtering via `commands/update.ts:loadUpdateSkipPaths` — drops paths matching the `update.skip` list in `.trellis/config.yaml`. **Bypassed** when the update is a breaking release with `recommendMigrate` (`breakingBypass`); see "Migration Trigger Semantics".
-2. `configurators/shared.ts:replacePythonCommandLiterals` is applied to every value so init-time and update-time bytes are byte-identical on the same OS. This is the load-bearing step that keeps idempotency working — see Common Pitfalls.
+1. `update.skip` 过滤，通过 `commands/update.ts:loadUpdateSkipPaths` — 删除匹配 `.trellis/config.yaml` 中 `update.skip` 列表的路径。当更新是带有 `recommendMigrate` 的破坏性版本时**被绕过**（`breakingBypass`）；参见「迁移触发器语义」。
+2. 对每个值应用 `configurators/shared.ts:replacePythonCommandLiterals`，以便 init 时和 update 时的字节在同一操作系统上字节相同。这是保持幂等性工作的关键步骤 — 参见常见陷阱。
 
-### 2. Whole-file workflow.md update and AGENTS.md managed-block merge
+### 2. 整文件 workflow.md 更新和 AGENTS.md 管理块合并
 
-These two runtime-facing files have different update contracts:
+这两个面向运行时的文件有不同的更新契约：
 
-- **`.trellis/workflow.md`** stays on the normal whole-file template path. `collectTemplateFiles` inserts the bundled `workflowMdTemplate`; `analyzeChanges` decides whether to auto-update, prompt, skip, or create `.new` by comparing the current file hash with `.trellis/.template-hashes.json`. Do not partially merge only `[workflow-state:*]` blocks.
-- **`AGENTS.md`** (`commands/update.ts:buildAgentsMdTemplate`) merges only the `<!-- TRELLIS:START -->`…`<!-- TRELLIS:END -->` region via `commands/update.ts:replaceTrellisManagedBlock`; if no markers exist, the template managed block is appended. The legacy untracked-hash whitelist `LEGACY_UNTRACKED_AGENTS_MD_BLOCK_HASHES` lets a pristine pre-tracking AGENTS.md auto-update without a "modified by you" false positive (see `commands/update.ts:isKnownUntrackedTemplate`).
+- **`.trellis/workflow.md`** 保持在正常的整文件模板路径上。`collectTemplateFiles` 插入捆绑的 `workflowMdTemplate`；`analyzeChanges` 通过将当前文件哈希与 `.trellis/.template-hashes.json` 比较来决定是自动更新、提示、跳过还是创建 `.new`。不要仅部分合并 `[workflow-state:*]` 块。
+- **`AGENTS.md`**（`commands/update.ts:buildAgentsMdTemplate`）仅通过 `commands/update.ts:replaceTrellisManagedBlock` 合并 `<!-- TRELLIS:START -->`…`<!-- TRELLIS:END -->` 区域；如果不存在标记，则追加模板管理块。遗留未跟踪哈希白名单 `LEGACY_UNTRACKED_AGENTS_MD_BLOCK_HASHES` 允许原始的 pre-tracking AGENTS.md 在没有「modified by you」假阳性的情况下自动更新（参见 `commands/update.ts:isKnownUntrackedTemplate`）。
 
-Why workflow is whole-file: `.trellis/workflow.md` is parsed by `get_context.py`,
-`workflow_phase.py`, SessionStart strippers, and per-turn workflow-state hooks.
-Runtime-significant headings and platform markers live outside
-`[workflow-state:*]` blocks. Updating only tag blocks can make breadcrumbs
-current while leaving stale phase or platform routing sections behind.
+为什么 workflow 是整文件的：`.trellis/workflow.md` 由 `get_context.py`、`workflow_phase.py`、SessionStart 剥离器和每回合 workflow-state hooks 解析。运行时重要的标题和平台标记存在于 `[workflow-state:*]` 块之外。仅更新标签块可能使面包屑变得最新，但留下过时的阶段或平台路由部分。
 
-Non-native workflow variants selected through `trellis workflow --template` or
-`trellis init --workflow` are deliberately removed from
-`.trellis/.template-hashes.json`. That makes `trellis update` classify the file
-as user-managed instead of auto-updating it back to bundled native workflow.
+通过 `trellis workflow --template` 或 `trellis init --workflow` 选择的非原生 workflow 变体被有意从 `.trellis/.template-hashes.json` 中移除。这使得 `trellis update` 将文件分类为用户管理而不是自动更新回捆绑的原生 workflow。
 
-### 3. Analyze on-disk state
+### 3. 分析磁盘状态
 
-`commands/update.ts:analyzeChanges` walks every entry in the templates map and produces a `ChangeAnalysis`:
+`commands/update.ts:analyzeChanges` 遍历模板映射中的每个条目并产生一个 `ChangeAnalysis`：
 
-| Bucket | Condition |
+| 桶 | 条件 |
 |---|---|
-| `newFiles` | template has it; disk doesn't; no stored hash |
-| `userDeletedFiles` | template has it; disk doesn't; **stored hash exists** → respect deletion, do not re-add |
-| `unchangedFiles` | disk content === template content |
-| `autoUpdateFiles` | disk differs from template; stored hash matches current content (or known-untracked AGENTS.md) → user did not edit; safe to write |
-| `changedFiles` | disk differs from template; stored hash absent or stale → user edited; needs decision |
+| `newFiles` | 模板有；磁盘无；无存储哈希 |
+| `userDeletedFiles` | 模板有；磁盘无；**存储哈希存在** → 尊重删除，不重新添加 |
+| `unchangedFiles` | 磁盘内容 === 模板内容 |
+| `autoUpdateFiles` | 磁盘与模板不同；存储哈希匹配当前内容（或已知未跟踪的 AGENTS.md）→ 用户未编辑；安全写入 |
+| `changedFiles` | 磁盘与模板不同；存储哈希缺失或过时 → 用户已编辑；需要决策 |
 
-This bucketing is the basis for both the printed plan and the write phase.
+此分桶是打印计划和写入阶段的基础。
 
 ---
 
-## Flags Semantics
+## 标志语义
 
 ### `--dry-run`
 
-Runs the full pipeline up to and including the printed plan and breaking-change banner, then returns before the `Proceed?` confirm. No file writes, no backup, no version bump. Combines safely with `--migrate`: `commands/update.ts:update` allows the migration plan to be printed but stops before `executeMigrations` runs. See `update.integration.test.ts > #2 dry run makes no file changes even when changes exist` and `> #23 breaking-change gate allows --dry-run without --migrate`.
+运行完整管道直到并包括打印计划和破坏性变更横幅，然后在 `Proceed?` 确认之前返回。无文件写入，无备份，无版本提升。与 `--migrate` 安全组合：`commands/update.ts:update` 允许打印迁移计划但停止在 `executeMigrations` 运行之前。参见 `update.integration.test.ts > #2 dry run makes no file changes even when changes exist` 和 `> #23 breaking-change gate allows --dry-run without --migrate`。
 
 ### `--force` / `-f`
 
-Three meanings, all in this single flag:
+三个含义，全在这个单独的标志中：
 
-1. **Conflict resolution** (`commands/update.ts:promptConflictResolution`): for every entry in `changedFiles`, choose `overwrite` without asking.
-2. **Migration mode** (`commands/update.ts:executeMigrations`): for every `confirm`-bucket migration, treat as `rename`/`delete` (no inline `.backup`). The full snapshot under `.trellis/.backup-<timestamp>/` is the only safety net in this mode — see `update.integration.test.ts > #26 rename-anyway does NOT leave an inline .backup`.
-3. **Final confirm** (`commands/update.ts:update`): skip the global `Proceed?` prompt. This is what makes `trellis update --force --migrate` viable for CI / scripted upgrades.
+1. **冲突解决**（`commands/update.ts:promptConflictResolution`）：对于 `changedFiles` 中的每个条目，选择 `overwrite` 而不询问。
+2. **迁移模式**（`commands/update.ts:executeMigrations`）：对于每个 `confirm` 桶迁移，视为 `rename`/`delete`（无内联 `.backup`）。`.trellis/.backup-<timestamp>/` 下的完整快照是此模式中唯一的安全网 — 参见 `update.integration.test.ts > #26 rename-anyway does NOT leave an inline .backup`。
+3. **最终确认**（`commands/update.ts:update`）：跳过全局 `Proceed?` 提示。这使得 `trellis update --force --migrate` 对 CI / 脚本化升级可行。
 
 ### `--skip-all` / `-s`
 
-Mirror of `--force` for the "leave my edits alone" intent: `changedFiles` are skipped; modified `confirm` migrations are skipped (you'll see them flagged on the next update until cleaned up manually). Also skips the final confirm.
+`--force` 的镜像，用于「保留我的编辑」意图：`changedFiles` 被跳过；修改过的 `confirm` 迁移被跳过（你会在下次更新时看到它们被标记，直到手动清理）。也跳过最终确认。
 
 ### `--create-new` / `-n`
 
-For changed files only — writes `<path>.new` next to the original. Migrations are not affected. Tip lines at the end of `update()` remind users to merge `.new` files manually.
+仅对已更改的文件 — 在原始文件旁边写入 `<path>.new`。迁移不受影响。`update()` 末尾的提示行提醒用户手动合并 `.new` 文件。
 
 ### `--allow-downgrade`
 
-Permits `cliVersion < projectVersion`. Without it, `update()` exits early with a help message. With it, the warning still prints, then the pipeline runs as if upgrading. Migrations between the two versions are not "applied in reverse" — `getMigrationsForVersion` always walks low→high (see `migrations.md`), so a downgrade with file changes is best-effort and the user has to clean up manually. There is no migration task generation on downgrade.
+允许 `cliVersion < projectVersion`。没有它，`update()` 提前退出并显示帮助消息。有了它，警告仍然打印，然后管道像升级一样运行。两个版本之间的迁移不是「反向应用」— `getMigrationsForVersion` 始终走 低→高（参见 `migrations.md`），因此带有文件更改的降级是尽力的，用户必须手动清理。降级时不生成迁移任务。
 
 ### `--migrate`
 
-Opt-in to apply file migrations (renames/deletes/dir renames). Without it: migrations are listed in the plan but not executed; a "Tip: Use --migrate" hint prints. With it:
+选择应用文件迁移（重命名/删除/目录重命名）。没有它：迁移在计划中列出但不执行；打印「Tip: Use --migrate」提示。有了它：
 
-1. `commands/update.ts:executeMigrations` runs on the classified plan.
-2. The hardcoded 0.2.0 `traces-*.md → journal-*.md` rename in `update()` runs (workspace/<dev>/ pattern walk; cannot live in the manifest because the path includes a variable developer slug).
+1. `commands/update.ts:executeMigrations` 在分类计划上运行。
+2. `update()` 中的硬编码 0.2.0 `traces-*.md → journal-*.md` 重命名运行（workspace/<dev>/ 模式遍历；不能存在于清单中，因为路径包含变量开发者 slug）。
 
-`safe-file-delete` migrations are independent of `--migrate` — they always run when their hash gate passes (see Apply Phase). Rationale in `migrations.md`.
+`safe-file-delete` 迁移独立于 `--migrate` — 当它们的哈希门控通过时它们总是运行（参见应用阶段）。`migrations.md` 中的理由。
 
-### Tag flag (`--tag <beta|rc|latest>`)
+### 标签标志（`--tag <beta|rc|latest>`）
 
-There is no `--tag` flag on `trellis update` today. Version selection is implicit: `update()` always uses the version of the installed CLI (`constants/version.ts:VERSION`). Users who want a specific CLI channel should run `trellis upgrade --tag beta` (or `latest` / `rc`) first, then run `trellis update`. The npm-version check in `commands/update.ts:getLatestNpmVersion` only looks at the `latest` dist-tag and is purely advisory ("⚠️ Your CLI is behind npm").
+目前 `trellis update` 上没有 `--tag` 标志。版本选择是隐式的：`update()` 始终使用已安装 CLI 的版本（`constants/version.ts:VERSION`）。想要特定 CLI 通道的用户应先运行 `trellis upgrade --tag beta`（或 `latest` / `rc`），然后运行 `trellis update`。`commands/update.ts:getLatestNpmVersion` 中的 npm 版本检查仅查看 `latest` dist-tag，纯粹是咨询性的（「⚠️ Your CLI is behind npm」）。
 
 ---
 
-## Migration Trigger Semantics
+## 迁移触发器语义
 
-### Pending migrations
+### 待处理迁移
 
-`commands/update.ts:update` calls `migrations/index.ts:getMigrationsForVersion(projectVersion, cliVersion)` to get the migration set, then merges in **orphaned migrations** — items whose source still exists and target doesn't, regardless of version range. Orphans show up when a previous update bumped `.trellis/.version` but a migration was skipped or interrupted; they get added to `pendingMigrations` so the next `--migrate` cleans them up.
+`commands/update.ts:update` 调用 `migrations/index.ts:getMigrationsForVersion(projectVersion, cliVersion)` 获取迁移集，然后合并**孤儿迁移** — 源仍然存在而目标不存在的条目，无论版本范围如何。当先前的更新提升了 `.trellis/.version` 但某个迁移被跳过或中断时，孤儿会出现；它们被添加到 `pendingMigrations` 以便下次 `--migrate` 清理它们。
 
-Migration state is then run through `commands/update.ts:classifyMigrations` against current hashes and templates:
+迁移状态然后通过 `commands/update.ts:classifyMigrations` 针对当前哈希和模板运行：
 
-| Class | Trigger |
+| 类别 | 触发器 |
 |---|---|
-| `auto` | source unmodified, target free or matches template |
-| `confirm` | source modified by user (hash mismatch) |
-| `conflict` | both source and target exist with user content |
-| `skip` | source missing, or path is `PROTECTED_PATHS` |
+| `auto` | 源未修改，目标空闲或匹配模板 |
+| `confirm` | 源被用户修改（哈希不匹配） |
+| `conflict` | 源和目标都存在且有用户内容 |
+| `skip` | 源缺失，或路径是 `PROTECTED_PATHS` |
 
-Sorting before execution is by `commands/update.ts:sortMigrationsForExecution`: deeper `rename-dir` first, then other `rename-dir`, then `rename` / `delete`. Critical for nested directory renames — without depth ordering, a parent move would leave child entries pointing at a dead source.
+执行前的排序通过 `commands/update.ts:sortMigrationsForExecution`：更深层的 `rename-dir` 优先，然后是其他 `rename-dir`，然后是 `rename` / `delete`。对嵌套目录重命名至关重要 — 没有深度排序，父级移动将使子条目指向已死的源。
 
-### The breaking-change gate
+### 破坏性变更门控（The breaking-change gate）
 
-This is the safety mechanism that prevents accidental half-migration across a major version. In `commands/update.ts:update`, after `classifyMigrations`:
+这是防止跨主版本意外半迁移的安全机制。在 `commands/update.ts:update` 中，`classifyMigrations` 之后：
 
 ```text
 if (pendingMigrationCount > 0
@@ -184,191 +177,191 @@ if (pendingMigrationCount > 0
   → process.exit(1)
 ```
 
-Why hard-fail: the alternative path silently bumps `.trellis/.version` on success, leaving deprecated files orphaned next to the new architecture forever. The user has no signal that something went wrong until much later, when `update` re-flags the same orphan list every release.
+为什么硬失败：替代路径在成功时静默提升 `.trellis/.version`，将弃用文件永远留在新架构旁边作为孤儿。用户在很久以后才收到信号，当 `update` 在每次发布时重新标记相同的孤儿列表。
 
-Hard-fail conditions, all of which must be true:
+硬失败条件，所有这些都必须为 true：
 
-- there is real migration work pending (excluding `safe-file-delete`)
-- `--migrate` was not passed
-- `--dry-run` was not passed (preview is always allowed)
-- the upgrade is a real upgrade (not same-version, not downgrade)
-- the version range crosses at least one manifest with both `breaking: true` AND `recommendMigrate: true`
+- 存在真正的迁移工作待处理（排除 `safe-file-delete`）
+- 未传递 `--migrate`
+- 未传递 `--dry-run`（预览始终允许）
+- 升级是真正的升级（不是同版本，不是降级）
+- 版本范围跨越至少一个同时具有 `breaking: true` **且** `recommendMigrate: true` 的清单
 
-Tested in `update.integration.test.ts > #22 breaking-change gate exits 1 when --migrate is missing`, `> #23 ... allows --dry-run`, `> #24 ... allows --migrate to proceed`.
+在 `update.integration.test.ts > #22 breaking-change gate exits 1 when --migrate is missing`、`> #23 ... allows --dry-run`、`> #24 ... allows --migrate to proceed` 中测试。
 
-### `breakingBypass` for `update.skip`
+### `breakingBypass` 对 `update.skip`
 
-When the breaking-change gate fires AND `--migrate` is set, `commands/update.ts:update` computes `breakingBypass = true` and threads it into `collectTemplateFiles` and `collectSafeFileDeletes`. The bypass causes `update.skip` to be ignored for both new template writes AND `safe-file-delete` cleanup.
+当破坏性变更门控触发且 `--migrate` 已设置时，`commands/update.ts:update` 计算 `breakingBypass = true` 并将其线程化到 `collectTemplateFiles` 和 `collectSafeFileDeletes` 中。该绕过导致 `update.skip` 对新模板写入**和** `safe-file-delete` 清理都被忽略。
 
-Rationale: honoring `update.skip` during a breaking upgrade leaves the project permanently half-migrated — old deprecated files persist under skip-protected paths while new commands never land. The hash check in `safe-file-delete.allowed_hashes` is still the safety net (user-customized files still skip with a "skip-modified" reason). User customizations to non-deprecated files are still guarded at write time by the per-file conflict prompt.
-
----
-
-## Apply Phase
-
-Order of operations in `commands/update.ts:update` (after the `Proceed?` confirm, when not dry-run):
-
-1. **Backup** — `commands/update.ts:createFullBackup` snapshots every `BACKUP_DIRS` (= `configurators/index.ts:ALL_MANAGED_DIRS`) entry plus `BACKUP_FILES` (= `AGENTS.md`) into `.trellis/.backup-<ISO-timestamp>/`. `commands/update.ts:shouldExcludeFromBackup` filters out previous backups, `node_modules/`, user-data dirs (`workspace/`, `tasks/`, `spec/`, `backlog/`, `agent-traces/`), and platform-native worktree dirs (`/worktrees/`, `/worktree/`). Symlinks (and Windows directory junctions) are never followed in `commands/update.ts:collectAllFiles` — a junction to an ancestor would loop forever.
-
-2. **Migrations** (only if `--migrate`) — `commands/update.ts:executeMigrations` runs `auto` items first (sorted by depth), then `confirm` items via `commands/update.ts:promptMigrationAction` (or `--force` / `--skip-all` short-circuits). Default action for prompts is `backup-rename`: leaves `<new-path>.backup` of the user's modified content alongside the rename, so users can diff inline without digging through the snapshot. Hash tracking is updated via `utils/template-hash.ts:renameHash` / `removeHash`. Empty source dirs are pruned by `commands/update.ts:cleanupEmptyDirs` (gated by `configurators/index.ts:isManagedPath` + `isManagedRootDir` — never deletes managed roots themselves, never crosses into unmanaged paths). After regular migrations, the hardcoded `traces-*.md → journal-*.md` workspace walk runs.
-
-3. **`safe-file-delete`** — `commands/update.ts:executeSafeFileDeletes` deletes files in the `delete` action bucket (hash matched, not protected, not in `update.skip` unless bypassed), removes their hash entries, and prunes empty parent directories. `migrations.md` covers the full classification matrix.
-
-4. **New file writes** — straight `mkdir -p` + `writeFileSync`. `.sh` and `.py` get `chmod 755`.
-
-5. **Auto-update writes** — same as new files, but the file already exists.
-
-6. **Conflict resolution** — for every `changedFiles` entry, call `commands/update.ts:promptConflictResolution`. The `applyToAll` carrier object captures `[a]` / `[s]` / `[n]` "Apply to all" choices so the user only has to decide once for a batch of similar prompts. Result is `overwrite` (write + chmod), `skip` (no-op), or `create-new` (write `<path>.new`).
-
-7. **`configSectionsAdded`** — only on real upgrades (`cliVsProject > 0`, `projectVersion !== "unknown"`). `commands/update.ts:applyConfigSectionsAdded` walks entries from `migrations/index.ts:getConfigSectionsAddedBetween`, dedupes by `file::sentinel`, skips any whose sentinel is already present in the user's file (idempotent), and appends the named section extracted via `commands/update.ts:extractConfigSection`. This is the only path that can grow `.trellis/config.yaml` without going through the conflict prompt — by design, since users routinely edit other parts of `config.yaml` (`session_commit_message`, `packages`, etc.) and a hash-mismatch overwrite would either lose those edits (`y`) or starve the project of new sections (`n`). See `migrations.md` § `configSectionsAdded` for the schema.
-
-8. **Version stamp** — `commands/update.ts:updateVersionFile` writes `cliVersion` to `.trellis/.version`.
-
-9. **Hash refresh** — every newly-written file (`newFiles`, `autoUpdateFiles`, overwritten `changedFiles`, plus any `missingAgentsMdHash` entry from `collectMissingAgentsMdHash`) gets its hash recomputed and saved via `utils/template-hash.ts:updateHashes`. `.new` copies and skipped files do NOT get their hash updated — the original file's recorded hash continues to drive the next-update conflict decision.
-
-10. **Migration task creation** — only when the upgrade crosses a manifest with `breaking: true` AND a non-empty `migrationGuide` (collected via `migrations/index.ts:getMigrationMetadata`). `update()` writes `.trellis/tasks/<MM-DD>-migrate-to-<cliVersion>/` containing `task.json` (built via `utils/task-json.ts:emptyTaskJson`) and `prd.md` listing every guide and AI-instruction block. Skipped if the directory already exists. Assignee is read from `.trellis/.developer` via the strict `name=<value>` regex — DO NOT change this to a raw `.trim()` (see Common Pitfalls).
-
-11. **End-of-run banners** — breaking-change banner and `--migrate` recommendation are intentionally printed last so they don't scroll off screen on long updates.
+理由：在破坏性升级期间遵守 `update.skip` 会使项目永久处于半迁移状态 — 旧的弃用文件在受跳过的路径下持续存在，而新命令永远不会落地。`safe-file-delete.allowed_hashes` 中的哈希检查仍然是安全网（用户自定义文件仍然以「skip-modified」理由跳过）。用户对非弃用文件的自定义在写入时仍然由每个文件的冲突提示守卫。
 
 ---
 
-## Hashing & Idempotency
+## 应用阶段（Apply Phase）
 
-`.trellis/.template-hashes.json` is the contract that makes `analyzeChanges` work. Schema and helpers live in `utils/template-hash.ts`. Update interacts with it via:
+`commands/update.ts:update` 中的操作顺序（在 `Proceed?` 确认之后，非 dry-run 时）：
 
-- `loadHashes(cwd)` at the top of `update()`
-- `computeHash(content)` for inline checks (`isKnownUntrackedTemplate`, `safe-file-delete` matching)
-- `isTemplateModified(cwd, path, hashes)` in `classifyMigrations`
-- `renameHash` / `removeHash` during migrations
-- `updateHashes(cwd, files)` at the end
+1. **备份** — `commands/update.ts:createFullBackup` 将每个 `BACKUP_DIRS`（= `configurators/index.ts:ALL_MANAGED_DIRS`）条目加上 `BACKUP_FILES`（= `AGENTS.md`）快照到 `.trellis/.backup-<ISO-timestamp>/` 中。`commands/update.ts:shouldExcludeFromBackup` 过滤掉之前的备份、`node_modules/`、用户数据目录（`workspace/`、`tasks/`、`spec/`、`backlog/`、`agent-traces/`）和平台原生工作树目录（`/worktrees/`、`/worktree/`）。`commands/update.ts:collectAllFiles` 中从不跟随符号链接（和 Windows 目录 junction）— 指向祖先的 junction 会无限循环。
 
-`migrations.md` documents the relationship to `allowed_hashes` in `safe-file-delete` migrations: the hash file tracks "Trellis-installed bytes" (so update can detect user edits); `allowed_hashes` is a bounded set of "known-pristine bytes" the manifest blesses for auto-deletion. They are different sets — a user file might have a recorded hash but not be `allowed_hashes`-eligible.
+2. **迁移**（仅当 `--migrate`）— `commands/update.ts:executeMigrations` 首先运行 `auto` 项（按深度排序），然后通过 `commands/update.ts:promptMigrationAction` 运行 `confirm` 项（或 `--force` / `--skip-all` 短路）。提示的默认操作是 `backup-rename`：在重命名旁边留下用户修改内容的 `<new-path>.backup`，以便用户可以在不深入快照的情况下内联 diff。哈希跟踪通过 `utils/template-hash.ts:renameHash` / `removeHash` 更新。空源目录由 `commands/update.ts:cleanupEmptyDirs` 修剪（由 `configurators/index.ts:isManagedPath` + `isManagedRootDir` 门控 — 永不删除管理根目录本身，永不跨越到非管理路径）。常规迁移之后，运行硬编码的 `traces-*.md → journal-*.md` workspace 遍历。
 
-The idempotency invariant ("re-running update on a clean repo writes nothing") rests on three pieces of hygiene:
+3. **`safe-file-delete`** — `commands/update.ts:executeSafeFileDeletes` 删除 `delete` 操作桶中的文件（哈希匹配，未受保护，不在 `update.skip` 中，除非被绕过），移除它们的哈希条目，并修剪空父目录。`migrations.md` 涵盖了完整分类矩阵。
 
-1. **`collectTemplateFiles` resolves all placeholders the same way init does.** The most common bug is forgetting to pipe a new placeholder through `configurators/shared.ts:replacePythonCommandLiterals` (or the per-platform `resolvePlaceholders`) inside a configurator's `collectTemplates` lambda. Init writes resolved bytes; update collects unresolved templates; hashes mismatch every run. See `platform-integration.md > Common Mistakes > "Template placeholder not resolved in collectTemplates"`.
-2. **Init and update agree on what files exist.** Anything `collectTemplateFiles` lists must also be created by `init`, otherwise update auto-adds it on every run. See `platform-integration.md > Common Mistakes > "Template listed in update but not created by init"`.
-3. **The runtime templates are byte-stable.** `workflowMdTemplate` and `buildAgentsMdTemplate` should return the same content when given the same inputs across runs. The CLI tests this via `update.integration.test.ts > #1 same version update is a true no-op` (full snapshot before/after).
+4. **新文件写入** — 直接 `mkdir -p` + `writeFileSync`。`.sh` 和 `.py` 获得 `chmod 755`。
+
+5. **自动更新写入** — 与新文件相同，但文件已存在。
+
+6. **冲突解决** — 对于每个 `changedFiles` 条目，调用 `commands/update.ts:promptConflictResolution`。`applyToAll` 载体对象捕获 `[a]` / `[s]` / `[n]`「Apply to all」选择，以便用户只需对一批类似提示决定一次。结果可以是 `overwrite`（写入 + chmod）、`skip`（空操作）或 `create-new`（写入 `<path>.new`）。
+
+7. **`configSectionsAdded`** — 仅在真正的升级上（`cliVsProject > 0`，`projectVersion !== "unknown"`）。`commands/update.ts:applyConfigSectionsAdded` 遍历来自 `migrations/index.ts:getConfigSectionsAddedBetween` 的条目，按 `file::sentinel` 去重，跳过其 sentinel 已在用户文件中的任何条目（幂等），并追加通过 `commands/update.ts:extractConfigSection` 提取的命名 section。这是唯一可以在不经过冲突提示的情况下增长 `.trellis/config.yaml` 的路径 — 按设计，因为用户通常编辑 `config.yaml` 的其他部分（`session_commit_message`、`packages` 等），哈希不匹配覆盖要么丢失这些编辑（`y`）要么使项目缺少新 section（`n`）。参见 `migrations.md` § `configSectionsAdded` 获取 schema。
+
+8. **版本戳** — `commands/update.ts:updateVersionFile` 将 `cliVersion` 写入 `.trellis/.version`。
+
+9. **哈希刷新** — 每个新写入的文件（`newFiles`、`autoUpdateFiles`、覆盖的 `changedFiles`，加上来自 `collectMissingAgentsMdHash` 的任何 `missingAgentsMdHash` 条目）通过 `utils/template-hash.ts:updateHashes` 重新计算并保存其哈希。`.new` 副本和跳过的文件**不**更新其哈希 — 原始文件的记录哈希继续驱动下次更新冲突决策。
+
+10. **迁移任务创建** — 仅当升级跨越带有 `breaking: true` AND 非空 `migrationGuide` 的清单时（通过 `migrations/index.ts:getMigrationMetadata` 收集）。`update()` 写入 `.trellis/tasks/<MM-DD>-migrate-to-<cliVersion>/`，包含 `task.json`（通过 `utils/task-json.ts:emptyTaskJson` 构建）和 `prd.md` 列出每个 guide 和 AI 指令块。如果目录已存在则跳过。Assignee 通过严格的正则 `name=<value>` 从 `.trellis/.developer` 读取 — 不要将其更改为原始 `.trim()`（参见常见陷阱）。
+
+11. **运行结束横幅** — 破坏性变更横幅和 `--migrate` 建议被有意最后打印，以避免在长更新中滚出屏幕。
 
 ---
 
-## Boundaries with `init`
+## 哈希与幂等性
 
-Update and init share the same template producers:
+`.trellis/.template-hashes.json` 是使 `analyzeChanges` 工作的契约。Schema 和辅助函数位于 `utils/template-hash.ts`。Update 通过以下方式与之交互：
 
-| Helper | Producer |
+- `update()` 顶部的 `loadHashes(cwd)`
+- 用于内联检查的 `computeHash(content)`（`isKnownUntrackedTemplate`、`safe-file-delete` 匹配）
+- `classifyMigrations` 中的 `isTemplateModified(cwd, path, hashes)`
+- 迁移期间的 `renameHash` / `removeHash`
+- 末尾的 `updateHashes(cwd, files)`
+
+`migrations.md` 文档化了与 `safe-file-delete` 迁移中 `allowed_hashes` 的关系：哈希文件跟踪「Trellis 安装的字节」（以便 update 可以检测用户编辑）；`allowed_hashes` 是清单祝福用于自动删除的「已知原始字节」的有界集合。它们是不同的集合 — 用户文件可能具有记录的哈希但不具备 `allowed_hashes` 资格。
+
+幂等性不变量（「在干净仓库上重新运行 update 不写入任何内容」）依赖于三项清洁工作：
+
+1. **`collectTemplateFiles` 以与 init 相同的方式解析所有占位符。**最常见的 bug 是忘记在配置器的 `collectTemplates` lambda 内将新占位符通过 `configurators/shared.ts:replacePythonCommandLiterals`（或每个平台的 `resolvePlaceholders`）管道化。Init 写入已解析的字节；update 收集未解析的模板；每次运行哈希不匹配。参见 `platform-integration.md > Common Mistakes > "Template placeholder not resolved in collectTemplates"`。
+2. **Init 和 update 对存在哪些文件达成一致。**`collectTemplateFiles` 列出的任何内容也必须由 `init` 创建，否则 update 在每次运行时会自动添加它。参见 `platform-integration.md > Common Mistakes > "Template listed in update but not created by init"`。
+3. **运行时模板是字节稳定的。**`workflowMdTemplate` 和 `buildAgentsMdTemplate` 在给定相同输入时跨运行应返回相同内容。CLI 通过 `update.integration.test.ts > #1 same version update is a true no-op`（之前/之后的完整快照）测试这一点。
+
+---
+
+## 与 `init` 的边界
+
+Update 和 init 共享相同的模板生产者：
+
+| 辅助函数 | 生产者 |
 |---|---|
-| Collect platform files | `configurators/index.ts:collectPlatformTemplates` (init does it via `configurePlatform` writing them out; update gathers them via the parallel `collectTemplates` lambda in `PLATFORM_FUNCTIONS`) |
-| Detect platforms | `configurators/index.ts:getConfiguredPlatforms` |
-| Backup roots | `configurators/index.ts:ALL_MANAGED_DIRS` (also the source of `BACKUP_DIRS` in update) |
-| Empty-dir cleanup gate | `configurators/index.ts:isManagedPath` / `isManagedRootDir` |
-| Python script bundle | `templates/trellis/index.ts:getAllScripts` |
-| Init hash seeding | `utils/template-hash.ts:initializeHashes` (init); update keeps it fresh via `updateHashes` |
+| 收集平台文件 | `configurators/index.ts:collectPlatformTemplates`（init 通过 `configurePlatform` 写出它们；update 通过 `PLATFORM_FUNCTIONS` 中的并行 `collectTemplates` lambda 收集它们） |
+| 检测平台 | `configurators/index.ts:getConfiguredPlatforms` |
+| 备份根目录 | `configurators/index.ts:ALL_MANAGED_DIRS`（也是 update 中 `BACKUP_DIRS` 的来源） |
+| 空目录清理门控 | `configurators/index.ts:isManagedPath` / `isManagedRootDir` |
+| Python 脚本捆绑 | `templates/trellis/index.ts:getAllScripts` |
+| Init 哈希播种 | `utils/template-hash.ts:initializeHashes`（init）；update 通过 `updateHashes` 保持其新鲜 |
 
-What's unique to update:
+Update 独有的内容：
 
-- Whole-file hash-gated update for bundled native `workflow.md`; non-native workflows are user-managed by removing the workflow hash entry.
-- Managed-block merge for `AGENTS.md` (init writes the bundled template directly).
-- Snapshot backup at `.trellis/.backup-<timestamp>/`.
-- Migration plan + execution.
-- `configSectionsAdded` append path.
-- npm-version advisory check (init has no remote check today).
-- Migration task generation.
+- 捆绑原生 `workflow.md` 的整文件哈希门控更新；非原生 workflow 通过移除 workflow 哈希条目成为用户管理的。
+- `AGENTS.md` 的管理块合并（init 直接写入捆绑模板）。
+- `.trellis/.backup-<timestamp>/` 处的快照备份。
+- 迁移计划 + 执行。
+- `configSectionsAdded` 追加路径。
+- npm 版本咨询检查（init 目前没有远程检查）。
+- 迁移任务生成。
 
-Init has no notion of "what was here before" — it always assumes a fresh slate and is gated by `--force` / `--skip-existing`. Update is the only command that reasons about prior state via hashes.
-
----
-
-## Boundaries with `migrations.md`
-
-`migrations.md` is the canonical reference for: manifest schema (all fields including `breaking` / `recommendMigrate` / `migrationGuide` / `aiInstructions` / `configSectionsAdded`), migration types (`rename` / `rename-dir` / `delete` / `safe-file-delete`), classification rules per type, hash relationships (`allowed_hashes` vs `.template-hashes.json`), `update.skip` config, protected paths, and walk-table helpers (`getMigrationsForVersion` / `getAllMigrations` / `getMigrationMetadata` / `getConfigSectionsAddedBetween`).
-
-This document does NOT restate any of that. When extending update behavior, decide which side of the line your change lives on:
-
-- New manifest field → `migrations.md`, plus the consumer wiring in `update.ts`.
-- New CLI flag, new interactive prompt, new write phase, new banner → here.
-- New migration *type* → both: define the type and classification in `migrations.md`, define the executor in `update.ts:executeMigrations`.
+Init 没有「之前这里有什么」的概念 — 它始终假定干净的状态，并由 `--force` / `--skip-existing` 门控。Update 是唯一通过哈希推理先前状态的命令。
 
 ---
 
-## Common Pitfalls
+## 与 `migrations.md` 的边界
 
-### Multi-version hop chain (v0.4 → v0.5+)
+`migrations.md` 是以下内容的规范参考：清单 schema（所有字段包括 `breaking` / `recommendMigrate` / `migrationGuide` / `aiInstructions` / `configSectionsAdded`）、迁移类型（`rename` / `rename-dir` / `delete` / `safe-file-delete`）、每种类型的分类规则、哈希关系（`allowed_hashes` vs `.template-hashes.json`）、`update.skip` 配置、受保护路径和遍历表辅助函数（`getMigrationsForVersion` / `getAllMigrations` / `getMigrationMetadata` / `getConfigSectionsAddedBetween`）。
 
-`getMigrationsForVersion(from, to)` walks every manifest where `manifest.version` falls strictly above `from` and ≤ `to`. A v0.4 → v0.5.6 jump applies migrations from 0.4.x.y, 0.5.0.0, 0.5.1, …, 0.5.6 in version order. If any of those manifests is `breaking` + `recommendMigrate: true`, the breaking gate fires once for the whole hop. Consequence: a user who deferred upgrades for several releases sees a single hard-fail without `--migrate`, but the migration list can be very long. Test with `--dry-run` before running `--migrate` on big hops.
+本文档不重复这些内容中的任何一个。扩展 update 行为时，决定你的更改位于线的哪一侧：
 
-### Breaking + recommendMigrate must ship `migrationGuide`
+- 新清单字段 → `migrations.md`，加上 `update.ts` 中的消费者连接。
+- 新 CLI 标志、新交互式提示、新写入阶段、新横幅 → 这里。
+- 新迁移*类型* → 两者：在 `migrations.md` 中定义类型和分类，在 `update.ts:executeMigrations` 中定义执行器。
 
-`migrations.md` documents this: a manifest with `breaking: true` AND `recommendMigrate: true` MUST also define `migrationGuide` (and conventionally `aiInstructions`). The reason update.ts cares is the migration-task generator: `getMigrationMetadata` aggregates `migrationGuides` across every manifest in the hop; if the breaking manifest is missing one, the user gets either (a) a task PRD full of older guides with no mention of the actual breaking release, or (b) no task at all if every guide in the range is missing. Historical incident: 0.5.0-beta.0 shipped without a `migrationGuide` and was hotfixed in 0.5.0-beta.9. The `packages/cli/scripts/create-manifest.js` `--stdin` mode now hard-fails on this combination at manifest authoring time.
+---
 
-### Orphan migrations
+## 常见陷阱
 
-If `.trellis/.version` says you're already on the latest CLI but a stale `from` path still exists on disk and the new `to` doesn't, that's an orphan. `update()` always scans `getAllMigrations()` for orphans regardless of version range and adds them to `pendingMigrations`. They show up under "⚠️ Detected incomplete migrations from previous updates" in the printed plan. Causes: a previous run was interrupted between `migrations` execution and `updateVersionFile`; a previous run skipped the migration via `[s]` and the user expected it to apply later; manifest authoring error (a v0.4 entry referencing a path that was already moved before v0.4 ever shipped). All three resolve the same way: `trellis update --migrate`.
+### 多版本跳跃链（v0.4 → v0.5+）
 
-### Backup bloat
+`getMigrationsForVersion(from, to)` 遍历 `manifest.version` 严格高于 `from` 且 ≤ `to` 的每个清单。从 v0.4 到 v0.5.6 的跳跃按版本顺序应用来自 0.4.x.y、0.5.0.0、0.5.1、…、0.5.6 的迁移。如果这些清单中有任何是 `breaking` + `recommendMigrate: true`，破坏性门控对整个跳跃触发一次。后果：推迟了多个版本升级的用户在没有 `--migrate` 时看到单个硬失败，但迁移列表可能非常长。在大跳跃上运行 `--migrate` 之前先用 `--dry-run` 测试。
 
-Every non-trivial run creates `.trellis/.backup-<timestamp>/`. `BACKUP_EXCLUDE_PATTERNS` keeps user-data trees and platform worktrees out, but the snapshot still includes every managed config file in every platform directory. Power users with 8+ platforms configured can accumulate hundreds of MB of backups over a few months. There is no automatic pruning today — Trellis treats backups as user data ("cleanup is your call"). If you add automatic pruning, it must be opt-in and must not delete backups newer than the last successful version transition (otherwise a debug rollback path disappears).
+### Breaking + recommendMigrate 必须发布 `migrationGuide`
 
-### `node_modules/` under managed dirs
+`migrations.md` 文档化了这一点：具有 `breaking: true` AND `recommendMigrate: true` 的清单必须也定义 `migrationGuide`（并且按惯例 `aiInstructions`）。update.ts 关心的原因是迁移任务生成器：`getMigrationMetadata` 聚合跳跃中每个清单的 `migrationGuides`；如果破坏性清单缺少它，用户要么得到（a）一个全是旧 guides 且没有提及实际破坏性版本的 task PRD，要么（b）如果范围内每个 guide 都缺失，则根本没有 task。历史事件：0.5.0-beta.0 发布时没有 `migrationGuide`，并在 0.5.0-beta.9 中被热修复。`packages/cli/scripts/create-manifest.js` `--stdin` 模式现在在清单编写时对此组合硬失败。
 
-OpenCode's plugin pattern installs npm dependencies under `.opencode/`. Without `/node_modules/` in `BACKUP_EXCLUDE_PATTERNS`, every backup would snapshot the entire dependency tree (`update.integration.test.ts > #27 backup skips managed node_modules dependency trees` regression-tests this). When adding a new platform that ships dependencies, verify the pattern still catches them; if the platform uses a non-standard path, extend `BACKUP_EXCLUDE_PATTERNS`.
+### 孤儿迁移
 
-### `.developer` raw-trim foot-gun
+如果 `.trellis/.version` 说你已经在最新 CLI 上，但过时的 `from` 路径仍然在磁盘上存在而新 `to` 不存在，那就是孤儿。`update()` 始终扫描 `getAllMigrations()` 查找孤儿，无论版本范围如何，并将它们添加到 `pendingMigrations`。它们在打印计划中显示为「⚠️ Detected incomplete migrations from previous updates」。原因：先前的运行在 `migrations` 执行和 `updateVersionFile` 之间中断；先前的运行通过 `[s]` 跳过了迁移，用户期望它之后应用；清单编写错误（一个引用在 v0.4 发布之前就已移动的路径的 v0.4 条目）。三者都以相同方式解决：`trellis update --migrate`。
 
-`init_developer.py` writes `.trellis/.developer` as `key=value` lines:
+### 备份膨胀
+
+每个非平凡运行创建 `.trellis/.backup-<timestamp>/`。`BACKUP_EXCLUDE_PATTERNS` 阻止用户数据树和平台工作树进入，但快照仍然包括每个平台目录中的每个管理配置文件。配置了 8 个以上平台的超级用户在几个月内可能积累数百 MB 的备份。目前没有自动修剪 — Trellis 将备份视为用户数据（「清理由你决定」）。如果你添加自动修剪，它必须是可选择的，并且不得删除比上次成功版本转换更新的备份（否则调试回滚路径消失）。
+
+### 管理目录下的 `node_modules/`
+
+OpenCode 的插件模式在 `.opencode/` 下安装 npm 依赖。没有 `/node_modules/` 在 `BACKUP_EXCLUDE_PATTERNS` 中，每个备份都会快照整个依赖树（`update.integration.test.ts > #27 backup skips managed node_modules dependency trees` 回归测试了这一点）。添加一个包含依赖的新平台时，验证模式仍然捕获它们；如果平台使用非标准路径，扩展 `BACKUP_EXCLUDE_PATTERNS`。
+
+### `.developer` raw-trim 陷阱
+
+`init_developer.py` 将 `.trellis/.developer` 写为 `key=value` 行：
 
 ```text
 name=<developer-name>
 initialized_at=<iso8601>
 ```
 
-Reading the file with `fs.readFileSync(...).trim()` and using the result as `assignee` embeds the `name=` prefix and the `initialized_at` line into the task. The migration-task creator at the end of `commands/update.ts:update` uses the strict regex `/^\s*name\s*=\s*(.+?)\s*$/m` for exactly this reason. Don't "simplify" it.
+使用 `fs.readFileSync(...).trim()` 读取文件并使用结果作为 `assignee` 会将 `name=` 前缀和 `initialized_at` 行嵌入到任务中。`commands/update.ts:update` 末尾的迁移任务创建器正是出于这个原因使用严格的正则 `/^\s*name\s*=\s*(.+?)\s*$/m`。不要「简化」它。
 
-### Idempotency churn after adding a placeholder
+### 添加占位符后的幂等性反复变化
 
-Symptom: every `trellis update` shows the same hooks/settings file as auto-updated. Root cause: a configurator's `configure()` resolves a placeholder before writing, but `collectTemplates` returns the unresolved template. Fix: every placeholder must be resolved in BOTH places. The cleanest pattern is to share a `resolvePlaceholders(...)` call in both code paths inside `configurators/<platform>.ts`. See `platform-integration.md > Common Mistakes > "Template placeholder not resolved in collectTemplates"`.
+症状：每次 `trellis update` 显示相同的 hooks/settings 文件为自动更新。根本原因：配置器的 `configure()` 在写入前解析占位符，但 `collectTemplates` 返回未解析的模板。修复：每个占位符必须在两处都解析。最清晰的模式是在 `configurators/<platform>.ts` 的两个代码路径内共享一个 `resolvePlaceholders(...)` 调用。参见 `platform-integration.md > Common Mistakes > "Template placeholder not resolved in collectTemplates"`。
 
-### "Modified by you" on a file the user never touched
+### 用户从未触碰的文件上的「Modified by you」
 
-Two failure modes here:
+这里有两种失败模式：
 
-1. The file was written before hash tracking existed for that path (legacy install). Solution for AGENTS.md is `LEGACY_UNTRACKED_AGENTS_MD_BLOCK_HASHES`. Adding the same escape hatch for other paths is acceptable but should be a last resort — the proper fix is to backfill hashes.
-2. Two writers produced byte-different content for the same path. The classic case: `.agents/skills/<skill>/SKILL.md` written by both Codex and Gemini configurators with platform-specific `{{CMD_REF:name}}` resolution. Fix: use `configurators/shared.ts:resolvePlaceholdersNeutral` for shared destinations. See `platform-integration.md > "Rule: .agents/skills/ writes use resolvePlaceholdersNeutral()"`.
+1. 文件是在该路径存在哈希跟踪之前写入的（遗留安装）。AGENTS.md 的解决方案是 `LEGACY_UNTRACKED_AGENTS_MD_BLOCK_HASHES`。为其他路径添加相同的逃生舱是可以接受的，但应是最后的手段 — 正确的修复是回填哈希。
+2. 两个写入器为相同路径产生了字节不同的内容。典型案例：`.agents/skills/<skill>/SKILL.md` 由 Codex 和 Gemini 配置器写入，带有平台特定的 `{{CMD_REF:name}}` 解析。修复：对共享目标使用 `configurators/shared.ts:resolvePlaceholdersNeutral`。参见 `platform-integration.md > "Rule: .agents/skills/ writes use resolvePlaceholdersNeutral()"`。
 
-### `--allow-downgrade` is a foot-gun
+### `--allow-downgrade` 是陷阱
 
-Migrations are forward-only. A user who downgrades while staying on the same major usually gets away with it (templates revert, user files preserved), but anything that depends on a migration applied since the target version (e.g., a renamed directory, a deleted legacy file restored under its new name) will be broken. `--allow-downgrade` is genuinely an escape hatch, not a supported workflow.
+迁移是仅向前 的。降级同时保持在相同主版本上的用户通常可以侥幸成功（模板恢复，用户文件保留），但任何依赖于自目标版本以来已应用迁移的内容（例如，重命名的目录、在其新名称下恢复的已删除遗留文件）都会损坏。`--allow-downgrade` 确实是一个逃生舱，而不是受支持的工作流。
 
-### Codex two-layer upgrade
+### Codex 双层升级
 
-Old Trellis used `.agents/skills/` as the Codex configDir; current Trellis uses `.codex/` plus a shared `.agents/skills/` layer. `commands/update.ts:needsCodexUpgrade` detects the legacy state by looking for command-as-skill marker entries (`trellis-continue/SKILL.md`, `trellis-finish-work/SKILL.md`) in the hash file, then excludes any configured non-Codex platform whose current template collector declares those same marker paths. Current non-Codex platforms with a private command surface, such as ZCode, must not declare those marker paths under `.agents/skills`; this keeps combined installs from producing hash churn and keeps the Codex legacy detector unambiguous. When legacy Codex is detected, `update()` injects `codex` into `extraPlatforms` so `collectTemplateFiles` produces the missing `.codex/` files. Don't add platform-detection-via-hashes for any other case without a similarly tight marker and non-owner exclusion — false positives here would create bogus directories.
+旧 Trellis 使用 `.agents/skills/` 作为 Codex configDir；当前 Trellis 使用 `.codex/` 加上共享的 `.agents/skills/` 层。`commands/update.ts:needsCodexUpgrade` 通过查找哈希文件中的命令即技能 标记条目（`trellis-continue/SKILL.md`、`trellis-finish-work/SKILL.md`）来检测遗留状态，然后排除其当前模板收集器声明这些相同标记路径的任何已配置非 Codex 平台。具有私有命令接口的当前非 Codex 平台，例如 ZCode，不得在 `.agents/skills` 下声明这些标记路径；这使组合安装不产生哈希反复变化，并使 Codex 遗留检测器保持无歧义。当检测到遗留 Codex 时，`update()` 将 `codex` 注入 `extraPlatforms`，以便 `collectTemplateFiles` 产生缺失的 `.codex/` 文件。不要在没有类似紧密标记和非所有者排除的情况下为任何其他情况添加基于哈希的平台检测 — 这里的假阳性会创建虚假目录。
 
-### Things that look like bugs but aren't
+### 看起来像 bug 但不是 bug 的事情
 
-- The `Proceed?` prompt asks for confirmation even when the only "change" is a version bump. Some of those cases short-circuit before the prompt (no file changes, no migrations, no safe-deletes — see the early return after `analyzeChanges`); others legitimately have changes worth confirming.
-- `getLatestNpmVersion` failure ("unable to fetch") is silent on the npm side and prints a single grayed-out line. The proxy setup happens in `commands/update.ts:update` via `utils/proxy.ts:setupProxy`; users behind a corporate proxy without `HTTP_PROXY` / `HTTPS_PROXY` set will see the gray line forever. This is intentional — the npm check is advisory only.
+- `Proceed?` 提示即使在唯一的「变更」是版本提升时也要求确认。其中一些情况在提示前短路（无文件更改、无迁移、无 safe-deletes — 参见 `analyzeChanges` 后的提前返回）；其他情况合法地有值得确认的更改。
+- `getLatestNpmVersion` 失败（「unable to fetch」）在 npm 端是静默的，并打印一条灰色行。代理设置在 `commands/update.ts:update` 中通过 `utils/proxy.ts:setupProxy` 发生；在未设置 `HTTP_PROXY` / `HTTPS_PROXY` 的情况下位于企业代理后的用户将永远看到灰色行。这是故意的 — npm 检查仅是咨询性的。
 
 ---
 
-## Test Conventions
+## 测试约定
 
-Integration tests live in `test/commands/update.integration.test.ts` (numbered cases `#1 .. #27` plus named cases like `workflow-md-r4`). The fixture pattern:
+集成测试位于 `test/commands/update.integration.test.ts`（编号案例 `#1 .. #27` 加上命名的案例如 `workflow-md-r4`）。Fixture 模式：
 
 ```typescript
 beforeEach: mkdtemp + cwd-spy + console-mute + fetch-stub
 setupProject(): await init({ yes: true, force: true })
 test body:
-  1. mutate the temp project to simulate the scenario (delete a file, edit a file, swap hashes, edit config.yaml, ...)
+  1. 变更临时项目以模拟场景（删除文件、编辑文件、交换哈希、编辑 config.yaml……）
   2. call await update({ ...flags })
-  3. assert on filesystem state and (optionally) on inquirer mock state
+  3. 断言文件系统状态和（可选）inquirer mock 状态
 afterEach: restoreAllMocks + rm -rf tmp
 ```
 
-External mocks: `figlet` (banner), `inquirer` (prompts; usually default `{ proceed: true }` and per-test overrides for migration-action and conflict-resolution prompts), `node:child_process.execSync` (Python detection), `globalThis.fetch` (npm registry). No filesystem or VERSION mocks — tests rely on the real CLI version and real bundled templates.
+外部 mock：`figlet`（横幅）、`inquirer`（提示；通常默认 `{ proceed: true }` 并为迁移操作和冲突解决提示进行每测试覆盖）、`node:child_process.execSync`（Python 检测）、`globalThis.fetch`（npm 注册表）。无文件系统或 VERSION mock — 测试依赖于真实的 CLI 版本和真实的捆绑模板。
 
-Hash file helpers `readHashesV2` / `writeHashesV2` (defined in the test file) bypass `utils/template-hash.ts` to inject precise hash states. Use them when the test's behavior depends on a specific tracked-vs-modified condition that's awkward to construct via `init` + edit.
+哈希文件辅助函数 `readHashesV2` / `writeHashesV2`（在测试文件中定义）绕过 `utils/template-hash.ts` 注入精确的哈希状态。当测试的行为依赖于难以通过 `init` + edit 构造的特定已跟踪 vs 已修改条件时使用它们。
 
-Internal helpers exported with `@internal Exported for testing only` JSDoc tags:
+带有 `@internal Exported for testing only` JSDoc 标签导出的内部辅助函数：
 
 - `loadUpdateSkipPaths`
 - `extractConfigSection`
@@ -377,17 +370,17 @@ Internal helpers exported with `@internal Exported for testing only` JSDoc tags:
 - `cleanupEmptyDirs`
 - `sortMigrationsForExecution`
 
-These are unit-tested in `test/commands/update-internals.test.ts`. Don't widen the public surface of `commands/update.ts` for testing — keep additions to those `@internal` exports.
+这些在 `test/commands/update-internals.test.ts` 中进行单元测试。不要为测试而扩大 `commands/update.ts` 的公共接口 — 将添加内容保留在这些 `@internal` 导出中。
 
-What you should test when extending update:
+扩展 update 时应测试的内容：
 
-| Change | Required test |
+| 更改 | 必需测试 |
 |---|---|
-| New `UpdateOptions` flag | A new `#NN` integration case exercising the flag |
-| New write phase | A snapshot-style test (full repo before/after) and a hash-tracking assertion |
-| New idempotency-affecting helper | A "re-run produces no changes" test (model: `#1 same version update is a true no-op`) |
-| New protected-path or backup-exclude pattern | A `shouldExcludeFromBackup` unit test in `update-internals.test.ts` |
-| New migration type | Add classification + execution unit tests, then a multi-step scenario in the integration suite |
-| Block-merge change to `workflow.md` / `AGENTS.md` | At least one test asserting both "user prose preserved" and "managed block updated" |
+| 新 `UpdateOptions` 标志 | 执行该标志的新 `#NN` 集成案例 |
+| 新写入阶段 | 快照式测试（完整仓库之前/之后）和哈希跟踪断言 |
+| 新影响幂等性的辅助函数 | 「重新运行不产生更改」测试（模型：`#1 same version update is a true no-op`） |
+| 新受保护路径或备份排除模式 | `update-internals.test.ts` 中的 `shouldExcludeFromBackup` 单元测试 |
+| 新迁移类型 | 添加分类 + 执行单元测试，然后在集成套件中添加多步骤场景 |
+| `workflow.md` / `AGENTS.md` 的块合并更改 | 至少一个测试断言「用户散文保留」和「管理块已更新」 |
 
-When a test reaches into `getAllMigrations()` or `getMigrationsForVersion`, it's exercising the boundary with `migrations/index.ts` — keep those assertions narrow (e.g., "this manifest's safe-file-delete fires") so they don't break every time the manifest list grows.
+当测试调用 `getAllMigrations()` 或 `getMigrationsForVersion` 时，它正在执行与 `migrations/index.ts` 的边界 — 保持这些断言窄（例如，「此清单的 safe-file-delete 触发」），以便它们不会在每次清单列表增长时都中断。

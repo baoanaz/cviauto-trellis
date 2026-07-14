@@ -1,56 +1,56 @@
-# Trellis File Reference
+# Trellis 文件参考
 
-Complete reference of all files in the `.trellis/` directory.
+`.trellis/` 目录下所有文件的完整参考。
 
 ---
 
-## Directory Structure
+## 目录结构
 
 ```
 .trellis/
-├── .developer              # Developer identity (gitignored)
-├── .runtime/               # Session-scoped runtime state (gitignored)
-├── .current-task           # Legacy ignored pointer; not an active-task source
-├── .ralph-state.json       # Ralph Loop state (gitignored)
-├── .template-hashes.json   # Template version tracking
-├── .version                # Installed Trellis version
-├── .gitignore              # Git ignore rules
-├── workflow.md             # Main workflow documentation
-├── worktree.yaml           # Multi-session configuration
+├── .developer              # 开发者身份（gitignored）
+├── .runtime/               # 会话级运行时状态（gitignored）
+├── .current-task           # 旧版忽略指针，非活动任务来源
+├── .ralph-state.json       # Ralph Loop 状态（gitignored）
+├── .template-hashes.json   # 模板版本跟踪
+├── .version                # 已安装的 Trellis 版本
+├── .gitignore              # Git 忽略规则
+├── workflow.md             # 主要工作流文档
+├── worktree.yaml           # 多会话配置
 │
-├── workspace/              # Developer workspaces
-├── tasks/                  # Task tracking
-├── spec/                   # Coding guidelines
-└── scripts/                # Automation scripts
+├── workspace/              # 开发者工作区
+├── tasks/                  # 任务跟踪
+├── spec/                   # 编码规范
+└── scripts/                # 自动化脚本
 ```
 
 ---
 
-## Root Files
+## 根目录文件
 
 ### `.developer`
 
-**Purpose**: Store current developer identity.
+**用途**：存储当前开发者身份。
 
-**Created by**: `init_developer.py`
+**创建者**：`init_developer.py`
 
-**Format**: Plain text, single line with developer name.
+**格式**：纯文本，单行开发者名称。
 
 ```
 taosu
 ```
 
-**Gitignored**: Yes - each machine has its own identity.
+**Gitignored**：是 - 每台机器有自己的身份。
 
 ---
 
 ### `.runtime/sessions/<session-key>.json`
 
-**Purpose**: Store active task state for one AI session/window.
+**用途**：存储一个 AI 会话/窗口的活动任务状态。
 
-**Created by**: `task.py start <task-dir>`
+**创建者**：`task.py start <task-dir>`
 
-**Format**: JSON runtime context.
+**格式**：JSON 运行时上下文。
 
 ```json
 {
@@ -61,28 +61,27 @@ taosu
 }
 ```
 
-**Gitignored**: Yes - each session/window has its own active task.
+**Gitignored**：是 - 每个会话/窗口有自己的活动任务。
 
-**Used by**:
-- Hooks resolve this through `common.active_task`
-- Scripts use this for active task operations
+**使用者**：
+- 钩子通过 `common.active_task` 解析此文件
+- 脚本使用此文件进行活动任务操作
 
 ### `.current-task`
 
-**Purpose**: Legacy ignored pointer from older Trellis versions.
+**用途**：旧版 Trellis 版本遗留的忽略指针。
 
-**Active-task behavior**: Not read or written as a fallback. Current Trellis
-uses `.runtime/sessions/<session-key>.json` only.
+**活动任务行为**：不作为回退方案读取或写入。当前 Trellis 仅使用 `.runtime/sessions/<session-key>.json`。
 
 ---
 
 ### `.ralph-state.json`
 
-**Purpose**: Track Ralph Loop iteration state.
+**用途**：跟踪 Ralph Loop 迭代状态。
 
-**Created by**: `ralph-loop.py` (Claude Code only)
+**创建者**：`ralph-loop.py`（仅 Claude Code）
 
-**Format**: JSON
+**格式**：JSON
 
 ```json
 {
@@ -92,24 +91,24 @@ uses `.runtime/sessions/<session-key>.json` only.
 }
 ```
 
-**Gitignored**: Yes - runtime state.
+**Gitignored**：是 - 运行时状态。
 
-**Fields**:
-| Field | Type | Description |
+**字段**：
+| 字段 | 类型 | 描述 |
 |-------|------|-------------|
-| `task` | string | Task directory path |
-| `iteration` | number | Current iteration (1-5) |
-| `started_at` | ISO date | When loop started |
+| `task` | string | 任务目录路径 |
+| `iteration` | number | 当前迭代次数（1-5） |
+| `started_at` | ISO 日期 | 循环开始时间 |
 
 ---
 
 ### `.template-hashes.json`
 
-**Purpose**: Track template file versions for `trellis update`.
+**用途**：跟踪模板文件版本，用于 `trellis update`。
 
-**Created by**: `trellis init` or `trellis update`
+**创建者**：`trellis init` 或 `trellis update`
 
-**Format**: JSON object mapping file paths to SHA-256 hashes.
+**格式**：JSON 对象，将文件路径映射到 SHA-256 哈希值。
 
 ```json
 {
@@ -119,67 +118,67 @@ uses `.runtime/sessions/<session-key>.json` only.
 }
 ```
 
-**Used by**:
-- `trellis update` - Detect which files have been modified
-- Determines if files can be auto-updated or need conflict resolution
+**使用者**：
+- `trellis update` - 检测哪些文件已被修改
+- 判断文件是否可以自动更新或需要冲突解决
 
-**Behavior**:
-- File hash matches template → Safe to update
-- File hash differs → User modified, needs manual merge
+**行为**：
+- 文件哈希匹配模板 → 可以安全更新
+- 文件哈希不同 → 用户已修改，需要手动合并
 
 ---
 
 ### `.version`
 
-**Purpose**: Track installed Trellis CLI version.
+**用途**：跟踪已安装的 Trellis CLI 版本。
 
-**Created by**: `trellis init` or `trellis update`
+**创建者**：`trellis init` 或 `trellis update`
 
-**Format**: Plain text, semver version string.
+**格式**：纯文本，semver 版本字符串。
 
 ```
 0.3.0-beta.5
 ```
 
-**Used by**:
-- `trellis update` - Determine if update is needed
-- Version mismatch detection
+**使用者**：
+- `trellis update` - 判断是否需要更新
+- 版本不匹配检测
 
 ---
 
 ### `.gitignore`
 
-**Purpose**: Define which files to exclude from git.
+**用途**：定义要从 git 中排除的文件。
 
-**Default content**:
+**默认内容**：
 ```gitignore
-# Developer identity (local only)
+# 开发者身份（仅本地）
 .developer
 
-# Legacy current task pointer
+# 旧版当前任务指针
 .current-task
 
-# Session runtime state
+# 会话运行时状态
 .runtime/
 
-# Ralph Loop state
+# Ralph Loop 状态
 .ralph-state.json
 
-# Agent runtime files
+# Agent 运行时文件
 .agents/
 .agent-log
 .agent-runner.sh
 .session-id
 
-# Task directory runtime files
+# 任务目录运行时文件
 .plan-log
 
-# Atomic update temp files
+# 原子更新临时文件
 *.tmp
 .backup-*
 *.new
 
-# Python cache
+# Python 缓存
 **/__pycache__/
 **/*.pyc
 ```
@@ -188,32 +187,32 @@ uses `.runtime/sessions/<session-key>.json` only.
 
 ### `workflow.md`
 
-**Purpose**: Main workflow documentation for developers and AI.
+**用途**：面向开发者和 AI 的主要工作流文档。
 
-**Created by**: `trellis init`
+**创建者**：`trellis init`
 
-**Content sections**:
-1. Quick Start guide
-2. Workflow overview
-3. Session start process
-4. Development process
-5. Session end
-6. File descriptions
-7. Best practices
+**内容章节**：
+1. 快速入门指南
+2. 工作流概述
+3. 会话启动流程
+4. 开发流程
+5. 会话结束
+6. 文件说明
+7. 最佳实践
 
-**Injected by**: `session-start.py` hook (Claude Code)
+**注入者**：`session-start.py` 钩子（Claude Code）
 
-**For Cursor**: Read manually at session start.
+**对于 Cursor**：在会话开始时手动读取。
 
 ---
 
 ### `worktree.yaml`
 
-**Purpose**: Configure Multi-Session and Ralph Loop.
+**用途**：配置 Multi-Session 和 Ralph Loop。
 
-**Created by**: `trellis init`
+**创建者**：`trellis init`
 
-**Format**: YAML
+**格式**：YAML
 
 ```yaml
 worktree_dir: ../worktrees
@@ -227,101 +226,101 @@ verify:
   - pnpm typecheck
 ```
 
-→ See `claude-code/worktree-config.md` for details.
+→ 详见 `claude-code/worktree-config.md`。
 
 ---
 
-## Runtime Files (Gitignored)
+## 运行时文件（Gitignored）
 
 ### `.agents/`
 
-**Purpose**: Agent registry for Multi-Session.
+**用途**：Multi-Session 的 Agent 注册表。
 
-**Location**: `.trellis/workspace/{developer}/.agents/`
+**位置**：`.trellis/workspace/{developer}/.agents/`
 
-**Content**: `registry.json` tracking running agents.
+**内容**：跟踪运行中 agent 的 `registry.json`。
 
 ---
 
 ### `.session-id`
 
-**Purpose**: Store Claude Code session ID for resume.
+**用途**：存储 Claude Code 会话 ID，用于恢复。
 
-**Created by**: Multi-Session `start.py`
+**创建者**：Multi-Session `start.py`
 
-**Format**: UUID string.
+**格式**：UUID 字符串。
 
 ---
 
 ### `.agent-log`
 
-**Purpose**: Agent execution log.
+**用途**：Agent 执行日志。
 
-**Created by**: Multi-Session scripts.
+**创建者**：Multi-Session 脚本。
 
 ---
 
 ### `.plan-log`
 
-**Purpose**: Plan Agent execution log.
+**用途**：Plan Agent 执行日志。
 
-**Location**: Task directory.
+**位置**：任务目录。
 
 ---
 
-## Directories
+## 目录
 
 ### `workspace/`
 
-Developer workspaces with journals and indexes.
+带日志和索引的开发者工作区。
 
-→ See `core/workspace.md`
+→ 详见 `core/workspace.md`
 
 ### `tasks/`
 
-Task directories with PRDs and session files.
+带 PRD 和会话文件的任务目录。
 
-→ See `core/tasks.md`
+→ 详见 `core/tasks.md`
 
 ### `spec/`
 
-Coding guidelines and specifications.
+编码规范和规格说明。
 
-→ See `core/specs.md`
+→ 详见 `core/specs.md`
 
 ### `scripts/`
 
-Automation scripts.
+自动化脚本。
 
-→ See `core/scripts.md` and `claude-code/scripts.md`
+→ 详见 `core/scripts.md` 和 `claude-code/scripts.md`
 
 ---
 
-## Template Files
+## 模板文件
 
-These files are managed by `trellis update`:
+以下文件由 `trellis update` 管理：
 
-| File | Purpose |
+| 文件 | 用途 |
 |------|---------|
-| `.trellis/workflow.md` | Workflow documentation |
-| `.trellis/worktree.yaml` | Multi-session config |
-| `.trellis/.gitignore` | Git ignore rules |
-| `.claude/hooks/*.py` | Hook scripts |
-| `.claude/commands/*.md` | Slash commands |
-| `.claude/agents/*.md` | Agent definitions |
-| `.cursor/commands/*.md` | Cursor commands (mirror) |
+| `.trellis/workflow.md` | 工作流文档 |
+| `.trellis/worktree.yaml` | 多会话配置 |
+| `.trellis/.gitignore` | Git 忽略规则 |
+| `.claude/hooks/*.py` | 钩子脚本 |
+| `.claude/commands/*.md` | 斜杠命令 |
+| `.claude/agents/*.md` | Agent 定义 |
+| `.cursor/commands/*.md` | Cursor 命令（镜像） |
 
-**Update behavior**:
-1. Compare file hash with `.template-hashes.json`
-2. If unchanged → Auto-update
-3. If modified → Create `.new` file for manual merge
-4. Update hashes after successful update
+**更新行为**：
+1. 将文件哈希与 `.template-hashes.json` 比较
+2. 如果未修改 → 自动更新
+3. 如果已修改 → 创建 `.new` 文件供手动合并
+4. 成功更新后更新哈希值
 
 ---
 
-## File Lifecycle
+## 文件生命周期
 
-### Created by `trellis init`
+### 由 `trellis init` 创建
 
 ```
 .trellis/
@@ -337,13 +336,13 @@ These files are managed by `trellis update`:
 └── scripts/
 ```
 
-### Created at runtime
+### 在运行时创建
 
 ```
 .trellis/
 ├── .developer           # init_developer.py
 ├── .runtime/sessions/   # task.py start
-├── .current-task        # legacy ignored file, not active-task source
+├── .current-task        # 旧版忽略文件，非活动任务来源
 ├── .ralph-state.json    # ralph-loop.py
 ├── workspace/{dev}/     # init_developer.py
 │   ├── index.md
@@ -355,12 +354,12 @@ These files are managed by `trellis update`:
     └── *.jsonl
 ```
 
-### Cleaned up
+### 清理
 
 ```
-# After task completion
+# 任务完成后
 .trellis/tasks/{task}/ → .trellis/tasks/archive/YYYY-MM/
 
-# After worktree removal
-.agents/registry.json entries removed
+# Worktree 删除后
+.agents/registry.json 中的条目被移除
 ```

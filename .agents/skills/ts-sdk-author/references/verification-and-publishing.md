@@ -1,44 +1,44 @@
-# Verification & Publishing — End-to-End SDK Release Engineering
+# 验证与发布——端到端 SDK 发布工程
 
-This reference covers everything between "the build succeeded on my machine" and "users can `npm install` it without a paper cut." It is opinionated, code-heavy, and tool-by-tool.
+本文档涵盖从"构建在我的机器上成功了"到"用户可以 `npm install` 而没有任何痛点"之间的一切。它是观点明确的、代码密集的、逐工具介绍的。
 
-For `exports` field shape, see `package-json-exports.md`. For bundler config (tsdown / tsup / unbuild), see `tsdown-bundling.md`. This document assumes the build already produced `dist/`.
+关于 `exports` 字段形状，参阅 `package-json-exports.md`。关于打包器配置（tsdown / tsup / unbuild），参阅 `tsdown-bundling.md`。本文档假设构建已经产生了 `dist/`。
 
 ---
 
-## 1. Overview — The Three Pillars
+## 1. 概述——三大支柱
 
-A defensible SDK release rests on three pillars. Skip any one and you ship paper cuts.
+一个可防御的 SDK 发布建立在三大支柱之上。跳过任何一个，你就会发布痛点。
 
-| Pillar                              | Tooling                                  | Question Answered                                                  |
+| 支柱                              | 工具                                  | 回答的问题                                                  |
 | ----------------------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
-| **(a) Build artifact verification** | `publint`, `@arethetypeswrong/cli`, smoke tests | "Does the tarball actually work in Node CJS / Node ESM / bundlers / Deno / Bun?" |
-| **(b) Version & changelog mgmt**    | `changesets`, semver, npm `dist-tag`     | "What changed since the last release, and what version reflects it?" |
-| **(c) Publish flow**                | GitHub Actions, `changesets/action`, npm provenance | "How does the package reach users from a green CI build, attestably?" |
+| **(a) 构建产物验证** | `publint`、`@arethetypeswrong/cli`、冒烟测试 | "tarball 在 Node CJS / Node ESM / 打包器 / Deno / Bun 中真的能用吗？" |
+| **(b) 版本与变更日志管理**    | `changesets`、semver、npm `dist-tag`     | "自上次发布以来有什么变化，什么版本反映了它？" |
+| **(c) 发布流程**                | GitHub Actions、`changesets/action`、npm provenance | "包如何从绿色 CI 构建中到达用户，并且是可证明的？" |
 
-Everything below maps to one of these three pillars. CI must enforce **all** of them — local discipline is necessary but not sufficient.
+以下所有内容都映射到这三个支柱之一。CI 必须强制执行**所有**它们——本地纪律是必要的，但不够充分。
 
-The minimum gate for any production SDK:
+任何生产级 SDK 的最低门槛：
 
 ```bash
-pnpm build           # produce dist/
-pnpm test            # unit + integration
-pnpm publint         # static checks on package.json + dist/
-pnpm attw --pack     # types resolution across runtimes/resolvers
-pnpm pack --dry-run  # show what ships
+pnpm build           # 产生 dist/
+pnpm test            # 单元 + 集成
+pnpm publint         # 对 package.json + dist/ 的静态检查
+pnpm attw --pack     # 跨运行时/解析器的类型解析
+pnpm pack --dry-run  # 显示将发布什么
 ```
 
-Then `changesets` orchestrates (b) and `changesets/action` orchestrates (c).
+然后 `changesets` 编排（b），`changesets/action` 编排（c）。
 
 ---
 
-## 2. Pre-Publish Verification: `publint`
+## 2. 发布前验证：`publint`
 
-**One-liner:** `publint` is a static linter for the package you are about to publish. It catches misconfigurations in `package.json` and `dist/` that npm will accept but consumers will hit at install time.
+**一句话：** `publint` 是一个用于你即将发布的包的静态 linter。它捕获 `package.json` 和 `dist/` 中的错误配置，这些配置 npm 会接受，但消费者会在安装时遇到。
 
-It does not run code. It reads `package.json`, walks the `exports`/`main`/`module`/`types` map, opens each referenced file, and applies a rule catalog.
+它不运行代码。它读取 `package.json`，遍历 `exports`/`main`/`module`/`types` 映射，打开每个引用的文件，并应用规则目录。
 
-### Wiring
+### 接线
 
 ```jsonc
 // package.json
@@ -53,52 +53,52 @@ It does not run code. It reads `package.json`, walks the `exports`/`main`/`modul
 }
 ```
 
-`prepublishOnly` runs automatically on `npm publish` and `pnpm publish`. **It does not run on `yarn publish` before yarn 4** — so don't rely on it as your only gate; gate in CI too.
+`prepublishOnly` 在 `npm publish` 和 `pnpm publish` 上自动运行。**它在 yarn 4 之前的 `yarn publish` 上不运行**——所以不要依赖它作为你唯一的门禁；也在 CI 中设门禁。
 
-### Key commands
+### 关键命令
 
-| Command                            | What it does                                                                |
+| 命令                            | 作用                                                                |
 | ---------------------------------- | --------------------------------------------------------------------------- |
-| `publint`                          | Lint the current package; report warnings + errors                          |
-| `publint --strict`                 | Treat warnings as errors (use this in CI and `prepublishOnly`)              |
-| `publint ./packages/foo`           | Lint a specific package in a monorepo                                       |
-| `publint --pack pnpm`              | Use `pnpm pack` to materialize the tarball before linting (most accurate)   |
-| `npx publint <pkg-name>`           | Lint a published package from the registry (auditing a dependency)         |
+| `publint`                          | 对当前包进行 lint；报告警告 + 错误                          |
+| `publint --strict`                 | 将警告视为错误（在 CI 和 `prepublishOnly` 中使用）              |
+| `publint ./packages/foo`           | 对 monorepo 中的特定包进行 lint                                       |
+| `publint --pack pnpm`              | 在 lint 之前使用 `pnpm pack` 将 tarball 物化（最准确）   |
+| `npx publint <pkg-name>`           | 从 registry 对已发布的包进行 lint（审计依赖）         |
 
-### Rule catalog
+### 规则目录
 
-The full rule set lives at <https://publint.dev/rules>. The high-value rules grouped by severity:
+完整规则集在 <https://publint.dev/rules>。按严重性分组的高价值规则：
 
-**Errors (must fix before publishing):**
+**错误（发布前必须修复）：**
 
-- `IMPLICIT_INDEX_JS_INVALID_FORMAT` — `main` resolves to `index.js` but file content's format mismatches `type` field.
-- `FILE_DOES_NOT_EXIST` — `main`/`module`/`types` points at a file not in the tarball. Most common cause: forgot to list `dist` in `files`.
-- `FILE_INVALID_FORMAT` — file uses CJS but `type: "module"` (or vice-versa).
-- `EXPORTS_VALUE_INVALID` — `exports` value doesn't start with `./`.
-- `EXPORTS_GLOB_NO_MATCHED_FILES` — pattern like `"./components/*": "./dist/components/*.js"` matches zero files.
-- `USE_EXPORTS_BROWSER` — using top-level `browser` field; should be a condition inside `exports`.
-- `USE_TYPE_MODULE` — package contains `.js` ESM files but has no `type: "module"` (Node will treat them as CJS).
+- `IMPLICIT_INDEX_JS_INVALID_FORMAT` — `main` 解析到 `index.js`，但文件内容的格式与 `type` 字段不匹配。
+- `FILE_DOES_NOT_EXIST` — `main`/`module`/`types` 指向 tarball 中不存在的文件。最常见原因：忘记在 `files` 中列出 `dist`。
+- `FILE_INVALID_FORMAT` — 文件使用 CJS 但 `type: "module"`（或反之）。
+- `EXPORTS_VALUE_INVALID` — `exports` 值不以 `./` 开头。
+- `EXPORTS_GLOB_NO_MATCHED_FILES` — 类似 `"./components/*": "./dist/components/*.js"` 的模式匹配零个文件。
+- `USE_EXPORTS_BROWSER` — 使用顶层 `browser` 字段；应该是 `exports` 内的一个条件。
+- `USE_TYPE_MODULE` — 包包含 `.js` ESM 文件但没有 `type: "module"`（Node 会将它们视为 CJS）。
 
-**Warnings (should fix):**
+**警告（应该修复）：**
 
-- `TYPES_NOT_EXPORTED` — `exports` exposes a runtime file but no `types` condition; consumers get `any`.
-- `EXPORTS_TYPES_INVALID_FORMAT` — `types` condition order wrong (`types` must come **first** in each condition object).
-- `MODULE_SHOULD_BE_ESM` — `module` field exists but points at CJS.
-- `FIELD_INVALID_VALUE_TYPE` — `keywords` is a string, `files` is missing, etc.
-- `DEPRECATED_FIELD_JSNEXT` — uses `jsnext:main` (long-deprecated).
+- `TYPES_NOT_EXPORTED` — `exports` 暴露了运行时文件但没有 `types` 条件；消费者获得 `any`。
+- `EXPORTS_TYPES_INVALID_FORMAT` — `types` 条件顺序错误（`types` 必须在每个条件对象中**第一个**出现）。
+- `MODULE_SHOULD_BE_ESM` — `module` 字段存在但指向 CJS。
+- `FIELD_INVALID_VALUE_TYPE` — `keywords` 是字符串，`files` 缺失等。
+- `DEPRECATED_FIELD_JSNEXT` — 使用 `jsnext:main`（早已弃用）。
 
-### Common failures and fixes
+### 常见失败和修复
 
 ```jsonc
-//  WRONG — types condition out of order, will silently break TS consumers
+//  错误 — types 条件顺序错误，会静默地破坏 TS 消费者
 "exports": {
   ".": {
     "import": "./dist/index.mjs",
-    "types": "./dist/index.d.ts"   //  must be first
+    "types": "./dist/index.d.ts"   //  必须放在最前面
   }
 }
 
-//  RIGHT
+//  正确
 "exports": {
   ".": {
     "types": "./dist/index.d.ts",
@@ -109,30 +109,30 @@ The full rule set lives at <https://publint.dev/rules>. The high-value rules gro
 ```
 
 ```jsonc
-//  WRONG — dist/ not shipped
+//  错误 — dist/ 没有被发布
 "files": ["src", "README.md"]
 
-//  RIGHT
+//  正确
 "files": ["dist", "README.md", "LICENSE"]
 ```
 
-**Verify what `npm publish` will actually upload** before publishing:
+**在发布前验证 `npm publish` 实际会上传什么**：
 
 ```bash
 npm pack --dry-run
-# Lists every file, prints unpacked size.
-# Anything not in this list will NOT reach consumers.
+# 列出每个文件，打印解包大小。
+# 不在此列表中的任何内容都不会到达消费者。
 ```
 
 ---
 
-## 3. Pre-Publish Verification: `@arethetypeswrong/cli` (attw)
+## 3. 发布前验证：`@arethetypeswrong/cli`（attw）
 
-**One-liner:** `attw` simulates how every major TS resolver — Node10, Node16/NodeNext (CJS), Node16/NodeNext (ESM), bundler — resolves your package's types and runtime, and tells you where they disagree.
+**一句话：** `attw` 模拟每个主要 TS 解析器——Node10、Node16/NodeNext（CJS）、Node16/NodeNext（ESM）、bundler——如何解析你的包的类型和运行时，并告诉你它们在哪里不一致。
 
-This is the single highest-leverage tool for hybrid CJS+ESM packages. If you publish dual-format and you do not run `attw` in CI, you will ship broken types.
+这是混合 CJS+ESM 包的单一最高杠杆工具。如果你发布双格式并且不在 CI 中运行 `attw`，你会发布带有破损类型的包。
 
-### Install + wire
+### 安装 + 接线
 
 ```bash
 pnpm add -D @arethetypeswrong/cli
@@ -147,94 +147,94 @@ pnpm add -D @arethetypeswrong/cli
 }
 ```
 
-### Key commands
+### 关键命令
 
-| Command                                       | What it does                                                                          |
+| 命令                                       | 作用                                                                          |
 | --------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `attw --pack .`                               | Run `npm pack`, then check the tarball (most accurate — checks what ships)            |
-| `attw --pack . --profile node16`              | Use the Node16 / NodeNext profile (modern; what most apps now use)                    |
-| `attw --pack . --profile esm-only`            | If your package is ESM-only, assert no CJS resolution paths exist                     |
-| `attw your-pkg@1.2.3`                         | Check a published version from npm                                                    |
-| `attw --pack . --ignore-rules cjs-resolves-to-esm` | Suppress a specific rule (use only with reasoning, e.g., intentional ESM-only) |
-| `attw --pack . --format json`                 | Machine-readable; feed into CI annotations                                            |
+| `attw --pack .`                               | 运行 `npm pack`，然后检查 tarball（最准确——检查实际发布的内容）            |
+| `attw --pack . --profile node16`              | 使用 Node16 / NodeNext 配置文件（现代；现在大多数应用使用）                    |
+| `attw --pack . --profile esm-only`            | 如果你的包是纯 ESM，断言不存在 CJS 解析路径                     |
+| `attw your-pkg@1.2.3`                         | 从 npm 检查已发布的版本                                                    |
+| `attw --pack . --ignore-rules cjs-resolves-to-esm` | 抑制特定规则（仅在有理由时使用，例如，故意的纯 ESM） |
+| `attw --pack . --format json`                 | 机器可读；输入到 CI 注释中                                            |
 
-### Resolution modes attw simulates
+### attw 模拟的解析模式
 
-| Mode               | Used by                                            | Reads which field/condition                  |
+| 模式               | 由谁使用                                            | 读取哪个字段/条件                  |
 | ------------------ | -------------------------------------------------- | -------------------------------------------- |
-| **node10**         | TS `moduleResolution: "node"` (old default)        | `main`, `types`, and `typesVersions`         |
-| **node16-cjs**     | TS `moduleResolution: "node16"`, CJS importer      | `exports[".".require.types]` then `.require` |
-| **node16-esm**     | TS `moduleResolution: "node16"`, ESM importer      | `exports[".".import.types]` then `.import`   |
-| **bundler**        | TS `moduleResolution: "bundler"` (Vite, webpack)   | `exports[".".types]` + first matching cond.  |
+| **node10**         | TS `moduleResolution: "node"`（旧默认值）        | `main`、`types` 和 `typesVersions`         |
+| **node16-cjs**     | TS `moduleResolution: "node16"`，CJS 导入者      | `exports[".".require.types]` 然后 `.require` |
+| **node16-esm**     | TS `moduleResolution: "node16"`，ESM 导入者      | `exports[".".import.types]` 然后 `.import`   |
+| **bundler**        | TS `moduleResolution: "bundler"`（Vite、webpack）   | `exports[".".types]` + 第一个匹配的条件  |
 
-### Common failure modes
+### 常见失败模式
 
-The full catalog: <https://github.com/arethetypeswrong/arethetypeswrong.github.io/blob/main/docs/problems/README.md>
+完整目录：<https://github.com/arethetypeswrong/arethetypeswrong.github.io/blob/main/docs/problems/README.md>
 
-| Problem                        | Symptom                                                                              | Fix                                                                                              |
+| 问题                        | 症状                                                                              | 修复                                                                                              |
 | ------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| **Masquerading as CJS**        | File extension `.js` + `type: "commonjs"` but contains ESM (`import` keyword)        | Build to `.mjs` for ESM output, OR set `type: "module"` + build CJS to `.cjs`                    |
-| **Masquerading as ESM**        | File extension `.js` + `type: "module"` but contains `require()` calls               | Build CJS to `.cjs` extension                                                                    |
-| **FalseCJS** / **FalseESM**    | Types say one thing, runtime delivers another (e.g., `.d.ts` exports class, `.js` exports default + class but bundled wrong) | Use `.d.cts` for CJS types and `.d.mts` for ESM types; let bundler emit both                 |
-| **Missing Resolution**         | `exports` has a `require` condition but no `.cjs` types alongside                    | Add a `.d.cts` next to every `.cjs`                                                              |
-| **NoResolution**               | A resolver can't find the package entry at all                                       | Add the missing condition (`require` for CJS consumers, `import` for ESM)                        |
-| **CJS-only / ESM-only types**  | You publish both runtimes but only one type file                                     | Emit both `.d.cts` and `.d.mts` (tsdown/tsup do this with `dts: true` + dual format)              |
-| **Internal-resolution errors** | Your `dist/index.mjs` imports `./utils.js` but only `./utils.mjs` exists             | Match extensions in bundler output; modern bundlers handle this if configured correctly          |
+| **伪装成 CJS（Masquerading as CJS）**        | 文件扩展名 `.js` + `type: "commonjs"` 但包含 ESM（`import` 关键字）        | 将 ESM 输出构建为 `.mjs`，或设置 `type: "module"` + 将 CJS 构建为 `.cjs`                    |
+| **伪装成 ESM（Masquerading as ESM）**        | 文件扩展名 `.js` + `type: "module"` 但包含 `require()` 调用               | 将 CJS 构建为 `.cjs` 扩展名                                                                    |
+| **FalseCJS** / **FalseESM**    | 类型说一件事，运行时交付另一件事（例如，`.d.ts` 导出 class，`.js` 导出 default + class 但打包错误） | 对 CJS 类型使用 `.d.cts`，对 ESM 类型使用 `.d.mts`；让打包器同时产出两者                 |
+| **缺失解析（Missing Resolution）**         | `exports` 有 `require` 条件但没有对应的 `.cjs` 类型                              | 在每个 `.cjs` 旁边添加 `.d.cts`                                                              |
+| **NoResolution**               | 解析器根本找不到包的入口点                                       | 添加缺失的条件（CJS 消费者用 `require`，ESM 用 `import`）                        |
+| **仅 CJS / 仅 ESM 类型**  | 你发布了两种运行时但只有一种类型文件                                     | 同时产出 `.d.cts` 和 `.d.mts`（tsdown/tsup 通过 `dts: true` + 双格式做到这一点）              |
+| **内部解析错误（Internal-resolution errors）** | 你的 `dist/index.mjs` 导入 `./utils.js` 但只有 `./utils.mjs` 存在             | 在打包器输出中匹配扩展名；如果配置正确，现代打包器可以处理这一点          |
 
-### Reading attw output
+### 阅读 attw 输出
 
 ```
 ┌───────────────────┬──────────────────────────────────────────┐
 │                   │ "my-sdk"                                 │
 ├───────────────────┼──────────────────────────────────────────┤
 │ node10            │ 🟢                                       │
-│ node16 (from CJS) │ 🟢 (CJS)                                 │
-│ node16 (from ESM) │ 🟢 (ESM)                                 │
+│ node16（from CJS） │ 🟢（CJS）                                 │
+│ node16（from ESM） │ 🟢（ESM）                                 │
 │ bundler           │ 🟢                                       │
 └───────────────────┴──────────────────────────────────────────┘
 ```
 
-All green = ship it. Any red = consumer breakage. Yellow (⚠️) = warning, often Masquerading; investigate.
+全部绿色 = 发布。任何红色 = 消费者会出问题。黄色（⚠️）= 警告，通常是伪装（Masquerading）；调查。
 
 ---
 
-## 4. Build Output Smoke Tests
+## 4. 构建输出冒烟测试
 
-Static checks miss runtime issues. Run smoke tests against the actual tarball.
+静态检查会遗漏运行时问题。针对实际 tarball 运行冒烟测试。
 
-### In-tree smoke tests
+### 树内冒烟测试
 
 ```bash
-# After pnpm build:
+# 在 pnpm build 之后：
 node --print "require('./dist/index.cjs').myFunction"
 node --input-type=module -e "import('./dist/index.mjs').then(m => console.log(m.myFunction))"
 ```
 
-Each command should print something other than `undefined`. If it prints `undefined`, your `exports` map or your bundler's named-export emission is broken.
+每个命令应该打印出不是 `undefined` 的内容。如果打印 `undefined`，你的 `exports` 映射或打包器的命名导出产出是坏的。
 
-### Out-of-tree tarball test (the gold standard)
+### 树外 tarball 测试（黄金标准）
 
 ```bash
-# 1. Pack
+# 1. 打包
 pnpm pack
-# Produces my-sdk-1.0.0.tgz
+# 产生 my-sdk-1.0.0.tgz
 
-# 2. Install in a throwaway directory
+# 2. 在临时目录中安装
 mkdir /tmp/smoke-test && cd /tmp/smoke-test
 npm init -y
 npm install /path/to/my-sdk-1.0.0.tgz
 
-# 3. CJS consumer
+# 3. CJS 消费者
 node --print "require('my-sdk').myFunction.toString().slice(0, 50)"
 
-# 4. ESM consumer
+# 4. ESM 消费者
 cat > test.mjs << 'EOF'
 import { myFunction } from 'my-sdk';
 console.log('OK:', typeof myFunction);
 EOF
 node test.mjs
 
-# 5. TypeScript consumer
+# 5. TypeScript 消费者
 cat > test.ts << 'EOF'
 import { myFunction } from 'my-sdk';
 const x: ReturnType<typeof myFunction> = myFunction();
@@ -242,9 +242,9 @@ EOF
 npx tsc --noEmit --strict --moduleResolution node16 --module nodenext test.ts
 ```
 
-If any of these fail, **do not publish**. The published artifact will fail for users in exactly the same way.
+如果其中任何一个失败，**不要发布**。已发布的产物将以完全相同的方式对用户失败。
 
-### Automate in CI
+### 在 CI 中自动化
 
 ```yaml
 - name: "smoke test tarball"
@@ -260,344 +260,344 @@ If any of these fail, **do not publish**. The published artifact will fail for u
 
 ---
 
-## 5. Semver Refresher for SDK Authors
+## 5. SDK 作者的 Semver 速查
 
-Semver: **MAJOR.MINOR.PATCH** plus optional **pre-release identifier** and **build metadata**.
+Semver：**MAJOR.MINOR.PATCH** 加上可选的**预发布标识符**和**构建元数据**。
 
 ```
-1.2.3                  stable release
-1.2.3-alpha.0          pre-release (alpha line)
-1.2.3-beta.5           pre-release (beta line)
-1.2.3-rc.1             pre-release (release candidate)
-1.2.3+sha.abc1234      build metadata (ignored for precedence)
-0.0.0-pr-123-sha-abc   ephemeral / snapshot release
+1.2.3                  稳定发布
+1.2.3-alpha.0          预发布（alpha 线）
+1.2.3-beta.5           预发布（beta 线）
+1.2.3-rc.1             预发布（发布候选）
+1.2.3+sha.abc1234      构建元数据（在优先级比较中被忽略）
+0.0.0-pr-123-sha-abc   临时 / 快照发布
 ```
 
-### The MAJOR.MINOR.PATCH contract
+### MAJOR.MINOR.PATCH 合约
 
-| Bump  | When                                                                | Examples                                                              |
+| 升级  | 何时                                                                | 示例                                                              |
 | ----- | ------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| MAJOR | Backwards-incompatible API change                                   | Removed an export, changed a function signature, raised Node min      |
-| MINOR | Backwards-compatible feature addition                               | New optional parameter, new export, expanded enum                     |
-| PATCH | Backwards-compatible bug fix                                        | Fixed wrong calculation, fixed type narrowing, perf improvement       |
+| MAJOR | 向后不兼容的 API 变更                                   | 移除导出的内容，更改函数签名，提高 Node 最低版本      |
+| MINOR | 向后兼容的功能新增                               | 新的可选参数，新的导出，扩展的枚举                     |
+| PATCH | 向后兼容的 bug 修复                                        | 修复错误计算，修复类型收窄，性能改进       |
 
-**Internal-only "refactor" without observable change → no bump.** A changeset with bump type `none` (changesets supports the `---` empty-body form, but most teams just skip writing one).
+**仅内部"重构"而没有可观察到的变更 → 不升级。** 一个 bump type 为 `none` 的 changeset（changesets 支持 `---` 空正文形式，但大多数团队只是跳过写一个）。
 
-### Pre-release identifiers
+### 预发布标识符
 
-`1.0.0-alpha.0` precedes `1.0.0`. Precedence order:
+`1.0.0-alpha.0` 在 `1.0.0` 之前。优先级顺序：
 
 ```
 1.0.0-alpha.0 < 1.0.0-alpha.1 < 1.0.0-beta.0 < 1.0.0-beta.5 < 1.0.0-rc.0 < 1.0.0
 ```
 
-**Subtle:** `1.0.0-alpha` < `1.0.0-alpha.0` (no identifier < numeric identifier 0). Always include the trailing `.N` so the precedence is total.
+**细微之处：** `1.0.0-alpha` < `1.0.0-alpha.0`（无标识符 < 数字标识符 0）。始终包含尾部 `.N`，以便优先级是全序的。
 
-### The `0.x` regime
+### `0.x` 制度
 
-Per semver §4: **anything `0.x.y` MAY break at any time.** Convention:
+根据 semver §4：**任何 `0.x.y` 可能随时有破坏性变更。** 约定：
 
-- `0.x.0` → breaking change (MINOR-position acts as MAJOR)
-- `0.x.y` → non-breaking (PATCH-position acts as MINOR + PATCH combined)
+- `0.x.0` → 破坏性变更（MINOR 位置充当 MAJOR）
+- `0.x.y` → 非破坏性（PATCH 位置充当 MINOR + PATCH 组合）
 
-This is what tools like `changesets` actually implement: in `0.x`, a "major" bump only bumps minor.
+这是像 `changesets` 这样的工具实际实现的：在 `0.x` 中，"major" 升级只升级 minor。
 
-**ZeroVer (`0ver.org`)**: a movement to stay on `0.x` forever to avoid the social commitment of `1.0`. Popular projects on `0.x` for years: `npm`, `bun` (until 1.0), `htop`, `streamlit`. Don't follow this without intent — staying on `0.x` signals to enterprise users that the API is unstable.
+**ZeroVer（`0ver.org`）**：一个永远停留在 `0.x` 的运动，以避免 `1.0` 的社会承诺。在 `0.x` 上停留多年的流行项目：`npm`、`bun`（在 1.0 之前）、`htop`、`streamlit`。不要在没有意图的情况下遵循这个——停留在 `0.x` 向企业用户发出 API 不稳定的信号。
 
-**Bump to `1.0.0` when**: the public API is documented, the test surface is high, and you commit to semver discipline for breaking changes.
+**升级到 `1.0.0` 当**：公共 API 已文档化化，测试覆盖面很高，并且你承诺对破坏性变更遵守 semver 纪律。
 
 ---
 
-## 6. Pre-Release Channels & npm dist-tags
+## 6. 预发布通道与 npm dist-tags
 
-A **dist-tag** is a named pointer (like a git tag for npm) that resolves to a specific version. Every package has at least `latest`.
+一个 **dist-tag** 是一个命名的指针（类似于 npm 的 git 标签），解析到特定版本。每个包至少有一个 `latest`。
 
-### The `latest` tag
+### `latest` 标签
 
-`npm install pkg` resolves to `pkg@latest`. By default, `npm publish` writes to `latest`. **This is dangerous for pre-releases.**
+`npm install pkg` 解析到 `pkg@latest`。默认情况下，`npm publish` 写入 `latest`。**这对预发布是危险的。**
 
-### Convention tags
+### 约定标签
 
-| Tag            | Meaning                                                      | Example consumer command                  |
+| 标签            | 含义                                                      | 示例消费者命令                  |
 | -------------- | ------------------------------------------------------------ | ----------------------------------------- |
-| `latest`       | Current stable                                                | `npm install next`                        |
-| `next`         | Next major's pre-release line                                 | `npm install @trpc/server@next`           |
-| `beta`         | Beta channel of next major                                    | `npm install ai@beta`                     |
-| `rc`           | Release candidate                                             | `npm install next@rc`                     |
-| `canary`       | Bleeding-edge, every-commit                                   | `npm install next@canary`                 |
-| `alpha`        | Earliest pre-release                                          | `npm install ai@alpha`                    |
-| `experimental` | Off-roadmap experiments (React uses this)                     | `npm install react@experimental`          |
-| `nightly`      | Daily build (less common in npm; common in Rust/CI)           | `npm install some-pkg@nightly`            |
-| `snapshot`     | Ephemeral, per-PR / per-commit                                | `npm install ai@snapshot`                 |
+| `latest`       | 当前稳定版                                                | `npm install next`                        |
+| `next`         | 下一个主版本的预发布线                                 | `npm install @trpc/server@next`           |
+| `beta`         | 下一个主版本的 Beta 通道                                    | `npm install ai@beta`                     |
+| `rc`           | 发布候选                                             | `npm install next@rc`                     |
+| `canary`       | 最新、每次提交                                   | `npm install next@canary`                 |
+| `alpha`        | 最早的预发布                                          | `npm install ai@alpha`                    |
+| `experimental` | 非路线图实验（React 使用这个）                           | `npm install react@experimental`          |
+| `nightly`      | 每日构建（在 npm 中不常见；在 Rust/CI 中常见）           | `npm install some-pkg@nightly`            |
+| `snapshot`     | 临时的，每个 PR / 每次提交                                | `npm install ai@snapshot`                 |
 
-### How resolution works
+### 解析如何工作
 
 ```bash
 npm install pkg            # → pkg@latest
-npm install pkg@beta       # → version pointed to by `beta` dist-tag
-npm install pkg@1.2.3      # → exact version
-npm install pkg@^1.2.3     # → highest 1.x.y >= 1.2.3 (and NOT pre-release)
+npm install pkg@beta       # → `beta` dist-tag 指向的版本
+npm install pkg@1.2.3      # → 确切版本
+npm install pkg@^1.2.3     # → 最高的 1.x.y >= 1.2.3（且不是预发布版本）
 ```
 
-**Critical:** npm's range matchers (`^`, `~`, `>=`) by default exclude pre-release versions. `^1.0.0` will NOT install `1.5.0-beta.0`. This is intentional and good — keeps stable users away from pre-releases.
+**关键：** npm 的范围匹配器（`^`、`~`、`>=`）默认排除预发布版本。`^1.0.0` 不会安装 `1.5.0-beta.0`。这是故意的，也是好的——保持稳定用户远离预发布。
 
-### Managing dist-tags
+### 管理 dist-tags
 
 ```bash
-# List current tags
+# 列出当前标签
 npm dist-tag ls my-pkg
 # latest: 1.4.2
 # beta: 2.0.0-beta.3
 # canary: 2.0.0-canary.47
 
-# Add a tag (point it at an existing version)
+# 添加标签（将其指向现有版本）
 npm dist-tag add my-pkg@1.4.1 stable-legacy
 
-# Remove a tag (does NOT unpublish the version)
+# 移除标签（不会取消发布版本）
 npm dist-tag rm my-pkg beta
 
-# Publish with a non-latest tag
+# 以非 latest 标签发布
 npm publish --tag beta
 pnpm publish --tag canary --no-git-checks
 ```
 
-### **Never publish a pre-release to `latest`**
+### **永远不要将预发布发布到 `latest`**
 
 ```bash
-# WRONG — publishes 2.0.0-beta.0 as `latest`, every `npm install pkg` now gets a beta
+# 错误 — 将 2.0.0-beta.0 发布为 `latest`，每个 `npm install pkg` 现在都会获得一个 beta 版本
 npm publish
 
-# RIGHT
+# 正确
 npm publish --tag beta
 ```
 
-**Recovery** if you accidentally tagged a pre-release as `latest`:
+**恢复** 如果你意外地将预发布标记为 `latest`：
 
 ```bash
-# 1. Re-point latest at the previous stable
+# 1. 将 latest 重新指向之前的稳定版
 npm dist-tag add my-pkg@1.4.2 latest
 
-# 2. Re-tag the pre-release where it belongs
+# 2. 将预发布重新标记到它应该的位置
 npm dist-tag add my-pkg@2.0.0-beta.0 beta
 
-# 3. Communicate (Twitter, Discord, GitHub release notes) — installs between
-#    the bad publish and the fix may have pulled the beta as latest.
+# 3. 沟通（Twitter、Discord、GitHub 发布说明）——在错误发布和修复之间
+#    的安装可能已经将 beta 拉取为 latest。
 ```
 
-You **cannot** unpublish (with rare exceptions, see §12). You can only re-point tags and `npm deprecate` the bad version.
+你**不能**取消发布（有罕见的例外，参见第 12 节）。你只能重新指向标签和对坏版本使用 `npm deprecate`。
 
 ---
 
-## 7. The Full Lifecycle: alpha → beta → rc → stable → next-cycle
+## 7. 完整生命周期：alpha → beta → rc → stable → 下一个循环
 
-### Stage definitions
+### 阶段定义
 
-| Stage      | Purpose                                              | API stability      | Audience               | Soak time before next |
+| 阶段      | 用途                                              | API 稳定性      | 受众               | 进入下一阶段前的浸泡时间 |
 | ---------- | ---------------------------------------------------- | ------------------ | ---------------------- | --------------------- |
-| **alpha**  | Internal / feature-spike, dogfood                    | None — anything moves | Maintainers, design partners | Days to weeks         |
-| **beta**   | Feature-complete; gathering real-world feedback      | API may shift on signal | Early adopters         | Weeks                 |
-| **rc**     | Frozen; blocker-only fixes                            | Locked              | Production-curious users | 1–2 weeks typical     |
-| **stable** | Production-ready (`latest` tag)                       | Locked              | Everyone               | Until next major      |
-| **patch**  | Bug fixes on the stable line                          | Locked              | Everyone               | Continuous            |
+| **alpha**  | 内部 / 功能探索，dogfood                    | 无——任何东西都可能变动 | 维护者、设计合作伙伴 | 天到周         |
+| **beta**   | 功能完成；收集真实世界反馈      | API 可能根据信号变化 | 早期采用者         | 周                 |
+| **rc**     | 冻结；仅修复阻塞性 bug                            | 锁定              | 对生产环境感兴趣的用户 | 通常 1-2 周     |
+| **stable** | 生产就绪（`latest` 标签）                       | 锁定              | 所有人               | 直到下一个主版本      |
+| **patch**  | 稳定线上的 bug 修复                          | 锁定              | 所有人               | 持续            |
 
-### State diagram
+### 状态图
 
 ```
                 ┌────────────────────────────────────────────────┐
-                │  v1.0.0 stable line                            │
+                │  v1.0.0 稳定线                            │
                 │                                                │
                 │   1.0.0 ──► 1.0.1 ──► 1.0.2 ──► 1.1.0 ──► …   │
                 │                                                │
                 └─────────────────┬──────────────────────────────┘
                                   │
-                          new major branch
+                          新的主版本分支
                                   │
                                   ▼
    2.0.0-alpha.0 ─► 2.0.0-alpha.5 ─┐
-                                   │ feature freeze
+                                   │ 功能冻结
                                    ▼
    2.0.0-beta.0 ─► 2.0.0-beta.7 ─┐
-                                 │ API freeze
+                                 │ API 冻结
                                  ▼
    2.0.0-rc.0 ─► 2.0.0-rc.2 ─┐
-                             │ blocker-free + soak passed
+                             │ 零阻塞 + 浸泡通过
                              ▼
-   2.0.0  ────────────────► (tag `latest` → 2.0.0)
+   2.0.0  ────────────────► （标签 `latest` → 2.0.0）
                              │
                              ▼
-   2.0.0 ──► 2.0.1 ──► 2.0.2 ──► 2.1.0 ──► …  (new stable line, repeat)
+   2.0.0 ──► 2.0.1 ──► 2.0.2 ──► 2.1.0 ──► …  （新的稳定线，重复）
 
 
-   Parallel:                            (Meanwhile, on `release/1.x` branch)
-   1.0.2 ──► 1.0.3 ──► 1.0.4 ──► …      patches on previous stable
+   并行：                            （同时，在 `release/1.x` 分支上）
+   1.0.2 ──► 1.0.3 ──► 1.0.4 ──► …      上一个稳定版的补丁
 ```
 
-### Transition triggers
+### 转换触发器
 
-| Transition          | Trigger                                                                          |
+| 转换          | 触发器                                                                          |
 | ------------------- | -------------------------------------------------------------------------------- |
-| alpha → beta        | Feature freeze: all planned features merged; no new API surface                  |
-| beta → rc           | API freeze: no more design changes; only blocker bugs                            |
-| rc → stable         | Zero P0/P1 open + minimum soak period (commonly 7–14 days for the same rc.N)     |
-| stable → stable.+1  | Bug fix, internal change, dependency security update                             |
-| stable → next-cycle | New breaking change required → cut a new major-version branch, start alphas       |
+| alpha → beta        | 功能冻结：所有计划的功能已合并；没有新的 API 对外接口                  |
+| beta → rc           | API 冻结：没有更多的设计变更；只有阻塞性 bug                            |
+| rc → stable         | 零 P0/P1 开放 + 最低浸泡期（通常同一个 rc.N 需要 7-14 天）     |
+| stable → stable.+1  | Bug 修复、内部变更、依赖安全更新                             |
+| stable → 下一个循环 | 需要新的破坏性变更 → 切出新的主版本分支，开始 alpha       |
 
-### Branching strategy for multiple active lines
+### 多条活跃线的分支策略
 
-When `2.0.0` ships, you don't stop supporting `1.x` immediately. Use long-lived release branches:
+当 `2.0.0` 发布时，你不会立即停止支持 `1.x`。使用长期存在的发布分支：
 
 ```
-main                  ← active development (next major: 3.0.0-alpha)
-release/2.x           ← current stable line; patches: 2.0.1, 2.1.0
-release/1.x           ← LTS / previous stable; patches: 1.4.5
+main                  ← 活跃开发（下一个主版本：3.0.0-alpha）
+release/2.x           ← 当前稳定线；补丁：2.0.1、2.1.0
+release/1.x           ← LTS / 上一个稳定版；补丁：1.4.5
 ```
 
-Changesets on each branch:
+每个分支上的 Changesets：
 
-- `main`: `pre enter alpha` for the new major.
-- `release/2.x`: stable mode; bumps produce `2.0.1`, `2.1.0`, etc.
-- `release/1.x`: stable mode; bumps produce `1.4.5`, etc. Set `baseBranch: "release/1.x"` in `.changeset/config.json` on this branch.
+- `main`：对新主版本 `pre enter alpha`。
+- `release/2.x`：稳定模式；升级产生 `2.0.1`、`2.1.0` 等。
+- `release/1.x`：稳定模式；升级产生 `1.4.5` 等。在此分支的 `.changeset/config.json` 中设置 `baseBranch: "release/1.x"`。
 
-CI publishes from each branch with a different `--tag`:
+CI 从每个分支以不同的 `--tag` 发布：
 
-- `main` → `--tag alpha` or `--tag canary`
+- `main` → `--tag alpha` 或 `--tag canary`
 - `release/2.x` → `--tag latest`
-- `release/1.x` → `--tag lts` (or `1-lts`, `v1`, etc.)
+- `release/1.x` → `--tag lts`（或 `1-lts`、`v1` 等）
 
 ---
 
-## 8. Real-World SDK Release Cadence — Case Studies
+## 8. 真实世界 SDK 发布节奏——案例研究
 
-All version numbers below are pulled from the npm registry as of 2026-05-13. `npm view <pkg> versions --json` and `npm view <pkg> dist-tags` confirm them.
+以下所有版本号均截至 2026-05-13 从 npm registry 中提取。`npm view <pkg> versions --json` 和 `npm view <pkg> dist-tags` 确认了它们。
 
-### 8.1 Next.js (`next`)
+### 8.1 Next.js（`next`）
 
-**Strategy:** every-commit canary, weekly stable, parallel LTS branches.
+**策略：** 每次提交 canary，每周 stable，并行 LTS 分支。
 
-- **Tags:** `latest`, `canary`, `rc`, `beta`, `backport`, plus historical lines (`next-15-3`, `next-14`, `next-13`, etc. — one per supported minor)
-- Recent canary run (sample): `16.3.0-canary.0` → `16.3.0-canary.1` → … → `16.3.0-canary.19` (current)
-- Stable cadence: `16.2.1` → `16.2.2` → `16.2.3` → `16.2.4` → `16.2.5` → `16.2.6` (`latest`)
-- Pre-major: `15.0.0-rc.1`, current `16.0.0-beta.0`
-- Install commands:
+- **标签：** `latest`、`canary`、`rc`、`beta`、`backport`，加上历史线（`next-15-3`、`next-14`、`next-13` 等——每个支持的 minor 一个）
+- 最近的 canary 运行（示例）：`16.3.0-canary.0` → `16.3.0-canary.1` → … → `16.3.0-canary.19`（当前）
+- 稳定节奏：`16.2.1` → `16.2.2` → `16.2.3` → `16.2.4` → `16.2.5` → `16.2.6`（`latest`）
+- 主版本前：`15.0.0-rc.1`，当前 `16.0.0-beta.0`
+- 安装命令：
   ```bash
-  npm install next             # 16.2.6 (latest)
-  npm install next@canary      # 16.3.0-canary.19 (today's canary)
+  npm install next             # 16.2.6（latest）
+  npm install next@canary      # 16.3.0-canary.19（今天的 canary）
   npm install next@rc          # 15.0.0-rc.1
   npm install next@beta        # 16.0.0-beta.0
-  npm install next@next-14     # 14.2.35 (LTS line)
+  npm install next@next-14     # 14.2.35（LTS 线）
   ```
 
-Vercel's release script publishes a canary on **every merge to main**, then promotes a recent canary to stable weekly.
+Vercel 的发布脚本在**每次合并到 main** 时发布一个 canary，然后每周将最近的 canary 提升为 stable。
 
 ### 8.2 vercel/ai
 
-**Strategy:** alpha + beta + canary triple-pre-release, snapshot per PR, parallel `ai-v5` and `ai-v6` major lines.
+**策略：** alpha + beta + canary 三重预发布，每个 PR 的 snapshot，并行 `ai-v5` 和 `ai-v6` 主版本线。
 
-- **Tags:** `latest` (6.0.180), `alpha` (5.0.0-alpha.15), `beta` (7.0.0-beta.116), `canary` (7.0.0-canary.133), `snapshot` (0.0.0-bf6e4b15-20260402200305), `ai-v5` (5.0.188), `ai-v6` (6.0.132)
-- Recent beta sequence: `7.0.0-beta.103` → `7.0.0-beta.104` → … → `7.0.0-beta.116`
-- Then they cut canary: `7.0.0-canary.117` → `7.0.0-canary.118` → … → `7.0.0-canary.133`
-- **Snapshot pattern:** PR-driven preview versions named `0.0.0-{sha}-{timestamp}` — installable as `npm install ai@0.0.0-bf6e4b15-20260402200305`. This lets PR authors test changes in real apps before merge.
-- Install commands:
+- **标签：** `latest`（6.0.180）、`alpha`（5.0.0-alpha.15）、`beta`（7.0.0-beta.116）、`canary`（7.0.0-canary.133）、`snapshot`（0.0.0-bf6e4b15-20260402200305）、`ai-v5`（5.0.188）、`ai-v6`（6.0.132）
+- 最近的 beta 序列：`7.0.0-beta.103` → `7.0.0-beta.104` → … → `7.0.0-beta.116`
+- 然后他们切出 canary：`7.0.0-canary.117` → `7.0.0-canary.118` → … → `7.0.0-canary.133`
+- **Snapshot 模式：** PR 驱动的预览版本，命名为 `0.0.0-{sha}-{timestamp}`——可通过 `npm install ai@0.0.0-bf6e4b15-20260402200305` 安装。这让 PR 作者在合并前在真实应用中测试变更。
+- 安装命令：
   ```bash
-  npm install ai                # 6.0.180 (latest, v6 stable)
-  npm install ai@ai-v5          # 5.0.188 (v5 LTS)
-  npm install ai@beta           # 7.0.0-beta.116 (next major)
-  npm install ai@canary         # 7.0.0-canary.133 (every-PR build)
+  npm install ai                # 6.0.180（latest，v6 稳定版）
+  npm install ai@ai-v5          # 5.0.188（v5 LTS）
+  npm install ai@beta           # 7.0.0-beta.116（下一个主版本）
+  npm install ai@canary         # 7.0.0-canary.133（每个 PR 构建）
   ```
 
-### 8.3 tRPC (`@trpc/server`)
+### 8.3 tRPC（`@trpc/server`）
 
-**Strategy:** `next` for major prereleases, alpha-tagged feature branches, parallel v10 LTS.
+**策略：** `next` 用于主版本预发布，alpha 标记的功能分支，并行 v10 LTS。
 
-- **Tags:** `latest` (11.17.0), `next` (11.13.0), `canary` (11.16.1-canary.20), `v10` (10.45.4), plus feature-branch alphas like `tmp-main` (10.46.0-alpha-tmp-0202-nosideeffects-main.26)
-- Recent cadence: `11.13.0` → `11.13.1` → `11.13.2` → `11.13.3` → `11.13.4` → `11.13.5-canary.0` → `11.13.5-canary.1` → … → `11.14.0` → `11.14.1-canary.0` → `11.14.1` → … → `11.17.0`
-- Note the pattern: stable `11.X.0` ships, then `11.X.1-canary.N` accumulates, then stable `11.X.1` ships, then a new minor `11.(X+1).0` starts.
-- They used `changesets pre enter beta` historically for v11; now use `next` tag for ongoing pre-releases.
-- Install:
+- **标签：** `latest`（11.17.0）、`next`（11.13.0）、`canary`（11.16.1-canary.20）、`v10`（10.45.4），加上功能分支 alpha 如 `tmp-main`（10.46.0-alpha-tmp-0202-nosideeffects-main.26）
+- 最近节奏：`11.13.0` → `11.13.1` → `11.13.2` → `11.13.3` → `11.13.4` → `11.13.5-canary.0` → `11.13.5-canary.1` → … → `11.14.0` → `11.14.1-canary.0` → `11.14.1` → … → `11.17.0`
+- 注意模式：稳定版 `11.X.0` 发布，然后 `11.X.1-canary.N` 累积，然后稳定版 `11.X.1` 发布，然后新的 minor `11.(X+1).0` 开始。
+- 他们在历史上对 v11 使用了 `changesets pre enter beta`；现在使用 `next` 标签进行持续的预发布。
+- 安装：
   ```bash
   npm install @trpc/server         # 11.17.0
-  npm install @trpc/server@next    # 11.13.0 (next major preview / large feature)
-  npm install @trpc/server@v10     # 10.45.4 (LTS)
+  npm install @trpc/server@next    # 11.13.0（下一个主版本预览 / 大型功能）
+  npm install @trpc/server@v10     # 10.45.4（LTS）
   ```
 
 ### 8.4 Storybook
 
-**Strategy:** `next` for the upcoming major, per-PR canaries, plus a tag-per-major LTS.
+**策略：** `next` 用于即将到来的主版本，每个 PR 的 canary，加上每个主版本的标签 LTS。
 
-- **Tags:** `latest` (10.3.6), `next` (10.4.0-alpha.19), `canary` (`0.0.0-pr-34569-sha-67fab295`), plus `v7` (7.6.24), `v8` (8.6.18), `v9` (9.1.20), and per-major canaries (`v7-canary`, `v8-canary`, `v9-canary`).
-- Recent next-line: `10.4.0-alpha.0` → `10.4.0-alpha.1` → … → `10.4.0-alpha.19`
-- Recent stable: `10.3.0-beta.1` → `10.3.0-beta.2` → `10.3.0-beta.3` → `10.3.0` → `10.3.1` → … → `10.3.6` (current `latest`)
-- The triple-track means users can stay on `latest`, opt into `next` for upcoming features, or pin to a major LTS tag.
+- **标签：** `latest`（10.3.6）、`next`（10.4.0-alpha.19）、`canary`（`0.0.0-pr-34569-sha-67fab295`），加上 `v7`（7.6.24）、`v8`（8.6.18）、`v9`（9.1.20），以及每个主版本的 canary（`v7-canary`、`v8-canary`、`v9-canary`）。
+- 最近的 next 线：`10.4.0-alpha.0` → `10.4.0-alpha.1` → … → `10.4.0-alpha.19`
+- 最近的 stable：`10.3.0-beta.1` → `10.3.0-beta.2` → `10.3.0-beta.3` → `10.3.0` → `10.3.1` → … → `10.3.6`（当前 `latest`）
+- 三重轨道意味着用户可以留在 `latest`，选择加入 `next` 获取即将到来的功能，或固定到主版本 LTS 标签。
 
 ### 8.5 Stripe Node SDK
 
-**Strategy:** hand-rolled (no changesets), strict semver-major for breaking, monthly cadence.
+**策略：** 手动（无 changesets），严格的 semver-major 用于破坏性变更，每月节奏。
 
-- Single channel: `latest` only. No `beta` / `rc` / `canary`. Pre-releases are exceptional.
-- Major bumps tied to Stripe API versions (e.g., when Stripe API ships a breaking change, the SDK bumps major).
-- Lesson: if your SDK wraps an external API with its own versioning, your semver tracks **the SDK's surface**, not the API. Breaking changes to the wrapped API are MINOR if your SDK gates them behind opt-in, MAJOR if mandatory.
+- 单一通道：仅 `latest`。没有 `beta` / `rc` / `canary`。预发布是例外。
+- 主版本升级与 Stripe API 版本绑定（例如，当 Stripe API 发布破坏性变更时，SDK 升级主版本）。
+- 教训：如果你的 SDK 包装了一个带有自己版本控制的外部 API，你的 semver 跟踪**SDK 的对外接口**，而不是 API。对被包装 API 的破坏性变更是 MINOR，如果你的 SDK 通过选择加入的方式门控它们，则是 MINOR；如果是强制性的，则是 MAJOR。
 
-### Case study comparison
+### 案例研究对比
 
-| Project    | Channels                                  | Per-PR builds        | LTS branches             | Tooling                  |
+| 项目    | 通道                                  | 每个 PR 构建        | LTS 分支             | 工具                  |
 | ---------- | ----------------------------------------- | -------------------- | ------------------------ | ------------------------ |
-| Next.js    | `latest`, `canary`, `rc`, `beta`          | No (canary = main)   | Yes (`next-15-3` etc.)   | Custom                   |
-| vercel/ai  | `latest`, `alpha`, `beta`, `canary`, `snapshot` | Yes (`0.0.0-{sha}`)  | Yes (`ai-v5`, `ai-v6`)   | changesets               |
-| tRPC       | `latest`, `next`, `canary`, `v10`         | Yes (canary)         | Yes (`v10`)              | changesets               |
-| Storybook  | `latest`, `next`, `canary`, `v7..v9`      | Yes (`0.0.0-pr-N`)   | Yes (one tag per major)  | Custom + changesets-like |
-| Stripe     | `latest` only                             | No                   | None public              | Hand-rolled              |
+| Next.js    | `latest`、`canary`、`rc`、`beta`          | 否（canary = main）   | 是（`next-15-3` 等）   | 自定义                   |
+| vercel/ai  | `latest`、`alpha`、`beta`、`canary`、`snapshot` | 是（`0.0.0-{sha}`）  | 是（`ai-v5`、`ai-v6`）   | changesets               |
+| tRPC       | `latest`、`next`、`canary`、`v10`         | 是（canary）         | 是（`v10`）              | changesets               |
+| Storybook  | `latest`、`next`、`canary`、`v7..v9`      | 是（`0.0.0-pr-N`）   | 是（每个主版本一个标签）  | 自定义 + 类似 changesets |
+| Stripe     | 仅 `latest`                             | 否                   | 无公共              | 手动              |
 
 ---
 
-## 9. Changesets in Pre-Release Mode
+## 9. 预发布模式下的 Changesets
 
-**One-liner:** changesets is a workflow where each PR adds a small markdown file describing its impact, and a release pipeline aggregates those files into a version bump + changelog entry.
+**一句话：** changesets 是一个工作流，其中每个 PR 添加一个小的 markdown 文件描述其影响，发布管道将这些文件聚合为版本升级 + 变更日志条目。
 
-### Stable-mode flow (recap)
+### 稳定模式流程（回顾）
 
 ```bash
-# 1. Author writes a changeset alongside their PR
+# 1. 作者在 PR 旁编写一个 changeset
 pnpm changeset
-# Interactive: pick affected packages, pick semver bump, write user-facing summary
-# Produces .changeset/some-name.md:
+# 交互式：选择受影响的包，选择 semver 升级，编写面向用户的摘要
+# 产生 .changeset/some-name.md：
 #   ---
 #   "@myorg/sdk": minor
 #   ---
 #   Added support for X
 git add .changeset && git commit -m "feat: add X"
 
-# 2. Release time (on main, in CI)
-pnpm changeset version    # bump package.json versions + write CHANGELOG.md + delete .md files
-pnpm changeset publish    # publish all bumped packages to npm
+# 2. 发布时（在 main 上，在 CI 中）
+pnpm changeset version    # 升级 package.json 版本 + 写 CHANGELOG.md + 删除 .md 文件
+pnpm changeset publish    # 将所有升级的包发布到 npm
 ```
 
-### Pre-release mode
+### 预发布模式
 
-`changesets pre enter <tag>` flips the repo into pre-release mode. While in pre-release mode, `changeset version` emits versions of the form `X.Y.Z-tag.N`.
+`changesets pre enter <tag>` 将仓库翻转为预发布模式。在预发布模式下，`changeset version` 产出 `X.Y.Z-tag.N` 形式的版本。
 
 ```bash
-# Enter beta mode
+# 进入 beta 模式
 pnpm changeset pre enter beta
-# Creates .changeset/pre.json — must be committed!
+# 创建 .changeset/pre.json——必须提交！
 
-# Now write changesets as usual
+# 现在像往常一样编写 changesets
 pnpm changeset            # → .changeset/blue-cats-jump.md
 
-# Version + publish
-pnpm changeset version    # bumps "1.0.0" → "1.0.0-beta.0"
-pnpm changeset publish    # auto-publishes with --tag beta (uses pre.json's tag)
+# 版本 + 发布
+pnpm changeset version    # 升级 "1.0.0" → "1.0.0-beta.0"
+pnpm changeset publish    # 自动使用 --tag beta 发布（使用 pre.json 的 tag）
 
-# More changes → more changesets → next bump is 1.0.0-beta.1
+# 更多变更 → 更多 changesets → 下一次升级是 1.0.0-beta.1
 # ...
 
-# Exit pre-release mode
+# 退出预发布模式
 pnpm changeset pre exit
-# Deletes .changeset/pre.json
+# 删除 .changeset/pre.json
 git add .changeset && git commit -m "chore: exit beta"
-# Next `pnpm changeset version` produces 1.0.0 (stable)
+# 下一次 `pnpm changeset version` 产生 1.0.0（稳定版）
 ```
 
-### `.changeset/pre.json` (the state file)
+### `.changeset/pre.json`（状态文件）
 
 ```json
 {
@@ -611,46 +611,46 @@ git add .changeset && git commit -m "chore: exit beta"
 }
 ```
 
-This file tracks: the current pre-release tag, the initial version each package was at when pre mode started, and which changesets have already been applied. **Commit it. Do not edit it by hand** (changesets manages it).
+此文件跟踪：当前的预发布标签，预模式开始时每个包的初始版本，以及哪些 changesets 已被应用。**提交它。不要手动编辑它**（changesets 管理它）。
 
-### The canonical "beta → rc" transition
+### 规范的 "beta → rc" 转换
 
-When beta-5 is feature-complete and API-frozen, cut `rc.0`:
-
-```bash
-pnpm changeset pre exit              # leave beta mode
-pnpm changeset pre enter rc          # enter rc mode
-pnpm changeset version               # bumps 1.0.0-beta.5 → 1.0.0-rc.0
-pnpm changeset publish               # publishes with --tag rc
-```
-
-The version number resets the pre-release counter (`.5 → .0`) but keeps the underlying `1.0.0` target. Consumers on `@beta` are unaffected; new users must explicitly opt into `@rc`.
-
-### The rc → stable transition
+当 beta-5 功能完成且 API 冻结时，切出 `rc.0`：
 
 ```bash
-pnpm changeset pre exit              # leave rc mode
-pnpm changeset version               # bumps 1.0.0-rc.2 → 1.0.0 (stable!)
-pnpm changeset publish               # publishes with --tag latest
+pnpm changeset pre exit              # 退出 beta 模式
+pnpm changeset pre enter rc          # 进入 rc 模式
+pnpm changeset version               # 升级 1.0.0-beta.5 → 1.0.0-rc.0
+pnpm changeset publish               # 使用 --tag rc 发布
 ```
 
-### GOTCHAs
+版本号重置了预发布计数器（`.5 → .0`），但保留了底层的 `1.0.0` 目标。`@beta` 上的消费者不受影响；新用户必须显式选择加入 `@rc`。
 
-- **Forgetting `pre exit` before stable.** Symptom: you wanted `1.0.0` but got `1.0.0-beta.6`. Recovery: `pnpm changeset pre exit`, then `pnpm changeset version` again. If you already published, delete the bad pre-release with `npm dist-tag rm` (the version stays in registry but is no longer pointed at).
-- **Adding `pre enter` mid-PR.** Don't. Land `pre enter`/`pre exit` as their own commits so reviewers see the mode change.
-- **Multi-package mismatch.** If one package is at `1.0.0-beta.3` and another at `0.5.2-beta.0`, that's fine — pre.json tracks each independently. But mixing modes (one in pre, one not) is impossible because pre.json is repo-wide.
-- **Changing pre tag mid-cycle.** To go from `alpha` to `beta`, you must `pre exit` then `pre enter beta`. There is no `pre switch`.
-- **Snapshot releases**: `changeset version --snapshot pr-123` emits versions like `0.0.0-pr-123-20260513120000` without consuming changesets — perfect for ephemeral per-PR builds. See §10.
+### rc → stable 转换
+
+```bash
+pnpm changeset pre exit              # 退出 rc 模式
+pnpm changeset version               # 升级 1.0.0-rc.2 → 1.0.0（稳定版！）
+pnpm changeset publish               # 使用 --tag latest 发布
+```
+
+### 陷阱
+
+- **在 stable 之前忘记 `pre exit`。** 症状：你想要 `1.0.0` 但得到了 `1.0.0-beta.6`。恢复：`pnpm changeset pre exit`，然后再次 `pnpm changeset version`。如果你已经发布了，使用 `npm dist-tag rm` 删除错误的预发布（版本保留在 registry 中但不再被指向）。
+- **在 PR 中途中添加 `pre enter`。** 不要。将 `pre enter`/`pre exit` 作为它们自己的提交落地，以便审查者看到模式变更。
+- **多包不匹配。** 如果一个包在 `1.0.0-beta.3` 而另一个在 `0.5.2-beta.0`，这是可以的——pre.json 独立跟踪每个包。但混合模式（一个在预发布，一个不在）是不可能的，因为 pre.json 是仓库范围的。
+- **在周期中更改预标签。** 要从 `alpha` 切换到 `beta`，你必须 `pre exit` 然后 `pre enter beta`。没有 `pre switch`。
+- **Snapshot 发布**：`changeset version --snapshot pr-123` 产出类似 `0.0.0-pr-123-20260513120000` 的版本，而不消耗 changesets——非常适合临时的每个 PR 构建。参见第 10 节。
 
 ---
 
-## 10. GitHub Actions Release Pipeline
+## 10. GitHub Actions 发布管道
 
-The `changesets/action` GitHub Action implements a "version PR" pattern: when there are pending changesets on `main`, it opens (or updates) a PR that bumps versions and writes the changelog. Merging that PR triggers publish.
+`changesets/action` GitHub Action 实现了一个"版本 PR"模式：当在 `main` 上有待处理的 changesets 时，它会打开（或更新）一个升级版本和编写变更日志的 PR。合并该 PR 会触发发布。
 
-### Minimal working pipeline
+### 最小工作管道
 
-Source: <https://github.com/changesets/action> (README, verbatim shape):
+来源：<https://github.com/changesets/action>（README，逐字形状）：
 
 ```yaml
 # .github/workflows/release.yml
@@ -669,14 +669,14 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # push commits / tags
-      pull-requests: write   # open Version PR
-      id-token: write   # npm provenance (see §11)
+      contents: write   # 推送 commits / tags
+      pull-requests: write   # 打开 Version PR
+      id-token: write   # npm provenance（参见第 11 节）
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # need full history for changesets
+          fetch-depth: 0   # changesets 需要完整历史
 
       - uses: pnpm/action-setup@v3
         with:
@@ -713,33 +713,33 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
-### How the Version PR pattern works
+### 版本 PR 模式如何工作
 
-1. Dev opens PR → adds `.changeset/foo.md` → merges to `main`.
-2. Workflow runs on `main`. `changesets/action` sees a pending changeset and **no version PR exists**, so it opens one.
-3. The Version PR's diff: bumps `package.json` version, updates `CHANGELOG.md`, deletes `.changeset/foo.md`.
-4. More PRs land → workflow runs → updates the Version PR (it stays open and absorbs new changesets).
-5. When you're ready, merge the Version PR. Workflow runs again — this time `.changeset/*.md` is empty, so `changeset publish` runs and pushes to npm.
+1. 开发者打开 PR → 添加 `.changeset/foo.md` → 合并到 `main`。
+2. 工作流在 `main` 上运行。`changesets/action` 看到有待处理的 changeset 且**没有版本 PR 存在**，所以它打开一个。
+3. 版本 PR 的 diff：升级 `package.json` 版本，更新 `CHANGELOG.md`，删除 `.changeset/foo.md`。
+4. 更多 PR 落地 → 工作流运行 → 更新版本 PR（它保持打开并吸收新的 changesets）。
+5. 当你准备好时，合并版本 PR。工作流再次运行——这次 `.changeset/*.md` 为空，所以 `changeset publish` 运行并推送到 npm。
 
-The Version PR is your release approval gate — code review the changelog and version bumps before they ship.
+版本 PR 是你的发布批准门禁——在它们发布之前代码审查变更日志和版本升级。
 
-### Pre-release mode in CI
+### CI 中的预发布模式
 
-For a long-running beta line, set up a separate branch:
+对于长期运行的 beta 线，设置一个单独的分支：
 
 ```yaml
 # .github/workflows/release-beta.yml
 on:
   push:
     branches:
-      - "release/2.x"   # or whatever your beta branch is called
+      - "release/2.x"   # 或你的 beta 分支叫什么
 ```
 
-Make sure `.changeset/pre.json` is **committed on that branch** so the workflow sees it.
+确保 `.changeset/pre.json` 在**该分支上被提交**，以便工作流看到它。
 
-### Snapshot releases (per-PR installable previews)
+### Snapshot 发布（每个 PR 可安装的预览）
 
-This is the pattern vercel/ai uses for `0.0.0-{sha}-{timestamp}` versions.
+这是 vercel/ai 用于 `0.0.0-{sha}-{timestamp}` 版本的模式。
 
 ```yaml
 # .github/workflows/snapshot.yml
@@ -747,7 +747,7 @@ name: Snapshot Release
 
 on:
   pull_request:
-    types: [labeled]   # only when someone adds the "snapshot" label
+    types: [labeled]   # 仅当有人添加 "snapshot" 标签时
 
 jobs:
   snapshot:
@@ -787,25 +787,25 @@ jobs:
             })
 ```
 
-Output version looks like `0.0.0-pr-123-20260513120000`. Consumer installs it via `npm install my-sdk@pr-123` (the dist-tag) or pins to the exact version.
+输出版本看起来像 `0.0.0-pr-123-20260513120000`。消费者通过 `npm install my-sdk@pr-123`（dist-tag）或固定到确切版本来安装它。
 
-### Branching summary
+### 分支总结
 
-| Branch          | Workflow         | Outcome                                         |
+| 分支          | 工作流         | 结果                                         |
 | --------------- | ---------------- | ----------------------------------------------- |
-| `main`          | release.yml      | Open Version PR or publish stable → `latest`    |
-| `release/N.x`   | release-beta.yml | Publish pre-release → `beta` / `rc` / `next`    |
-| PR with label   | snapshot.yml     | Publish snapshot → `pr-{N}` dist-tag            |
+| `main`          | release.yml      | 打开版本 PR 或发布稳定版 → `latest`    |
+| `release/N.x`   | release-beta.yml | 发布预发布 → `beta` / `rc` / `next`    |
+| 带标签的 PR   | snapshot.yml     | 发布 snapshot → `pr-{N}` dist-tag            |
 
 ---
 
 ## 11. npm Provenance
 
-**One-liner:** Provenance is a signed attestation that this exact tarball was built from this exact git commit, in a specified GitHub Actions workflow run.
+**一句话：** Provenance 是一个签名证明，证明这个确切的 tarball 是从这个确切的 git 提交，在指定的 GitHub Actions 工作流运行中构建的。
 
-Provenance ties the npm release to a verifiable build pipeline. Consumers can check it; supply-chain auditors love it.
+Provenance 将 npm 发布绑定到一个可验证的构建管道。消费者可以检查它；供应链审计员喜欢它。
 
-### Enable in `package.json`
+### 在 `package.json` 中启用
 
 ```jsonc
 {
@@ -816,201 +816,201 @@ Provenance ties the npm release to a verifiable build pipeline. Consumers can ch
 }
 ```
 
-### Requirements
+### 要求
 
-1. Publishing must happen from a public CI provider that supports OIDC (currently npm officially supports GitHub Actions and GitLab CI).
-2. Repository must be **public** OR you're on an npm paid plan.
-3. Workflow needs `permissions: id-token: write`.
-4. Must use npm CLI 9.5+ (`npm publish`) or pnpm 8+ (`pnpm publish`).
+1. 发布必须从支持 OIDC 的公共 CI 提供者进行（目前 npm 官方支持 GitHub Actions 和 GitLab CI）。
+2. 仓库必须是**公开的**，或者你在 npm 付费计划上。
+3. 工作流需要 `permissions: id-token: write`。
+4. 必须使用 npm CLI 9.5+（`npm publish`）或 pnpm 8+（`pnpm publish`）。
 
-### What gets attested
+### 什么被证明
 
-- The git repository URL
-- The exact commit SHA
-- The workflow file path and the workflow run ID
-- The build environment (runner OS, Node version)
-- A hash of the tarball contents
+- Git 仓库 URL
+- 确切的提交 SHA
+- 工作流文件路径和工作流运行 ID
+- 构建环境（运行器 OS、Node 版本）
+- tarball 内容的哈希
 
-### Consumer-side verification
+### 消费者端验证
 
 ```bash
-# Show provenance info for a package version
+# 显示包版本的 provenance 信息
 npm view my-sdk@1.2.3
 
-# Or use the audit signature command
+# 或使用审计签名命令
 npm audit signatures
-# Verifies provenance attestations of all installed packages
+# 验证所有已安装包的 provenance 证明
 ```
 
-npm's website also shows a "Provenance" badge on each version's page, linking back to the GitHub Actions run that produced it.
+npm 的网站还在每个版本页面上显示一个"Provenance"徽章，链接回产生它的 GitHub Actions 运行。
 
-### Common pitfall
+### 常见陷阱
 
-Forgetting `permissions: id-token: write` in the workflow. Symptom: `npm publish` fails with `Unable to authenticate, need: OIDC token, OIDC ID token request failed`. Fix: add the permission block.
+忘记在工作流中使用 `permissions: id-token: write`。症状：`npm publish` 失败并显示 `Unable to authenticate, need: OIDC token, OIDC ID token request failed`。修复：添加权限块。
 
 ---
 
-## 12. Yanking & Deprecation
+## 12. 撤回与弃用
 
-You shipped a broken version. What now?
+你发布了一个有问题的版本。现在怎么办？
 
-### `npm deprecate` — the right tool, 99% of the time
+### `npm deprecate` — 正确的工具，99% 的情况下
 
 ```bash
 npm deprecate my-sdk@1.2.3 "Critical regression in fetch wrapper; upgrade to 1.2.4"
-# Adds a deprecation warning shown on every install of that version
-# Does NOT remove the version — old lockfiles still work
+# 在该版本的每次安装上添加弃用警告
+# 不删除版本——旧的锁文件仍然工作
 ```
 
-Wildcard supported:
+支持通配符：
 
 ```bash
 npm deprecate my-sdk@"<1.2.4" "Multiple bugs fixed in 1.2.4"
 ```
 
-To un-deprecate:
+取消弃用：
 
 ```bash
 npm deprecate my-sdk@1.2.3 ""
-# Empty message clears the deprecation
+# 空消息清除弃用
 ```
 
-### `npm unpublish` — last resort
+### `npm unpublish` — 最后的手段
 
 ```bash
 npm unpublish my-sdk@1.2.3 --force
 ```
 
-**Restrictions:**
+**限制：**
 
-- Allowed within 72 hours of publish, no questions asked.
-- After 72 hours, only if: no other packages depend on this version AND fewer than 300 weekly downloads AND only one maintainer.
-- Otherwise: file a support ticket with npm.
-- Unpublishing **breaks** lockfiles that reference the removed version. This is why deprecation is preferred.
+- 发布后 72 小时内允许，无需询问。
+- 72 小时后，仅当：没有其他包依赖此版本且每周下载量少于 300 且只有一个维护者。
+- 否则：向 npm 提交支持工单。
+- 取消发布**会破坏**引用已删除版本的锁文件。这就是为什么弃用是首选。
 
-### Choosing yank vs supersede for pre-releases
+### 为预发布选择撤回 vs 替代
 
-- **Buggy stable release**: deprecate the bad version, ship a patch superseding it. Never unpublish.
-- **Buggy pre-release version (beta.5 with show-stopper bug)**: deprecate AND `npm dist-tag rm` so `@beta` doesn't resolve to it, then immediately publish `beta.6` with the fix.
-- **Pre-release that exposed a security issue**: deprecate, then publish the fix to a new pre-release.
-- **Snapshot/canary version with a vulnerable transitive dep**: usually fine to leave alone (snapshots aren't pinned in production lockfiles), but deprecate if it survives in a downstream lockfile.
-
----
-
-## 13. Decision Tree: Picking Your Release Strategy
-
-```
-Q1: Is your library < 1.0?
-   ├─ Yes → stay on `0.x.y`. Breaking changes bump MINOR (changesets handles this).
-   │        Single `latest` tag is enough until 1.0.
-   │        Skip to Q4.
-   └─ No → continue
-
-Q2: Do you have paying / enterprise users on the current major?
-   ├─ Yes → mandatory rc + soak period (≥1 week of rc.N before stable)
-   │        Maintain LTS branch (`release/N.x`) for at least one major back.
-   │        Use 4 channels: `latest`, `next`, `rc`, `beta`.
-   │        Continue to Q3.
-   └─ No → 2 channels is enough: `latest` + `beta` (or `next`).
-
-Q3: Do you ship code on every PR merge?
-   ├─ Yes → add `canary` (or `next`) channel: publish on every push to main.
-   │        Optionally add `snapshot` for per-PR previews.
-   └─ No → weekly or biweekly release cadence; no canary needed.
-
-Q4: Does your library have plugin / extension authors?
-   ├─ Yes → in each release's changelog, explicitly call out plugin-API
-   │        breaking changes under their own heading.
-   │        Consider a separate plugin-compat tag (e.g., `compat-v3`).
-   └─ No → standard changelog is fine.
-
-Q5: Do you target multiple runtimes (Node, Bun, Deno, browser)?
-   ├─ Yes → attw `--pack` and a smoke test PER runtime in CI.
-   │        Bun: `bun add ./tarball.tgz && bun test`
-   │        Deno: `deno run --allow-all npm:my-sdk@1.0.0`
-   │        Browser: build a min repro in StackBlitz / use Playwright.
-   └─ No → attw in `node16-cjs` + `node16-esm` modes is enough.
-```
+- **有问题的稳定发布**：弃用有问题的版本，发布一个补丁替代它。永远不要取消发布。
+- **有问题的预发布版本（beta.5 有致命 bug）**：弃用并且 `npm dist-tag rm`，以便 `@beta` 不解析到它，然后立即发布带有修复的 `beta.6`。
+- **暴露了安全问题的预发布**：弃用，然后将修复发布到新的预发布。
+- **带有易受攻击的传递依赖的 snapshot/canary 版本**：通常可以不管（snapshot 不会在生产锁文件中被固定），但如果在下游锁文件中幸存，则弃用。
 
 ---
 
-## 14. Anti-Patterns
+## 13. 决策树：选择你的发布策略
 
-| Anti-pattern                                                              | Why bad                                                              | Fix                                                                          |
+```
+Q1: 你的库是否 < 1.0？
+   ├─ 是 → 停留在 `0.x.y`。破坏性变更升级 MINOR（changesets 处理这个）。
+   │        在 1.0 之前单个 `latest` 标签就足够了。
+   │        跳到 Q4。
+   └─ 否 → 继续
+
+Q2: 你在当前主版本上有付费/企业用户吗？
+   ├─ 是 → 强制 rc + 浸泡期（在 stable 之前至少 1 周 rc.N）
+   │        至少向后一个主版本维护 LTS 分支（`release/N.x`）。
+   │        使用 4 个通道：`latest`、`next`、`rc`、`beta`。
+   │        继续到 Q3。
+   └─ 否 → 2 个通道就够了：`latest` + `beta`（或 `next`）。
+
+Q3: 你在每次 PR 合并时都发布代码吗？
+   ├─ 是 → 添加 `canary`（或 `next`）通道：在每次推送到 main 时发布。
+   │        可选地添加 `snapshot` 用于每个 PR 的预览。
+   └─ 否 → 每周或每两周发布节奏；不需要 canary。
+
+Q4: 你的库有插件/扩展作者吗？
+   ├─ 是 → 在每次发布的变更日志中，显式地在自己的标题下
+   │        指出插件 API 的破坏性变更。
+   │        考虑一个单独的插件兼容性标签（例如 `compat-v3`）。
+   └─ 否 → 标准变更日志就好。
+
+Q5: 你是否面向多个运行时（Node、Bun、Deno、浏览器）？
+   ├─ 是 → 在 CI 中每个运行时 attw `--pack` 和一次冒烟测试。
+   │        Bun：`bun add ./tarball.tgz && bun test`
+   │        Deno：`deno run --allow-all npm:my-sdk@1.0.0`
+   │        浏览器：构建一个最小复现到 StackBlitz / 使用 Playwright。
+   └─ 否 → 在 `node16-cjs` + `node16-esm` 模式下的 attw 就够了。
+```
+
+---
+
+## 14. 反模式
+
+| 反模式                                                              | 为什么不好                                                              | 修复                                                                          |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Publishing a pre-release to `latest`                                      | `npm install pkg` now gives users a beta they didn't ask for         | Always `--tag <pre>`. Set `publishConfig.tag` in changeset for pre branches  |
-| Breaking change in a PATCH bump                                           | Violates semver; consumers' `^x.y.z` ranges silently break           | Bump MAJOR; if you forgot, deprecate and re-release as MAJOR                 |
-| First publish of a scoped package without `--access public`               | npm refuses to publish (scoped defaults to private = paid)           | `"publishConfig": { "access": "public" }` in package.json                    |
-| Forgetting `pnpm changeset pre exit` before stable                        | Stable release becomes another beta version                          | Always `pre exit` as its own commit before the stable Version PR             |
-| No `attw --pack` in CI                                                    | Type errors shipped for half your consumers                          | Wire `attw` into `prepublishOnly` AND CI; treat warnings as errors           |
-| Editing `.changeset/pre.json` by hand                                     | State drift between local and remote; future bumps misbehave         | Only manage via `pre enter` / `pre exit`                                     |
-| `npm unpublish` as a first response                                       | Breaks lockfiles downstream; relationship damage                     | `npm deprecate` + ship a patch superseding the bad version                   |
-| Releasing without `publint`                                               | `exports` map silently broken for 30% of users                       | `publint --strict` in `prepublishOnly` and CI                                |
-| Auto-publishing on every commit to main without a Version PR              | No human approval gate; changelog mistakes ship                      | Use `changesets/action` Version PR pattern                                   |
-| Missing `permissions: id-token: write` in workflow with provenance enabled | Publish fails with cryptic OIDC error                                | Add the permissions block; double-check in the publish step's job context    |
-| Not pinning `pnpm`/`npm` version in `packageManager` field                | CI uses one version locally, another version in Actions; lockfile churn | Set `"packageManager": "pnpm@9.x.x"` in root package.json                |
-| Treating `0.x` as production-safe                                         | Consumers think `^0.5.0` is stable; you ship breaking 0.6.0          | Either commit to semver (cut 1.0) or be explicit in README about 0.x policy  |
+| 将预发布发布到 `latest`                                      | `npm install pkg` 现在给用户一个他们没要求的 beta 版本         | 始终 `--tag <pre>`。在 changeset 中为预分支设置 `publishConfig.tag`  |
+| 在 PATCH 升级中进行破坏性变更                                           | 违反 semver；消费者的 `^x.y.z` 范围静默地中断           | 升级 MAJOR；如果你忘记了，弃用并以 MAJOR 重新发布                 |
+| 作用域包的首次发布没有 `--access public`               | npm 拒绝发布（作用域默认是私有的 = 付费）           | `"publishConfig": { "access": "public" }` 在 package.json 中                    |
+| 在 stable 之前忘记 `pnpm changeset pre exit`                        | 稳定发布变成另一个 beta 版本                          | 始终在 stable 版本 PR 之前将 `pre exit` 作为自己的提交             |
+| CI 中没有 `attw --pack`                                                    | 一半的消费者收到类型错误                          | 将 `attw` 接入 `prepublishOnly` 和 CI；将警告视为错误           |
+| 手动编辑 `.changeset/pre.json`                                     | 本地和远程之间状态漂移；未来升级行为异常         | 仅通过 `pre enter` / `pre exit` 管理                                     |
+| `npm unpublish` 作为第一响应                                       | 破坏下游的锁文件；关系损害                     | `npm deprecate` + 发布一个替代有问题版本的补丁                   |
+| 没有 `publint` 就发布                                               | `exports` 映射对 30% 的用户静默地是错误的                       | `publint --strict` 在 `prepublishOnly` 和 CI 中                                |
+| 在没有版本 PR 的情况下每次提交到 main 都自动发布              | 没有人工批准门禁；变更日志错误发布                      | 使用 `changesets/action` 版本 PR 模式                                   |
+| 在启用 provenance 的工作流中缺少 `permissions: id-token: write` | 发布以神秘的 OIDC 错误失败                                | 添加权限块；在发布步骤的任务上下文中仔细检查    |
+| 未在 `packageManager` 字段中固定 `pnpm`/`npm` 版本                | CI 在本地使用一个版本，在 Actions 中使用另一个版本；锁文件变动 | 在根 package.json 中设置 `"packageManager": "pnpm@9.x.x"`                |
+| 将 `0.x` 视为生产安全                                         | 消费者认为 `^0.5.0` 是稳定的；你发布了破坏性的 0.6.0          | 要么承诺 semver（切出 1.0），要么在 README 中明确说明 0.x 策略  |
 
 ---
 
-## 15. Quick Reference Card
+## 15. 快速参考卡片
 
 ```bash
-# === Pre-publish verification ===
+# === 发布前验证 ===
 pnpm build
 pnpm publint --strict
 pnpm attw --pack
-pnpm pack --dry-run                       # what will ship?
+pnpm pack --dry-run                       # 将发布什么？
 
-# === Out-of-tree smoke test ===
+# === 树外冒烟测试 ===
 pnpm pack
 ( cd /tmp && rm -rf st && mkdir st && cd st && npm init -y && \
   npm install $OLDPWD/*.tgz && \
   node --print "require('my-sdk').default" )
 
-# === Changesets — stable ===
-pnpm changeset                            # author a changeset
-pnpm changeset version                    # apply bumps + write changelog
-pnpm changeset publish                    # publish to npm
+# === Changesets — 稳定版 ===
+pnpm changeset                            # 编写一个 changeset
+pnpm changeset version                    # 应用升级 + 写变更日志
+pnpm changeset publish                    # 发布到 npm
 
-# === Changesets — pre-release ===
-pnpm changeset pre enter beta             # enter beta mode
-pnpm changeset                            # write changeset
-pnpm changeset version                    # bumps to X.Y.Z-beta.N
-pnpm changeset publish                    # publishes --tag beta
-pnpm changeset pre exit                   # exit pre-mode
-pnpm changeset version                    # next bump is stable
+# === Changesets — 预发布 ===
+pnpm changeset pre enter beta             # 进入 beta 模式
+pnpm changeset                            # 编写 changeset
+pnpm changeset version                    # 升级到 X.Y.Z-beta.N
+pnpm changeset publish                    # 发布 --tag beta
+pnpm changeset pre exit                   # 退出预模式
+pnpm changeset version                    # 下一次升级是稳定版
 
-# === Snapshot release (per-PR) ===
+# === Snapshot 发布（每个 PR） ===
 pnpm changeset version --snapshot pr-${PR}
 pnpm changeset publish --tag pr-${PR} --no-git-checks
 
-# === Dist-tag management ===
+# === Dist-tag 管理 ===
 npm dist-tag ls my-pkg
 npm dist-tag add my-pkg@1.2.3 latest
 npm dist-tag rm my-pkg beta
 npm publish --tag beta
 npm publish --tag canary --provenance
 
-# === Yank / fix ===
+# === 撤回 / 修复 ===
 npm deprecate my-pkg@1.2.3 "Use 1.2.4+"
-npm dist-tag add my-pkg@1.2.4 latest      # repoint if mis-tagged
+npm dist-tag add my-pkg@1.2.4 latest      # 如果标签错误则重新指向
 ```
 
 ---
 
-## References
+## 参考文献
 
-- publint rules: <https://publint.dev/rules>
-- attw problem catalog: <https://github.com/arethetypeswrong/arethetypeswrong.github.io/blob/main/docs/problems/README.md>
-- changesets pre-releases: <https://github.com/changesets/changesets/blob/main/docs/prereleases.md>
-- changesets dist-tags: <https://github.com/changesets/changesets/blob/main/docs/dist-tags.md>
-- changesets snapshot releases: <https://github.com/changesets/changesets/blob/main/docs/snapshot-releases.md>
-- npm dist-tag CLI: <https://docs.npmjs.com/cli/v10/commands/npm-dist-tag>
-- npm deprecate CLI: <https://docs.npmjs.com/cli/v10/commands/npm-deprecate>
-- npm provenance: <https://docs.npmjs.com/generating-provenance-statements>
-- changesets/action: <https://github.com/changesets/action>
-- vercel/ai release workflow: <https://github.com/vercel/ai/tree/main/.github/workflows>
-- tRPC changesets config: <https://github.com/trpc/trpc/blob/main/.changeset/config.json>
-- Semver spec: <https://semver.org/>
-- ZeroVer: <https://0ver.org/>
+- publint 规则：<https://publint.dev/rules>
+- attw 问题目录：<https://github.com/arethetypeswrong/arethetypeswrong.github.io/blob/main/docs/problems/README.md>
+- changesets 预发布：<https://github.com/changesets/changesets/blob/main/docs/prereleases.md>
+- changesets dist-tags：<https://github.com/changesets/changesets/blob/main/docs/dist-tags.md>
+- changesets snapshot 发布：<https://github.com/changesets/changesets/blob/main/docs/snapshot-releases.md>
+- npm dist-tag CLI：<https://docs.npmjs.com/cli/v10/commands/npm-dist-tag>
+- npm deprecate CLI：<https://docs.npmjs.com/cli/v10/commands/npm-deprecate>
+- npm provenance：<https://docs.npmjs.com/generating-provenance-statements>
+- changesets/action：<https://github.com/changesets/action>
+- vercel/ai 发布工作流：<https://github.com/vercel/ai/tree/main/.github/workflows>
+- tRPC changesets 配置：<https://github.com/trpc/trpc/blob/main/.changeset/config.json>
+- Semver 规范：<https://semver.org/>
+- ZeroVer：<https://0ver.org/>

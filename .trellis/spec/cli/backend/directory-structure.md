@@ -1,151 +1,151 @@
-# Directory Structure
+# 目录结构
 
-> How backend/CLI code is organized in this project.
-
----
-
-## Overview
-
-This project is a **TypeScript monorepo** using ES modules. It publishes a CLI package (`@baoanaz/cviauto`) and a reusable core package (`@baoanaz/cviauto-core`). The source code also follows a **dogfooding architecture** - Trellis uses its own configuration files (`.cursor/`, `.claude/`, `.trellis/`) as templates for new projects.
+> 后端/CLI 代码在本项目中的组织方式。
 
 ---
 
-## Directory Layout
+## 概述
+
+本项目是一个使用 ES 模块的 **TypeScript monorepo**。它发布一个 CLI 包（`@baoanaz/cviauto`）和一个可复用 core 包（`@baoanaz/cviauto-core`）。源码也遵循**自我试用（dogfooding）架构** — Trellis 使用自己的配置文件（`.cursor/`、`.claude/`、`.trellis/`）作为新项目的模板。
+
+---
+
+## 目录布局
 
 ```
 packages/
-├── core/                # @baoanaz/cviauto-core: reusable APIs
+├── core/                # @baoanaz/cviauto-core: 可复用 API
 │   ├── src/
-│   │   ├── channel/     # channel/thread storage, reducers, event protocol helpers
-│   │   ├── task/        # reusable task record helpers
-│   │   ├── testing/     # test helpers intended for package consumers
-│   │   └── index.ts     # package public API
-│   └── package.json     # explicit public exports
-└── cli/                 # @baoanaz/cviauto: user-facing CLI
+│   │   ├── channel/     # channel/thread 存储、归约器、事件协议辅助函数
+│   │   ├── task/        # 可复用任务记录辅助函数
+│   │   ├── testing/     # 供包消费者使用的测试辅助函数
+│   │   └── index.ts     # 包公共 API
+│   └── package.json     # 显式公共导出
+└── cli/                 # @baoanaz/cviauto: 面向用户的 CLI
     ├── src/
-    │   ├── cli/         # CLI entry point and argument parsing
-    │   │   └── index.ts # Main CLI entry (Commander.js setup)
-    │   ├── commands/    # Command implementations (one file or folder per command)
+    │   ├── cli/         # CLI 入口点和参数解析
+    │   │   └── index.ts # 主 CLI 入口（Commander.js 设置）
+    │   ├── commands/    # 命令实现（每个命令一个文件或文件夹）
     │   │   ├── init.ts
     │   │   ├── update.ts
     │   │   ├── uninstall.ts
     │   │   ├── mem.ts
-    │   │   └── channel/ # Channel command renderers and CLI orchestration
+    │   │   └── channel/ # Channel 命令渲染器和 CLI 编排
     │   ├── configurators/
     │   ├── constants/
     │   ├── templates/
     │   ├── types/
     │   ├── utils/
-    │   └── index.ts     # CLI package public API
-    ├── scripts/         # release, manifest, template copy, and verification scripts
+    │   └── index.ts     # CLI 包公共 API
+    ├── scripts/         # 发布、清单、模板复制和验证脚本
     └── package.json
 ```
 
-### Dogfooding Directories (Project Root)
+### 自我试用目录（项目根目录）
 
-These directories are copied to `dist/` during build and used as templates:
+这些目录在构建时复制到 `dist/` 并用作模板：
 
 ```
-.cursor/                 # Cursor configuration (dogfooded)
-├── commands/            # Slash commands for Cursor
+.cursor/                 # Cursor 配置（自我试用）
+├── commands/            # Cursor 斜杠命令
 │   ├── start.md
 │   ├── finish-work.md
 │   └── ...
 
-.claude/                 # Claude Code configuration (dogfooded)
-├── commands/            # Slash commands
-├── agents/              # Multi-agent pipeline agents
-├── hooks/               # Context injection hooks
-└── settings.json        # Hook configuration
+.claude/                 # Claude Code 配置（自我试用）
+├── commands/            # 斜杠命令
+├── agents/              # 多智能体管道 agents
+├── hooks/               # 上下文注入 hooks
+└── settings.json        # Hook 配置
 
-.trellis/                # Trellis workflow (partially dogfooded)
-├── scripts/             # Python scripts (dogfooded)
-│   ├── common/          # Shared utilities (paths.py, developer.py, cli_adapter.py, etc.)
-│   ├── hooks/           # Lifecycle hook scripts (project-specific, NOT dogfooded)
-│   └── *.py             # Main scripts (task.py, get_context.py, etc.)
-├── workspace/           # Developer progress tracking
-│   └── index.md         # Index template (dogfooded)
-├── spec/                # Project guidelines (NOT dogfooded)
-│   ├── cli/             # CLI package specs (backend/, unit-test/)
-│   ├── docs-site/       # Docs package specs (docs/)
-│   └── guides/          # Thinking guides
-├── workflow.md          # Workflow documentation (dogfooded)
-└── .gitignore           # Git ignore rules (dogfooded)
+.trellis/                # Trellis workflow（部分自我试用）
+├── scripts/             # Python 脚本（自我试用）
+│   ├── common/          # 共享实用工具（paths.py, developer.py, cli_adapter.py 等）
+│   ├── hooks/           # 生命周期 hook 脚本（项目特定，不自我试用）
+│   └── *.py             # 主脚本（task.py, get_context.py 等）
+├── workspace/           # 开发者进度跟踪
+│   └── index.md         # 索引模板（自我试用）
+├── spec/                # 项目指南（不自我试用）
+│   ├── cli/             # CLI 包规范（backend/, unit-test/）
+│   ├── docs-site/       # 文档站点包规范（docs/）
+│   └── guides/          # 思考指南
+├── workflow.md          # Workflow 文档（自我试用）
+└── .gitignore           # Git 忽略规则（自我试用）
 ```
 
 ---
 
-## Dogfooding Architecture
+## 自我试用架构
 
-### What is Dogfooded
+### 什么是自我试用的
 
-Files that are copied directly from Trellis project to user projects:
+直接从 Trellis 项目复制到用户项目的文件：
 
-| Source | Destination | Description |
+| 源 | 目标 | 描述 |
 |--------|-------------|-------------|
-| `.cursor/` | `.cursor/` | Entire directory copied |
-| `.claude/` | `.claude/` | Entire directory copied |
-| `.trellis/scripts/` | `.trellis/scripts/` | All scripts copied |
-| `.trellis/workflow.md` | `.trellis/workflow.md` | Direct copy |
-| `.trellis/.gitignore` | `.trellis/.gitignore` | Direct copy |
-| `.trellis/workspace/index.md` | `.trellis/workspace/index.md` | Direct copy |
+| `.cursor/` | `.cursor/` | 整个目录复制 |
+| `.claude/` | `.claude/` | 整个目录复制 |
+| `.trellis/scripts/` | `.trellis/scripts/` | 全部脚本复制 |
+| `.trellis/workflow.md` | `.trellis/workflow.md` | 直接复制 |
+| `.trellis/.gitignore` | `.trellis/.gitignore` | 直接复制 |
+| `.trellis/workspace/index.md` | `.trellis/workspace/index.md` | 直接复制 |
 
-### What is NOT Dogfooded
+### 什么不是自我试用的
 
-Files that use generic templates (in `src/templates/`):
+使用通用模板（在 `src/templates/` 中）的文件：
 
-| Template Source | Destination | Reason |
+| 模板源 | 目标 | 原因 |
 |----------------|-------------|--------|
-| `src/templates/markdown/spec/**/*.md.txt` | `.trellis/spec/**/*.md` | User fills with project-specific content |
-| `src/templates/markdown/agents.md` | `AGENTS.md` | Project root file |
+| `src/templates/markdown/spec/**/*.md.txt` | `.trellis/spec/**/*.md` | 用户填写项目特定内容 |
+| `src/templates/markdown/agents.md` | `AGENTS.md` | 项目根文件 |
 
-### Build Process
+### 构建过程
 
 ```bash
-# scripts/copy-templates.js copies dogfooding sources to dist/
+# scripts/copy-templates.js 将自我试用源复制到 dist/
 pnpm build
 
-# Result:
+# 结果:
 dist/
-├── .cursor/           # From project root .cursor/
-├── .claude/           # From project root .claude/
-├── .trellis/          # From project root .trellis/ (filtered)
-│   ├── scripts/       # All scripts (no multi_agent/)
+├── .cursor/           # 从项目根 .cursor/
+├── .claude/           # 从项目根 .claude/
+├── .trellis/          # 从项目根 .trellis/（已过滤）
+│   ├── scripts/       # 所有脚本（无 multi_agent/）
 │   ├── workspace/
-│   │   └── index.md   # Only index.md, no developer subdirs
+│   │   └── index.md   # 仅 index.md，无 developer 子目录
 │   ├── workflow.md
 │   └── .gitignore
-└── templates/         # From src/templates/ (no .ts files)
-    ├── common/        # Shared command + skill templates
-    ├── shared-hooks/  # Platform-independent hook scripts
-    ├── claude/        # Claude-specific templates
-    ├── {platform}/    # Other platform templates
+└── templates/         # 从 src/templates/（无 .ts 文件）
+    ├── common/        # 共享命令 + skill 模板
+    ├── shared-hooks/  # 平台无关的 hook 脚本
+    ├── claude/        # Claude 特定模板
+    ├── {platform}/    # 其他平台模板
     └── markdown/
-        └── spec/      # Generic spec templates
+        └── spec/      # 通用 spec 模板
 ```
 
 ---
 
-## Module Organization
+## 模块组织
 
-### Layer Responsibilities
+### 层职责
 
-| Layer | Directory | Responsibility |
+| 层 | 目录 | 职责 |
 |-------|-----------|----------------|
-| Core | `packages/core/src/` | Reusable APIs, reducers, storage helpers, typed contracts |
-| CLI | `packages/cli/src/cli/` | Parse arguments, display help, call commands |
-| Commands | `packages/cli/src/commands/` | Implement CLI commands, orchestrate actions |
-| Configurators | `packages/cli/src/configurators/` | Copy/generate configuration for tools |
-| Templates | `packages/cli/src/templates/` | Extract template content, provide utilities |
-| Types | `packages/cli/src/types/` | CLI-specific TypeScript type definitions |
-| Utils | `packages/cli/src/utils/` | CLI-specific utility functions |
-| Constants | `packages/cli/src/constants/` | CLI constants (paths, names) |
+| Core | `packages/core/src/` | 可复用 API、归约器、存储辅助函数、类型化契约 |
+| CLI | `packages/cli/src/cli/` | 解析参数、显示帮助、调用命令 |
+| Commands | `packages/cli/src/commands/` | 实现 CLI 命令、编排操作 |
+| Configurators | `packages/cli/src/configurators/` | 为工具复制/生成配置 |
+| Templates | `packages/cli/src/templates/` | 提取模板内容，提供实用工具 |
+| Types | `packages/cli/src/types/` | CLI 特定的 TypeScript 类型定义 |
+| Utils | `packages/cli/src/utils/` | CLI 特定的实用函数 |
+| Constants | `packages/cli/src/constants/` | CLI 常量（paths, names） |
 
-Shared logic belongs in `packages/core/src/` when it is useful outside terminal command rendering. Package boundary rules live in `trellis-core-sdk.md`.
+共享逻辑属于 `packages/core/src/`，当它在终端命令渲染之外有用时。包边界规则位于 `trellis-core-sdk.md`。
 
-### Configurator Pattern
+### 配置器模式
 
-Configurators use `cpSync` for direct directory copy (dogfooding):
+配置器使用 `cpSync` 进行直接目录复制（自我试用）：
 
 ```typescript
 // configurators/cursor.ts
@@ -156,228 +156,219 @@ export async function configureCursor(cwd: string): Promise<void> {
 }
 ```
 
-### Template Extraction
+### 模板提取
 
-`extract.ts` provides utilities for reading dogfooded files:
+`extract.ts` 提供读取自我试用文件的实用工具：
 
 ```typescript
-// Get path to .trellis/ (works in dev and production)
+// 获取 .trellis/ 的路径（在 dev 和 production 中都能工作）
 getTrellisSourcePath(): string
 
-// Read file from .trellis/
+// 从 .trellis/ 读取文件
 readTrellisFile(relativePath: string): string
 
-// Copy directory from .trellis/ with executable scripts
+// 从 .trellis/ 复制带有可执行脚本的目录
 copyTrellisDir(srcRelativePath: string, destPath: string, options?: { executable?: boolean }): void
 ```
 
 ---
 
-## Naming Conventions
+## 命名约定
 
-### Files and Directories
+### 文件和目录
 
-| Convention | Example | Usage |
+| 约定 | 示例 | 用途 |
 |------------|---------|-------|
-| `kebab-case` | `file-writer.ts` | All TypeScript files |
-| `kebab-case` | `multi-agent/` | All directories |
-| `*.ts` | `init.ts` | TypeScript source files |
-| `*.md.txt` | `index.md.txt` | Template files for markdown |
+| `kebab-case` | `file-writer.ts` | 所有 TypeScript 文件 |
+| `kebab-case` | `multi-agent/` | 所有目录 |
+| `*.ts` | `init.ts` | TypeScript 源文件 |
+| `*.md.txt` | `index.md.txt` | markdown 模板文件 |
 
-### Why `.txt` Extension for Templates
+### 为什么模板使用 `.txt` 扩展名
 
-Templates use `.txt` extension to:
-- Prevent IDE markdown preview from rendering templates
-- Make clear these are template sources, not actual docs
-- Avoid confusion with actual markdown files
+模板使用 `.txt` 扩展名是为了：
+- 防止 IDE markdown 预览渲染模板
+- 明确这些是模板源，不是实际文档
+- 避免与实际的 markdown 文件混淆
 
-### Don't: Leak dogfood spec into `templates/markdown/spec/`
+### Don't: 将自我试用 spec 泄露到 `templates/markdown/spec/`
 
-**Invariant**: `packages/cli/src/templates/markdown/spec/` contains **only `.md.txt` files**. A bare `.md` file there is a bug — it ships to `dist/` (into the npm tarball) but is never imported by `markdown/index.ts`, so it never lands on a user's disk and serves no purpose except dead weight + future maintainer confusion.
+**不变量**：`packages/cli/src/templates/markdown/spec/` 仅包含 **`.md.txt` 文件**。那里的裸 `.md` 文件是一个 bug — 它会被发送到 `dist/`（进入 npm tarball），但永远不会被 `markdown/index.ts` 导入，所以它永远不会落在用户磁盘上，除了死重 + 未来维护者混淆之外毫无用处。
 
-**How the bug happens** (confirmed in git log — v0.1.x through v0.4): a spec-authoring workflow writes to the wrong directory. The two paths look almost identical:
+**Bug 如何发生**（在 git log 中确认 — v0.1.x 到 v0.4）：spec 编写工作流写入到错误的目录。两个路径看起来几乎相同：
 
-| Path | Purpose |
+| 路径 | 用途 |
 |------|---------|
-| `.trellis/spec/<pkg>/<layer>/*.md` | This repo's dogfood spec (Trellis documenting its own code) |
-| `packages/cli/src/templates/markdown/spec/<layer>/*.md.txt` | User-facing placeholder templates (ship to new projects via `trellis init`) |
+| `.trellis/spec/<pkg>/<layer>/*.md` | 此仓库的自我试用 spec（Trellis 文档化自己的代码） |
+| `packages/cli/src/templates/markdown/spec/<layer>/*.md.txt` | 面向用户的占位符模板（通过 `trellis init` 发送到新项目） |
 
-If you open-and-edit the wrong one, nothing fails at build / test / lint time — `markdown/index.ts` silently ignores your new file because it only reads the `.md.txt` variants. The drift can persist for years (caught in 2026-04 after ~3 months).
+如果你打开并编辑错误的一个，构建/测试/lint 时都不会失败 — `markdown/index.ts` 静默忽略你的新文件，因为它只读取 `.md.txt` 变体。漂移可能持续数年（在 2026-04 约 3 个月后被发现）。
 
-**Prevention checklist** (apply whenever you add or edit a spec-layer file):
+**预防清单**（每当你添加或编辑 spec 层文件时应用）：
 
-1. Write spec content to `.trellis/spec/<pkg>/<layer>/<file>.md` — this is the dogfood location.
-2. Template stubs for users live in `packages/cli/src/templates/markdown/spec/<layer>/<file>.md.txt` — write the user-facing placeholder, NOT the real content.
-3. If the new file is not imported by `packages/cli/src/templates/markdown/index.ts`, it shouldn't exist in that directory. `ls packages/cli/src/templates/markdown/spec/**/*.md` must return empty.
+1. 将 spec 内容写入 `.trellis/spec/<pkg>/<layer>/<file>.md` — 这是自我试用位置。
+2. 用户的模板存根位于 `packages/cli/src/templates/markdown/spec/<layer>/<file>.md.txt` — 写入面向用户的占位符，而不是实际内容。
+3. 如果新文件未被 `packages/cli/src/templates/markdown/index.ts` 导入，它不应该存在于该目录中。`ls packages/cli/src/templates/markdown/spec/**/*.md` 必须返回空。
 
-**Audit command**:
+**审计命令**：
 ```bash
-# Every file here must end in .md.txt
+# 这里的每个文件必须以 .md.txt 结尾
 find packages/cli/src/templates/markdown/spec -type f -name "*.md" ! -name "*.md.txt"
-# (empty output = clean)
+# （空输出 = 干净）
 ```
 
-Consider adding this find to a regression test (non-empty output → fail) so the invariant is machine-enforced, not memory-enforced.
+考虑将此 find 添加到回归测试（非空输出 → 失败），以便不变量由机器强制执行，而不是由记忆强制执行。
 
 ---
 
-## Monorepo Detection (`project-detector.ts`)
+## Monorepo 检测（`project-detector.ts`）
 
-### `detectMonorepo(cwd)` Flow
+### `detectMonorepo(cwd)` 流程
 
-Detects monorepo workspace configuration and enumerates packages. Returns `DetectedPackage[]` or `null`.
+检测 monorepo 工作区配置并枚举包。返回 `DetectedPackage[]` 或 `null`。
 
-**Return value semantics**:
+**返回值语义**：
 
-| Return | Meaning |
+| 返回 | 含义 |
 |--------|---------|
-| `null` | Not a monorepo (no workspace config or `.gitmodules` found) |
-| `[]` (empty array) | Monorepo config exists (e.g., `pnpm-workspace.yaml`) but no packages match on disk |
-| `[...]` (populated array) | Monorepo with detected packages |
+| `null` | 不是 monorepo（未找到工作区配置或 `.gitmodules`） |
+| `[]`（空数组） | Monorepo 配置存在（例如 `pnpm-workspace.yaml`）但磁盘上没有匹配的包 |
+| `[...]`（填充的数组） | Monorepo 包含已检测到的包 |
 
-**Detection priority** (checked in order, results merged):
+**检测优先级**（按顺序检查，结果合并）：
 
-1. `.gitmodules` — parsed first to build a submodule path set
-2. `pnpm-workspace.yaml` — `packages:` list
-3. `package.json` `workspaces` — array or `{packages: [...]}` (npm/yarn/bun)
-4. `Cargo.toml` `[workspace]` — `members` minus `exclude`
-5. `go.work` — `use` directives (block and single-line forms)
-6. `pyproject.toml` `[tool.uv.workspace]` — `members` list
-7. `parsePolyrepo` — sibling `.git` scan, **only fires if 1–6 all miss AND no submodules exist** (last-resort fallback)
+1. `.gitmodules` — 首先解析以构建子模块路径集
+2. `pnpm-workspace.yaml` — `packages:` 列表
+3. `package.json` `workspaces` — 数组或 `{packages: [...]}`（npm/yarn/bun）
+4. `Cargo.toml` `[workspace]` — `members` 减 `exclude`
+5. `go.work` — `use` 指令（块和单行形式）
+6. `pyproject.toml` `[tool.uv.workspace]` — `members` 列表
+7. `parsePolyrepo` — 兄弟 `.git` 扫描，**仅当 1-6 全部未命中且无子模块存在时触发**（最后手段回退）
 
-All workspace managers' glob patterns are expanded via `expandWorkspaceGlobs()`, and results are deduplicated by normalized path.
+所有工作区管理器的 glob 模式通过 `expandWorkspaceGlobs()` 扩展，结果通过标准化路径去重。
 
-### `DetectedPackage` Interface
+### `DetectedPackage` 接口
 
 ```typescript
 interface DetectedPackage {
-  name: string;         // From readPackageName() fallback chain
-  path: string;         // Normalized relative path (no ./ or trailing /)
-  type: ProjectType;    // Detected via detectProjectType() on the package dir
-  isSubmodule: boolean; // True if path appears in .gitmodules
-  isGitRepo: boolean;   // True if discovered via parsePolyrepo (independent .git, not a submodule)
+  name: string;         // 来自 readPackageName() 回退链
+  path: string;         // 标准化相对路径（无 ./ 或尾随 /）
+  type: ProjectType;    // 通过包目录上的 detectProjectType() 检测
+  isSubmodule: boolean; // 如果路径出现在 .gitmodules 中则为 True
+  isGitRepo: boolean;   // 如果通过 parsePolyrepo 发现则为 True（独立的 .git，不是子模块）
 }
 ```
 
-`isSubmodule` and `isGitRepo` are **mutually exclusive** — they correspond to two distinct runtime config schemas (`type: submodule` vs `git: true`). See "CLI ↔ Runtime Schema Parity" below.
+`isSubmodule` 和 `isGitRepo` 是**互斥的** — 它们对应两种不同的运行时配置 schema（`type: submodule` vs `git: true`）。参见下文的「CLI ↔ Runtime Schema Parity」。
 
-### `expandWorkspaceGlobs()` Limitations
+### `expandWorkspaceGlobs()` 限制
 
-- Only supports `*` as a **full path segment** wildcard (e.g., `packages/*`, `crates/*/subcrate`)
-- Does **not** support `**` (recursive globbing), `?`, or character classes `[abc]`
-- Segments that are not exactly `*` are treated as literal path components
-- Dotfiles (directories starting with `.`) are excluded from wildcard matches
-- Supports `!` prefix for exclusion patterns (e.g., `!packages/internal`)
+- 仅支持 `*` 作为**完整路径段**通配符（例如 `packages/*`、`crates/*/subcrate`）
+- **不**支持 `**`（递归通配）、`?` 或字符类 `[abc]`
+- 不正好是 `*` 的段被视为文字路径组件
+- 点文件（以 `.` 开头的目录）从通配匹配中排除
+- 支持 `!` 前缀用于排除模式（例如 `!packages/internal`）
 
-### `readPackageName()` Fallback Chain
+### `readPackageName()` 回退链
 
-Reads the package name from config files in priority order, falling back to the directory basename:
+按优先级顺序从配置文件读取包名称，回退到目录基本名称：
 
-1. `package.json` → `name` field
+1. `package.json` → `name` 字段
 2. `Cargo.toml` → `[package]` `name`
-3. `go.mod` → `module` directive (last path segment)
+3. `go.mod` → `module` 指令（最后一个路径段）
 4. `pyproject.toml` → `[project]` `name`
-5. Fallback: `path.basename(pkgPath)`
+5. 回退：`path.basename(pkgPath)`
 
-### `.gitmodules` Auto-Detection
+### `.gitmodules` 自动检测
 
-When `.gitmodules` exists, its entries are parsed and:
+当 `.gitmodules` 存在时，其条目被解析并：
 
-- Paths are added to the submodule lookup set
-- If no workspace manager is detected, submodule-only repos still return a non-null result (each submodule becomes a `DetectedPackage` with `isSubmodule: true`)
-- If workspace managers are also detected, submodule paths are merged: workspace packages at submodule paths get `isSubmodule: true`, and submodule paths not covered by any workspace manager are added as additional packages
+- 路径被添加到子模块查找集
+- 如果未检测到工作区管理器，仅子模块仓库仍返回非空结果（每个子模块成为带有 `isSubmodule: true` 的 `DetectedPackage`）
+- 如果工作区管理器也被检测到，子模块路径被合并：在子模块路径处的工作区包获得 `isSubmodule: true`，未被任何工作区管理器覆盖的子模块路径被添加为额外包
 
-### `parsePolyrepo()` — Sibling `.git` Fallback
+### `parsePolyrepo()` — 兄弟 `.git` 回退
 
-Last-resort detector for **polyrepo** layouts (multiple independent git repos in one directory, no workspace manager, no `.gitmodules`).
+**多仓库**布局的最后手段检测器（一个目录中多个独立的 git 仓库，无工作区管理器，无 `.gitmodules`）。
 
-**Rules**:
+**规则**：
 
-- Scans up to **2 levels deep** from `cwd` (immediate children + grandchildren). Deeper layouts must be configured manually via `config.yaml`
-- Once a directory containing `.git` is found, that path is a candidate and the scan **does not descend into it** (a package is atomic)
-- Filters out: dot-prefixed dirs (`.git`, `.next`, `.venv`, `.trellis`, …) and an explicit ignore set: `node_modules`, `target`, `dist`, `build`, `out`, `bin`, `obj`, `vendor`, `coverage`, `tmp`, `__pycache__`. Filter applies at every depth
-- `.git` may be a **directory or a file** (worktree gitlink). Detection MUST use `fs.existsSync` without `.isDirectory()`
-- Skips paths already in the submodule set (avoid double-counting)
-- Returns `null` if fewer than 2 candidates (single `.git` is more likely an accidental clone than a polyrepo)
+- 从 `cwd` 扫描最多 **2 层深度**（直接子级 + 孙级）。更深的布局必须通过 `config.yaml` 手动配置
+- 一旦找到包含 `.git` 的目录，该路径即为候选，扫描**不**进入其中（一个包是原子的）
+- 过滤掉：点前缀目录（`.git`、`.next`、`.venv`、`.trellis`、…）和一个显式忽略集：`node_modules`、`target`、`dist`、`build`、`out`、`bin`、`obj`、`vendor`、`coverage`、`tmp`、`__pycache__`。过滤在每个深度应用
+- `.git` 可以是**目录或文件**（工作树 gitlink）。检测必须使用 `fs.existsSync` 而不带 `.isDirectory()`
+- 跳过已在子模块集中的路径（避免重复计数）
+- 如果少于 2 个候选则返回 `null`（单个 `.git` 更可能是意外克隆而非多仓库）
 
-**Gating**: Only runs when all 6 prior parsers return null **and** the submodule set is empty. Workspace config always wins over polyrepo inference.
+**门控**：仅当所有 6 个先前解析器返回 null **且**子模块集为空时才运行。工作区配置始终胜过 polyrepo 推理。
 
-> **Gotcha**: The sibling-`.git` heuristic is intentionally fired in auto-detect mode (no flag required). The existing interactive `confirm` prompt in `init.ts` is the user-intent gate. Do NOT add a separate `--monorepo`-style guard — it duplicates an existing safety mechanism.
+> **陷阱**：兄弟 `.git` 启发式被有意在自动检测模式下触发（不需要标志）。`init.ts` 中现有的交互式 `confirm` 提示是用户意图门控。不要添加单独的 `--monorepo` 风格守卫 — 它会重复现有的安全机制。
 
 ---
 
-## Monorepo Init Flow (`init.ts`)
+## Monorepo Init 流程（`init.ts`）
 
-### CLI Flags
+### CLI 标志
 
-| Flag | Behavior |
+| 标志 | 行为 |
 |------|----------|
-| `--monorepo` | Force monorepo mode. On detector miss, prints a checklist of all 7 markers checked + a manual `config.yaml` example showing both `type: submodule` and `git: true`, then `return`s (not `process.exit(1)`) |
-| `--no-monorepo` | Skip monorepo detection entirely |
-| _(neither)_ | Auto-detect; prompt user to confirm if packages found |
+| `--monorepo` | 强制 monorepo 模式。检测器未命中时，打印所有 7 个标记的清单 + 一个手动 `config.yaml` 示例，显示 `type: submodule` 和 `git: true`，然后 `return`（不是 `process.exit(1)`） |
+| `--no-monorepo` | 完全跳过 monorepo 检测 |
+| _（两者都不是）_ | 自动检测；如果找到包则提示用户确认 |
 
-> **Design Decision (do NOT revisit lightly)**: There is intentionally **no `--packages` CLI flag**. The escape hatch for users with non-standard layouts is hand-writing `packages:` in `.trellis/config.yaml` — `writeMonorepoConfig` is non-destructive and won't overwrite. Reasons: (1) `config.yaml` is the runtime source of truth, a flag would be a transient duplicate; (2) Trellis prefers declarative configuration over imperative flags. If future need pushes back, document the use case before adding the flag.
+> **设计决策（不要轻易重新审视）**：有意**没有 `--packages` CLI 标志**。非标准布局用户的逃生舱是手工编写 `.trellis/config.yaml` 中的 `packages:` — `writeMonorepoConfig` 是非破坏性的，不会覆盖。原因：（1）`config.yaml` 是运行时权威来源，标志将是临时重复；（2）Trellis 偏好声明性配置而非命令式标志。如果未来需求对此有意见，在添加标志之前记录用例。
 
-### Init Sequence (Monorepo Path)
+### Init 顺序（Monorepo 路径）
 
-1. **Detect**: Call `detectMonorepo(cwd)` to find packages
-2. **Confirm**: In interactive mode, show detected packages and prompt "Enable monorepo mode?"
-3. **Per-package template**: For each package, ask whether to use blank spec or download a remote template (skipped with `-y`)
-4. **Create workflow structure**: Call `createWorkflowStructure()` with `packages` array, which creates per-package spec directories (`spec/<name>/backend/`, `spec/<name>/frontend/`, etc.)
-5. **Write config**: Call `writeMonorepoConfig()` to patch `config.yaml`
+1. **检测**：调用 `detectMonorepo(cwd)` 查找包
+2. **确认**：在交互模式下，显示检测到的包并提示「Enable monorepo mode?」
+3. **每包模板**：对于每个包，询问是使用空白 spec 还是下载远程模板（使用 `-y` 跳过）
+4. **创建工作流结构**：使用 `packages` 数组调用 `createWorkflowStructure()`，创建每包 spec 目录（`spec/<name>/backend/`、`spec/<name>/frontend/` 等）
+5. **写入配置**：调用 `writeMonorepoConfig()` 修补 `config.yaml`
 
-### `writeMonorepoConfig()` Behavior
+### `writeMonorepoConfig()` 行为
 
-Non-destructive config.yaml patch:
+非破坏性 config.yaml 修补：
 
-- **Reads** existing `config.yaml` (no-op if file doesn't exist yet)
-- **Skips** if `packages:` key already present (re-init safety — also makes hand-written config the supported escape hatch for non-standard layouts)
-- **Appends** `packages:` block with each package's `path` and optional `type: submodule` **or** `git: true` (mutually exclusive — a package is never both a submodule and a polyrepo entry)
-- **Sets** `default_package:` to the first non-submodule package (fallback to first package)
+- **读取**现有的 `config.yaml`（文件不存在时为 no-op）
+- **如果 `packages:` 键已存在则跳过**（重新 init 安全 — 也使手工编写的配置成为非标准布局的受支持逃生舱）
+- **追加** `packages:` 块，包含每个包的 `path` 和可选的 `type: submodule` **或** `git: true`（互斥 — 一个包不能同时是子模块和多仓库条目）
+- **设置** `default_package:` 为第一个非子模块包（回退到第一个包）
 
 ### CLI ↔ Runtime Schema Parity
 
-The TS `DetectedPackage` interface and the Python runtime config schema are coupled. When changing one, change the other.
+TS `DetectedPackage` 接口和 Python 运行时配置 schema 是耦合的。更改一个时，更改另一个。
 
-| TS field (`DetectedPackage`) | YAML key (`config.yaml` `packages.<name>`) | Python reader |
+| TS 字段（`DetectedPackage`） | YAML 键（`config.yaml` `packages.<name>`） | Python 读取器 |
 |---|---|---|
-| `isSubmodule: true` | `type: submodule` | `get_submodule_packages()` in `.trellis/scripts/common/config.py` |
-| `isGitRepo: true` | `git: true` | `get_git_packages()` in `.trellis/scripts/common/config.py` |
+| `isSubmodule: true` | `type: submodule` | `get_submodule_packages()` 在 `.trellis/scripts/common/config.py` 中 |
+| `isGitRepo: true` | `git: true` | `get_git_packages()` 在 `.trellis/scripts/common/config.py` 中 |
 
-The Python helper `_is_true_config_value()` accepts `true` (case-insensitive string). YAML literals are emitted unquoted by `writeMonorepoConfig`. End-to-end round-trip is covered by `test/commands/init.integration.test.ts` polyrepo case.
+Python 辅助函数 `_is_true_config_value()` 接受 `true`（大小写不敏感的字符串）。YAML 文字由 `writeMonorepoConfig` 不带引号发出。端到端往返由 `test/commands/init.integration.test.ts` 多仓库案例覆盖。
 
-### Runtime Session Context Fallback
+### 运行时会话上下文回退
 
-`common/session_context.py` consumes the `git: true` runtime schema when
-injecting package Git status. The configured package list remains the primary
-source of truth.
+`common/session_context.py` 在注入包 Git 状态时消费 `git: true` 运行时 schema。已配置的包列表仍然是主要权威来源。
 
-For backward compatibility with projects initialized before polyrepo detection
-or hand-created Trellis roots, session context has a bounded fallback: when the
-Trellis root is not a Git worktree and no configured package Git repositories
-are available, it may scan immediate child and grandchild directories for
-independent `.git` entries and inject those repositories' status. This fallback
-must mirror `parsePolyrepo()`:
+为了与在 polyrepo 检测之前初始化或手工创建 Trellis 根的项目保持向后兼容，会话上下文有一个有限的回退：当 Trellis 根不是 Git 工作树且没有已配置的包 Git 仓库可用时，它可以扫描直接子目录和孙目录以查找独立的 `.git` 条目并注入这些仓库的状态。此回退必须镜像 `parsePolyrepo()`：
 
-- maximum depth: two levels
-- skip dot-prefixed and generated/vendor directories
-- accept `.git` as a directory or file
-- stop descending once a child repository is found
-- require at least two discovered repositories before treating the layout as a
-  polyrepo
+- 最大深度：两层
+- 跳过点前缀和生成的/vendor 目录
+- 接受 `.git` 作为目录或文件
+- 找到子仓库后停止下降
+- 将布局视为 polyrepo 之前至少需要两个发现的仓库
 
-Do not use the fallback to rewrite `config.yaml`; it is context-only. Users with
-non-standard layouts should still configure `packages:` explicitly.
+不要使用回退重写 `config.yaml`；它仅作上下文使用。非标准布局的用户仍应显式配置 `packages:`。
 
-### Per-Package Spec Directory Creation
+### 每包 Spec 目录创建
 
-For each detected package, `createWorkflowStructure()` creates spec directories based on the package's detected `ProjectType`:
+对于每个检测到的包，`createWorkflowStructure()` 基于包检测到的 `ProjectType` 创建 spec 目录：
 
 - `backend` → `.trellis/spec/<name>/backend/*.md`
 - `frontend` → `.trellis/spec/<name>/frontend/*.md`
-- `fullstack` / `unknown` → both backend and frontend directories
+- `fullstack` / `unknown` → backend 和 frontend 目录都有
 
-Packages that received a remote template download (tracked via `remoteSpecPackages` set) skip blank spec template creation.
+收到远程模板下载的包（通过 `remoteSpecPackages` 集跟踪）跳过空白 spec 模板创建。
 
 ---
 
@@ -385,40 +376,40 @@ Packages that received a remote template download (tracked via `remoteSpecPackag
 
 ### DO
 
-- Dogfood from project's own config files when possible
-- Use `cpSync` for copying entire directories
-- Keep generic templates in `src/templates/markdown/`
-- Use `.md.txt` or `.yaml.txt` for template files
-- Update dogfooding sources (`.cursor/`, `.claude/`, `.trellis/scripts/`) when making changes
-- Always use `python3` explicitly when documenting script invocation (Windows compatibility)
+- 在可能的情况下从项目自己的配置文件中自我试用
+- 使用 `cpSync` 复制整个目录
+- 将通用模板保留在 `src/templates/markdown/` 中
+- 对模板文件使用 `.md.txt` 或 `.yaml.txt`
+- 进行更改时更新自我试用源（`.cursor/`、`.claude/`、`.trellis/scripts/`）
+- 在记录脚本调用时始终显式使用 `python3`（Windows 兼容性）
 
 ### DON'T
 
-- Don't hardcode file lists - copy entire directories instead
-- Don't duplicate content between templates and dogfooding sources
-- Don't put project-specific content in generic templates
-- Don't use dogfooding for spec/ (users fill these in)
+- 不要硬编码文件列表 — 改为复制整个目录
+- 不要在模板和自我试用源之间重复内容
+- 不要将项目特定内容放在通用模板中
+- 不要对 spec/ 使用自我试用（用户填写这些）
 
 ---
 
-## Design Decisions
+## 设计决策
 
-### Remote Template Download (giget)
+### 远程模板下载（giget）
 
-**Context**: Need to download GitHub subdirectories for remote template support.
+**上下文**：需要下载 GitHub 子目录以支持远程模板。
 
-**Options Considered**:
-1. `degit` / `tiged` - Simple, but no programmatic API
-2. `giget` - TypeScript native, has programmatic API, used by Nuxt/UnJS
-3. Manual GitHub API - Too complex
+**考虑过的选项**：
+1. `degit` / `tiged` - 简单，但没有编程 API
+2. `giget` - TypeScript 原生，有编程 API，被 Nuxt/UnJS 使用
+3. 手动 GitHub API - 太复杂
 
-**Decision**: Use `giget` because:
-- TypeScript native with programmatic API
-- Supports GitHub subdirectory: `gh:user/repo/path/to/subdir`
-- Built-in caching for offline support
-- Actively maintained by UnJS ecosystem
+**决策**：使用 `giget`，因为：
+- TypeScript 原生，带编程 API
+- 支持 GitHub 子目录：`gh:user/repo/path/to/subdir`
+- 内置缓存，支持离线
+- 由 UnJS 生态系统积极维护
 
-**Example**:
+**示例**：
 ```typescript
 import { downloadTemplate } from "giget";
 
@@ -428,48 +419,48 @@ await downloadTemplate("gh:mindfold-ai/Trellis/marketplace/specs/electron-fullst
 });
 ```
 
-### Directory Conflict Strategy (skip/overwrite/append)
+### 目录冲突策略（skip/overwrite/append）
 
-**Context**: When downloading remote templates, target directory may already exist.
+**上下文**：下载远程模板时，目标目录可能已存在。
 
-**Decision**: Three strategies with `skip` as default:
-- `skip` - Don't download if directory exists (safe default)
-- `overwrite` - Delete existing, download fresh
-- `append` - Only copy files that don't exist (merge)
+**决策**：三种策略，`skip` 为默认：
+- `skip` - 如果目录存在则不下载（安全默认）
+- `overwrite` - 删除现有，下载全新
+- `append` - 仅复制不存在的文件（合并）
 
-**Why**: giget doesn't support append natively, so we:
-1. Download to temp directory
-2. Walk and copy missing files only
-3. Clean up temp directory
+**为什么**：giget 原生不支持 append，所以我们：
+1. 下载到临时目录
+2. 遍历并仅复制缺失的文件
+3. 清理临时目录
 
-**Example**:
+**示例**：
 ```typescript
-// append strategy implementation
+// append 策略实现
 const tempDir = path.join(os.tmpdir(), `trellis-template-${Date.now()}`);
 await downloadTemplate(source, { dir: tempDir });
-await copyMissing(tempDir, destDir);  // Only copy non-existing files
+await copyMissing(tempDir, destDir);  // 仅复制不存在的文件
 await fs.promises.rm(tempDir, { recursive: true });
 ```
 
-### Extensible Template Type Mapping
+### 可扩展模板类型映射
 
-**Context**: Currently only `spec` templates, but future needs `skill`, `command`, `full` types.
+**上下文**：当前只有 `spec` 模板，但未来需要 `skill`、`command`、`full` 类型。
 
-**Decision**: Use type field + mapping table for extensibility:
+**决策**：使用类型字段 + 映射表实现可扩展性：
 
 ```typescript
 const INSTALL_PATHS: Record<string, string> = {
   spec: ".trellis/spec",
   skill: ".claude/skills",
   command: ".claude/commands",
-  full: ".",  // Entire project root
+  full: ".",  // 整个项目根
 };
 
-// Usage: auto-detect install path from template type
+// 用法：从模板类型自动检测安装路径
 const destDir = INSTALL_PATHS[template.type] || INSTALL_PATHS.spec;
 ```
 
-**Extensibility**: To add new template type:
-1. Add entry to `INSTALL_PATHS`
-2. Add templates to `index.json` with new type
-3. No code changes needed for download logic
+**可扩展性**：添加新模板类型：
+1. 向 `INSTALL_PATHS` 添加条目
+2. 向 `index.json` 添加带新类型的模板
+3. 下载逻辑无需代码更改

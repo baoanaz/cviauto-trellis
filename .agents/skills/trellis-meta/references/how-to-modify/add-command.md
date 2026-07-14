@@ -1,142 +1,142 @@
-# How To: Add Slash Command
+# How To：添加斜杠命令
 
-Add a new `/trellis:my-command` command.
+添加新的 `/trellis:my-command` 命令。
 
-**Platform**: All (Claude Code + Cursor)
+**平台**：All（Claude Code + Cursor）
 
 ---
 
-## Files to Modify
+## 需修改的文件
 
-| File | Action | Required |
+| 文件 | 操作 | 是否必需 |
 |------|--------|----------|
-| `.claude/commands/trellis/my-command.md` | Create | Yes |
-| `.cursor/commands/my-command.md` | Create | Optional |
-| `trellis-local/SKILL.md` | Update | Yes |
+| `.claude/commands/trellis/my-command.md` | 创建 | 是 |
+| `.cursor/commands/my-command.md` | 创建 | 可选 |
+| `trellis-local/SKILL.md` | 更新 | 是 |
 
 ---
 
-## Step 1: Create Command File
+## 步骤 1：创建命令文件
 
-Create `.claude/commands/trellis/my-command.md`:
+创建 `.claude/commands/trellis/my-command.md`：
 
 ```markdown
 ---
 name: my-command
-description: Short description of what the command does
+description: 命令功能的简短描述
 ---
 
 # My Command
 
-## Purpose
+## 用途
 
-Detailed description of the command's purpose.
+命令用途的详细描述。
 
-## When to Use
+## 使用场景
 
-- Scenario 1
-- Scenario 2
+- 场景 1
+- 场景 2
 
-## Workflow
+## 工作流
 
-1. First step
-2. Second step
-3. Third step
+1. 第一步
+2. 第二步
+3. 第三步
 
-## Output
+## 输出
 
-What the command produces.
+命令产出的内容。
 ```
 
-### Command Name Convention
+### 命令命名规范
 
-- Use kebab-case: `my-command`, not `myCommand`
-- Prefix with category if needed: `check-cross-layer`, `before-dev`
-
----
-
-## Step 2: Mirror to Cursor (Optional)
-
-If supporting Cursor, copy to `.cursor/commands/my-command.md`.
-
-**Note**: Cursor commands don't have the `trellis:` prefix.
+- 使用 kebab-case：`my-command`，而非 `myCommand`
+- 按需添加分类前缀：`check-cross-layer`、`before-dev`
 
 ---
 
-## Step 3: Document in trellis-local
+## 步骤 2：镜像到 Cursor（可选）
 
-Update `.claude/skills/trellis-local/SKILL.md`:
+如需支持 Cursor，复制到 `.cursor/commands/my-command.md`。
+
+**注意**：Cursor 命令没有 `trellis:` 前缀。
+
+---
+
+## 步骤 3：在 trellis-local 中记录
+
+更新 `.claude/skills/trellis-local/SKILL.md`：
 
 ```markdown
-## Commands
+## 命令
 
-### Added Commands
+### 已添加的命令
 
 #### /trellis:my-command
-- **File**: `.claude/commands/trellis/my-command.md`
-- **Platform**: [ALL]
-- **Purpose**: What it does
-- **Added**: 2026-01-31
-- **Reason**: Why it was added
+- **文件**: `.claude/commands/trellis/my-command.md`
+- **平台**: [ALL]
+- **用途**: 功能描述
+- **添加日期**: 2026-01-31
+- **原因**: 添加原因
 ```
 
 ---
 
-## Examples
+## 示例
 
-### Simple Command
+### 简单命令
 
 ```markdown
 ---
 name: check-types
-description: Run TypeScript type checking
+description: 运行 TypeScript 类型检查
 ---
 
 # Check Types
 
-Run `pnpm typecheck` and report results.
+运行 `pnpm typecheck` 并报告结果。
 
-## Usage
+## 使用方式
 
-Run this command after making code changes to verify type safety.
+在修改代码后运行此命令以验证类型安全。
 ```
 
-### Command with Parameters
+### 带参数的命令
 
-Commands can reference user input or context:
+命令可以引用用户输入或上下文：
 
 ```markdown
 ---
 name: review-file
-description: Review a specific file for code quality
+description: 审查指定文件的代码质量
 ---
 
 # Review File
 
-## Input
+## 输入
 
-User should specify which file to review.
+用户应指定要审查的文件。
 
-## Workflow
+## 工作流
 
-1. Read the specified file
-2. Check against relevant specs
-3. Report issues found
+1. 读取指定文件
+2. 对照相关 spec 检查
+3. 报告发现的问题
 ```
 
 ---
 
-## Testing
+## 测试
 
-1. Run the command: `/trellis:my-command`
-2. Verify behavior matches description
-3. Test edge cases
+1. 运行命令：`/trellis:my-command`
+2. 验证行为符合描述
+3. 测试边界情况
 
 ---
 
-## Checklist
+## 检查清单
 
-- [ ] Command file created with proper frontmatter
-- [ ] Mirrored to Cursor (if needed)
-- [ ] Documented in trellis-local
-- [ ] Tested the command
+- [ ] 命令文件已创建，frontmatter 正确
+- [ ] 已镜像到 Cursor（如需要）
+- [ ] 已在 trellis-local 中记录
+- [ ] 已测试命令

@@ -1,34 +1,34 @@
-# Task System
+# 任务系统（Task System）
 
-Track work items with phase-based execution.
+基于阶段执行跟踪工作项。
 
 ---
 
-## Directory Structure
+## 目录结构
 
 ```
 .trellis/tasks/
-├── {MM-DD-slug}/               # Active task directories
-│   ├── task.json               # Metadata, phases, branch
-│   ├── prd.md                  # Requirements document
-│   ├── design.md               # Technical design for complex tasks
-│   ├── implement.md            # Execution plan for complex tasks
-│   ├── implement.jsonl         # Context for implement phase
-│   ├── check.jsonl             # Context for check phase
-│   └── debug.jsonl             # Context for debug phase
+├── {MM-DD-slug}/               # 活动任务目录
+│   ├── task.json               # 元数据、阶段、分支
+│   ├── prd.md                  # 需求文档
+│   ├── design.md               # 复杂任务的技术设计
+│   ├── implement.md            # 复杂任务的执行计划
+│   ├── implement.jsonl         # 实现阶段的上下文
+│   ├── check.jsonl             # 检查阶段的上下文
+│   └── debug.jsonl             # 调试阶段的上下文
 │
-└── archive/                    # Completed tasks
+└── archive/                    # 已完成任务
     └── {YYYY-MM}/
         └── {task-dir}/
 ```
 
 ---
 
-## Task Directory Naming
+## 任务目录命名
 
-Format: `{MM-DD}-{slug}`
+格式：`{MM-DD}-{slug}`
 
-Examples:
+示例：
 - `01-31-add-login`
 - `02-01-fix-api-bug`
 
@@ -36,7 +36,7 @@ Examples:
 
 ## task.json
 
-Task metadata and workflow configuration.
+任务元数据与工作流配置。
 
 ```json
 {
@@ -73,41 +73,41 @@ Task metadata and workflow configuration.
 }
 ```
 
-### Fields
+### 字段
 
-| Field | Type | Description |
+| 字段 | 类型 | 说明 |
 |-------|------|-------------|
-| `id` | string | Slug identifier |
-| `name` | string | Slug identifier (same as id) |
-| `title` | string | Human-readable task title |
-| `description` | string | Task description |
-| `status` | string | `planning`, `in_progress`, `completed`, `rejected` |
-| `dev_type` | string\|null | `frontend`, `backend`, `fullstack`, `test`, `docs` |
-| `scope` | string\|null | Scope for PR title |
-| `priority` | string | `P0`, `P1`, `P2`, `P3` |
-| `creator` | string | Developer who created the task |
-| `assignee` | string | Developer assigned to the task |
-| `createdAt` | string | Creation date (YYYY-MM-DD) |
-| `completedAt` | string\|null | Completion date |
-| `branch` | string\|null | Git branch name |
-| `base_branch` | string | Branch to merge into |
-| `worktree_path` | string\|null | Git worktree path (multi-agent) |
-| `current_phase` | number | Current workflow phase |
-| `next_action` | array | Workflow phases |
-| `commit` | string\|null | Commit hash |
-| `pr_url` | string\|null | Pull request URL |
-| `subtasks` | array | Deprecated (legacy bootstrap format) |
-| `children` | string[] | Child task directory names |
-| `parent` | string\|null | Parent task directory name |
-| `relatedFiles` | string[] | Related file paths |
-| `notes` | string | Free-text notes |
-| `meta` | object | Extensible metadata for integrations (e.g. `linear_id`, `jira_ticket`) |
+| `id` | string | Slug 标识符 |
+| `name` | string | Slug 标识符（与 id 相同） |
+| `title` | string | 人类可读的任务标题 |
+| `description` | string | 任务描述 |
+| `status` | string | `planning`、`in_progress`、`completed`、`rejected` |
+| `dev_type` | string\|null | `frontend`、`backend`、`fullstack`、`test`、`docs` |
+| `scope` | string\|null | PR 标题的 scope |
+| `priority` | string | `P0`、`P1`、`P2`、`P3` |
+| `creator` | string | 创建任务的开发者 |
+| `assignee` | string | 被分配任务的开发者 |
+| `createdAt` | string | 创建日期（YYYY-MM-DD） |
+| `completedAt` | string\|null | 完成日期 |
+| `branch` | string\|null | Git 分支名称 |
+| `base_branch` | string | 合并目标分支 |
+| `worktree_path` | string\|null | Git worktree 路径（多智能体） |
+| `current_phase` | number | 当前工作流阶段 |
+| `next_action` | array | 工作流阶段列表 |
+| `commit` | string\|null | 提交哈希 |
+| `pr_url` | string\|null | Pull Request URL |
+| `subtasks` | array | 已废弃（旧版引导格式） |
+| `children` | string[] | 子任务目录名称列表 |
+| `parent` | string\|null | 父任务目录名称 |
+| `relatedFiles` | string[] | 相关文件路径 |
+| `notes` | string | 自由文本备注 |
+| `meta` | object | 可扩展的集成元数据（如 `linear_id`、`jira_ticket`） |
 
 ---
 
 ## prd.md
 
-Requirements document for the task.
+任务的需求文档。
 
 ```markdown
 # Add User Login
@@ -130,11 +130,11 @@ Implement user authentication with email/password.
 
 ---
 
-## JSONL Context Files
+## JSONL 上下文文件
 
-List files to inject as context for each phase.
+列出每个阶段要注入为上下文的文件。
 
-### Format
+### 格式
 
 ```jsonl
 {"file": ".trellis/spec/cli/backend/index.md", "reason": "Backend guidelines"}
@@ -142,21 +142,21 @@ List files to inject as context for each phase.
 {"file": ".trellis/tasks/01-31-add-login/prd.md", "reason": "Requirements"}
 ```
 
-### Files
+### 文件
 
-| File | Phase | Purpose |
+| 文件 | 阶段 | 用途 |
 |------|-------|---------|
-| `implement.jsonl` | implement | Dev specs, patterns to follow |
-| `check.jsonl` | check | Quality criteria, review specs |
-| `debug.jsonl` | debug | Debug context, error reports |
+| `implement.jsonl` | implement | 开发规范、需遵循的模式 |
+| `check.jsonl` | check | 质量标准、审查规范 |
+| `debug.jsonl` | debug | 调试上下文、错误报告 |
 
 ---
 
-## Session-Scoped Active Task
+## 会话范围的活动任务
 
 ### `.trellis/.runtime/sessions/<session-key>.json`
 
-Stores the active task for one AI session/window.
+存储单个 AI 会话/窗口的活动任务。
 
 ```json
 {
@@ -164,13 +164,13 @@ Stores the active task for one AI session/window.
 }
 ```
 
-### Set Active Task
+### 设置活动任务
 
 ```bash
 python3 .trellis/scripts/task.py start <task-dir>
 ```
 
-### Clear Current Task
+### 清除当前任务
 
 ```bash
 python3 .trellis/scripts/task.py finish
@@ -178,18 +178,18 @@ python3 .trellis/scripts/task.py finish
 
 ---
 
-## Task CLI
+## 任务 CLI
 
-### Create Task
+### 创建任务
 
 ```bash
 python3 .trellis/scripts/task.py create "Task name" --slug task-slug
 python3 .trellis/scripts/task.py create "Child task" --slug child --parent <parent-dir>
 ```
 
-Options: `--assignee <name>`, `--priority P0|P1|P2|P3`, `--description "text"`, `--parent <dir>`
+选项：`--assignee <name>`、`--priority P0|P1|P2|P3`、`--description "text"`、`--parent <dir>`
 
-### List Tasks
+### 列出任务
 
 ```bash
 python3 .trellis/scripts/task.py list
@@ -197,55 +197,56 @@ python3 .trellis/scripts/task.py list --mine
 python3 .trellis/scripts/task.py list --status planning
 ```
 
-Tasks with a `parent` are displayed indented under their parent.
-Parent tasks show children progress: `(planning) [2/3 done]`.
+有父任务的条目会缩进显示在父任务下方。
+父任务显示子任务进度：`(planning) [2/3 done]`。
 
-### Start Task
+### 开始任务
 
 ```bash
 python3 .trellis/scripts/task.py start <task-dir>
 ```
 
-### Finish (Clear Current Task)
+### 完成（清除当前任务）
 
 ```bash
 python3 .trellis/scripts/task.py finish
 ```
 
-### Initialize Context
+### 初始化上下文
 
 ```bash
 python3 .trellis/scripts/task.py init-context <task-dir> <dev-type>
 ```
 
-Dev types: `frontend`, `backend`, `fullstack`, `test`, `docs`
+开发类型：`frontend`、`backend`、`fullstack`、`test`、`docs`
 
-### Add Subtask
+### 添加子任务
 
 ```bash
 python3 .trellis/scripts/task.py add-subtask <parent-dir> <child-dir>
 ```
 
-Links an existing task as a child of another task. Errors if the child already has a parent.
+将已有任务链接为另一个任务的子任务。如果子任务已有父任务则报错。
 
-### Remove Subtask
+### 移除子任务
 
 ```bash
 python3 .trellis/scripts/task.py remove-subtask <parent-dir> <child-dir>
 ```
 
-Removes the parent-child link between two tasks.
+移除两个任务之间的父子链接。
 
-### Archive Task
+### 归档任务
 
 ```bash
 python3 .trellis/scripts/task.py archive <task-dir>
 ```
 
-When archiving a child task, it is automatically removed from the parent's `children` list.
-When archiving a parent task, the `parent` field is cleared in all its children.
+归档子任务时，子任务名称仍保留在父任务的 `children` 列表中。该列表为历史记录，以便已完成子任务移入 `archive/` 后父任务进度保持稳定。
 
-### Other Commands
+归档父任务时，活动子任务保留在原位并保留其自身任务数据。请勿将归档父任务作为完成或审查其子任务交付物的替代手段。
+
+### 其他命令
 
 ```bash
 python3 .trellis/scripts/task.py set-branch <dir> <branch>
@@ -262,33 +263,33 @@ python3 .trellis/scripts/task.py create-pr [dir] [--dry-run]
 
 ## get_context.py
 
-Display session runtime including task information.
+显示会话运行时，包含任务信息。
 
 ```bash
-python3 .trellis/scripts/get_context.py                      # Default text (full context)
-python3 .trellis/scripts/get_context.py --json                # Default JSON
-python3 .trellis/scripts/get_context.py --mode record         # Record text (my tasks focus)
-python3 .trellis/scripts/get_context.py --mode record --json  # Record JSON
+python3 .trellis/scripts/get_context.py                      # 默认文本（完整上下文）
+python3 .trellis/scripts/get_context.py --json                # 默认 JSON
+python3 .trellis/scripts/get_context.py --mode record         # 记录文本（聚焦我的任务）
+python3 .trellis/scripts/get_context.py --mode record --json  # 记录 JSON
 ```
 
-`--mode` controls content scope, `--json` controls output format. Can be combined.
+`--mode` 控制内容范围，`--json` 控制输出格式。可以组合使用。
 
 ---
 
-## Workflow Phases
+## 工作流阶段
 
-Standard phase progression:
+标准阶段推进：
 
 ```
-1. implement  →  Write code
-2. check      →  Review and fix
-3. finish     →  Final verification
-4. create-pr  →  Create pull request (Multi-Agent only)
+1. implement  →  编写代码
+2. check      →  审查与修复
+3. finish     →  最终验证
+4. create-pr  →  创建 Pull Request（仅多智能体模式）
 ```
 
-### Custom Phases
+### 自定义阶段
 
-Modify `next_action` in task.json:
+修改 task.json 中的 `next_action`：
 
 ```json
 "next_action": [
@@ -300,10 +301,10 @@ Modify `next_action` in task.json:
 
 ---
 
-## Best Practices
+## 最佳实践
 
-1. **Session-local focus** - Use `task.py start` in each AI session/window
-2. **Clear PRDs** - Write specific, testable requirements
-3. **Relevant context** - Only include needed files in JSONL
-4. **Archive completed** - Keep task directory clean
-5. **Use subtasks** - Break complex tasks into children for parallel work
+1. **会话本地聚焦** - 在每个 AI 会话/窗口中使用 `task.py start`
+2. **清晰的 PRD** - 编写具体、可测试的需求
+3. **相关上下文** - 只在 JSONL 中包含需要的文件
+4. **归档已完成任务** - 保持任务目录整洁
+5. **使用子任务** - 将复杂任务拆分为可独立验证的子任务；在子任务产物中写明依赖顺序，而不仅仅依赖树形结构

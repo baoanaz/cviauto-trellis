@@ -1,35 +1,35 @@
-# Agents Reference
+# Agents 参考
 
-Documentation for the Trellis agent system - specialized AI agents for different development phases.
-
----
-
-## Overview
-
-Trellis uses **specialized agents** for different tasks. Each agent has specific capabilities, restrictions, and context injection.
-
-**Key Insight**: Agents work in the **current directory** - no worktree needed. Multi-Session (worktree isolation) is a separate concept.
+Trellis Agent 系统的文档——用于不同开发阶段的专用 AI Agent。
 
 ---
 
-## Agent Types
+## 概述
 
-| Agent | Purpose | Can Write | Git Commit |
+Trellis 使用**专用 Agent** 来执行不同的任务。每个 Agent 具有特定的能力、限制和上下文注入。
+
+**关键洞察**：Agent 在**当前目录**中工作——无需 worktree。多会话（Multi-Session，worktree 隔离）是一个独立的概念。
+
+---
+
+## Agent 类型
+
+| Agent | 用途 | 可写 | Git 提交 |
 |-------|---------|-----------|------------|
-| `dispatch` | Orchestrate phases | No | Only via script |
-| `plan` | Evaluate requirements | Yes (task dir) | No |
-| `research` | Find patterns | No | No |
-| `implement` | Write code | Yes | No |
-| `check` | Review & self-fix | Yes | No |
-| `debug` | Fix issues | Yes | No |
+| `dispatch` | 编排阶段 | 否 | 仅通过脚本 |
+| `plan` | 评估需求 | 是（任务目录） | 否 |
+| `research` | 查找模式 | 否 | 否 |
+| `implement` | 编写代码 | 是 | 否 |
+| `check` | 审查和自修复 | 是 | 否 |
+| `debug` | 修复问题 | 是 | 否 |
 
 ---
 
-## Agent Definitions
+## Agent 定义
 
-Location: `.claude/agents/*.md`
+位置：`.claude/agents/*.md`
 
-### Format
+### 格式
 
 ```markdown
 ---
@@ -55,59 +55,59 @@ model: opus
 
 ## Dispatch Agent
 
-**File**: `.claude/agents/dispatch.md`
+**文件**：`.claude/agents/dispatch.md`
 
-**Purpose**: Pure orchestrator - calls other agents in sequence.
+**用途**：纯编排器——按顺序调用其他 Agent。
 
-**Key Principle**: Does NOT read specs directly. Hooks inject context to subagents.
+**关键原则**：不直接读取规范。Hooks 向 Subagent 注入上下文。
 
-**Tools**: `Read, Bash`
+**工具**：`Read, Bash`
 
-**Workflow**:
+**工作流**：
 ```
-1. Run task.py current --source → find session active task directory
-2. Read task.json → get next_action array
-3. For each phase:
+1. 运行 task.py current --source → 找到会话活动任务目录
+2. 读取 task.json → 获取 next_action 数组
+3. 对每个阶段：
    - implement → Task(subagent_type="implement")
    - check → Task(subagent_type="check")
    - finish → Task(subagent_type="check", prompt="[finish]...")
    - create-pr → Bash("python3 ... create_pr.py")
 ```
 
-**Forbidden**:
-- Reading spec files directly
-- Modifying code
-- Git operations (except via create-pr script)
+**禁止**：
+- 直接读取规范文件
+- 修改代码
+- Git 操作（除通过 create-pr 脚本外）
 
 ---
 
 ## Plan Agent
 
-**File**: `.claude/agents/plan.md`
+**文件**：`.claude/agents/plan.md`
 
-**Purpose**: Evaluate requirements and configure task directory.
+**用途**：评估需求并配置任务目录。
 
-**Tools**: `Read, Bash, Glob, Grep, Task`
+**工具**：`Read, Bash, Glob, Grep, Task`
 
-**Capabilities**:
-- **REJECT** unclear/vague requirements
-- Call Research Agent to analyze codebase
-- Create `prd.md` with requirements
-- Configure `task.json` (branch, scope, phases)
-- Initialize JSONL session files
+**能力**：
+- **拒绝**不清晰/模糊的需求
+- 调用 Research Agent 分析代码库
+- 创建包含需求的 `prd.md`
+- 配置 `task.json`（branch、scope、phases）
+- 初始化 JSONL 会话文件
 
-**Rejection Criteria**:
-- Vague requirements ("make it better")
-- Incomplete information
-- Out of scope
-- Potentially harmful
-- Too large (should split)
+**拒绝标准**：
+- 模糊的需求（"让它更好"）
+- 信息不完整
+- 超出范围
+- 可能有害
+- 太大（应拆分）
 
-**Output**:
+**输出**：
 ```
 task-dir/
-├── task.json      # Configured with branch, scope, dev_type
-├── prd.md         # Clear requirements
+├── task.json      # 已配置 branch、scope、dev_type
+├── prd.md         # 清晰的需求
 ├── implement.jsonl
 ├── check.jsonl
 └── debug.jsonl
@@ -117,26 +117,26 @@ task-dir/
 
 ## Research Agent
 
-**File**: `.claude/agents/research.md`
+**文件**：`.claude/agents/research.md`
 
-**Purpose**: Find and explain code patterns. Pure research, no modifications.
+**用途**：查找和解释代码模式。纯研究，不修改。
 
-**Tools**: `Read, Glob, Grep, web search, chrome-devtools`
+**工具**：`Read, Glob, Grep, web search, chrome-devtools`
 
-**Allowed**:
-- Describe what exists
-- Describe where it is
-- Describe how it works
-- Describe interactions
+**允许**：
+- 描述存在什么
+- 描述它在哪里
+- 描述它如何工作
+- 描述交互
 
-**Forbidden** (unless explicitly asked):
-- Suggest improvements
-- Criticize implementation
-- Recommend refactoring
-- Modify any files
-- Git operations
+**禁止**（除非明确要求）：
+- 建议改进
+- 批评实现
+- 推荐重构
+- 修改任何文件
+- Git 操作
 
-**Output Format**:
+**输出格式**：
 ```markdown
 ## Query Summary
 ...
@@ -155,47 +155,47 @@ task-dir/
 
 ## Implement Agent
 
-**File**: `.claude/agents/implement.md`
+**文件**：`.claude/agents/implement.md`
 
-**Purpose**: Write code following injected specs.
+**用途**：遵循注入的规范编写代码。
 
-**Tools**: `Read, Write, Edit, Bash, Glob, Grep`
+**工具**：`Read, Write, Edit, Bash, Glob, Grep`
 
-**Workflow**:
-1. Understand specs (from injected context)
-2. Understand task artifacts (prd.md, design.md if present, implement.md if present)
-3. Implement features
-4. Self-check (run lint/typecheck)
+**工作流**：
+1. 理解规范（来自注入的上下文）
+2. 理解任务产物（prd.md、design.md（如存在）、implement.md（如存在））
+3. 实现功能
+4. 自我检查（运行 lint/typecheck）
 
-**Forbidden**:
+**禁止**：
 - `git commit`
 - `git push`
 - `git merge`
 
-**Context Injection**: Hook injects `implement.jsonl` entries + `prd.md` + `design.md` if present + `implement.md` if present
+**上下文注入**：Hook 注入 `implement.jsonl` 条目 + `prd.md` + `design.md`（如存在）+ `implement.md`（如存在）
 
 ---
 
 ## Check Agent
 
-**File**: `.claude/agents/check.md`
+**文件**：`.claude/agents/check.md`
 
-**Purpose**: Review code and **self-fix** issues.
+**用途**：审查代码并**自我修复**问题。
 
-**Tools**: `Read, Write, Edit, Bash, Glob, Grep`
+**工具**：`Read, Write, Edit, Bash, Glob, Grep`
 
-**Key Principle**: Fix issues yourself, don't just report them.
+**关键原则**：自己修复问题，而不仅仅是报告它们。
 
-**Workflow**:
-1. Get changes: `git diff`
-2. Check against specs
-3. Self-fix issues directly
-4. Run verification (lint, typecheck)
-5. Output completion markers
+**工作流**：
+1. 获取更改：`git diff`
+2. 对照规范检查
+3. 直接自我修复问题
+4. 运行验证（lint、typecheck）
+5. 输出完成标记
 
-**Controlled by**: Ralph Loop (SubagentStop hook)
+**控制者**：Ralph Loop（SubagentStop hook）
 
-**Completion Markers**:
+**完成标记**：
 ```
 TYPECHECK_FINISH
 LINT_FINISH
@@ -206,30 +206,30 @@ CODEREVIEW_FINISH
 
 ## Debug Agent
 
-**File**: `.claude/agents/debug.md`
+**文件**：`.claude/agents/debug.md`
 
-**Purpose**: Fix specific reported issues.
+**用途**：修复特定报告的问题。
 
-**Tools**: `Read, Write, Edit, Bash, Glob, Grep`
+**工具**：`Read, Write, Edit, Bash, Glob, Grep`
 
-**Workflow**:
-1. Parse issues (prioritize P1 > P2 > P3)
-2. Research if needed
-3. Fix one by one
-4. Verify each fix (run typecheck)
+**工作流**：
+1. 解析问题（优先级 P1 > P2 > P3）
+2. 如需要则进行研究
+3. 逐一修复
+4. 验证每个修复（运行 typecheck）
 
-**Forbidden**:
-- Refactor surrounding code
-- Add new features
-- Modify unrelated files
-- Use non-null assertion (`x!`)
+**禁止**：
+- 重构周围代码
+- 添加新功能
+- 修改无关文件
+- 使用非空断言（`x!`）
 - Git commit
 
 ---
 
-## Invoking Agents
+## 调用 Agent
 
-Use the `Task` tool with `subagent_type`:
+使用 `Task` 工具并指定 `subagent_type`：
 
 ```javascript
 Task(
@@ -240,40 +240,40 @@ Task(
 )
 ```
 
-### Agent Resolution
+### Agent 解析
 
-1. Claude Code looks for `.claude/agents/{subagent_type}.md`
-2. Loads agent definition (tools, model, instructions)
-3. **PreToolUse hook fires** → `inject-subagent-context.py`
-4. Hook injects context from JSONL files
-5. Agent runs with full context
+1. Claude Code 查找 `.claude/agents/{subagent_type}.md`
+2. 加载 Agent 定义（工具、模型、指令）
+3. **PreToolUse hook 触发** → `inject-subagent-context.py`
+4. Hook 从 JSONL 文件注入上下文
+5. Agent 在完整上下文中运行
 
 ---
 
-## Context Injection
+## 上下文注入
 
-### How It Works
+### 工作原理
 
 ```
-Task(subagent_type="implement") called
+Task(subagent_type="implement") 被调用
             │
             ▼
-    PreToolUse hook fires
+    PreToolUse hook 触发
             │
             ▼
-inject-subagent-context.py runs
+inject-subagent-context.py 运行
             │
-            ├── Resolve session active task
+            ├── 解析会话活动任务
             │
-            ├── Find task directory from .runtime/sessions/<session-key>.json
+            ├── 从 .runtime/sessions/<session-key>.json 找到任务目录
             │
-            ├── Load implement.jsonl
+            ├── 加载 implement.jsonl
             │   {"file": ".trellis/spec/cli/backend/index.md", "reason": "..."}
             │   {"file": "src/services/auth.ts", "reason": "..."}
             │
-            ├── Read each file content
+            ├── 读取每个文件内容
             │
-            └── Build new prompt:
+            └── 构建新提示词：
                 # Implement Agent Task
                 ## Your Context
                 === .trellis/spec/cli/backend/index.md ===
@@ -284,60 +284,60 @@ inject-subagent-context.py runs
                 [original prompt]
 ```
 
-### JSONL Files
+### JSONL 文件
 
-| File | Agent | Purpose |
+| 文件 | Agent | 用途 |
 |------|-------|---------|
-| `implement.jsonl` | implement | Dev specs, patterns to follow |
-| `check.jsonl` | check | Check specs, quality criteria |
-| `debug.jsonl` | debug | Debug context, error reports |
-| `research.jsonl` | research | (optional) Research scope |
+| `implement.jsonl` | implement | 开发规范、要遵循的模式 |
+| `check.jsonl` | check | 检查规范、质量标准 |
+| `debug.jsonl` | debug | 调试上下文、错误报告 |
+| `research.jsonl` | research | （可选）研究范围 |
 
 ---
 
-## Multi-Agent Workflow
+## 多 Agent 工作流
 
-In the **current directory** (no worktree):
+在**当前目录**中（无需 worktree）：
 
 ```
-User request
+用户请求
     │
     ▼
-Orchestrator (you or dispatch)
+编排器（你或 dispatch）
     │
     ├── Task(subagent_type="research")
-    │   └── Returns: code patterns, relevant files
+    │   └── 返回：代码模式、相关文件
     │
     ├── Task(subagent_type="implement")
-    │   └── Returns: implemented code
+    │   └── 返回：实现的代码
     │
     ├── Task(subagent_type="check")
-    │   └── Returns: reviewed & fixed code
+    │   └── 返回：审查并修复后的代码
     │
-    └── Human commits
+    └── 人工提交
 ```
 
-### Task Workflow (from /trellis:start)
+### 任务工作流（来自 /trellis:start）
 
 ```
-1. User describes task
-2. AI classifies (Question / Trivial / Development Task)
-3. For Development Task:
-   a. Research Agent → analyze codebase
-   b. Create task directory + JSONL files
-   c. task.py start → set session active task
-   d. Implement Agent → write code
-   e. Check Agent → review & fix
-   f. Human tests and commits
+1. 用户描述任务
+2. AI 分类（Question / Trivial / Development Task）
+3. 对于 Development Task：
+   a. Research Agent → 分析代码库
+   b. 创建任务目录 + JSONL 文件
+   c. task.py start → 设置会话活动任务
+   d. Implement Agent → 编写代码
+   e. Check Agent → 审查并修复
+   f. 人工测试并提交
 ```
 
 ---
 
-## Adding Custom Agents
+## 添加自定义 Agent
 
-### 1. Create Definition
+### 1. 创建定义
 
-`.claude/agents/my-agent.md`:
+`.claude/agents/my-agent.md`：
 ```markdown
 ---
 name: my-agent
@@ -358,9 +358,9 @@ model: opus
 - ...
 ```
 
-### 2. Update Hook
+### 2. 更新 Hook
 
-Edit `.claude/hooks/inject-subagent-context.py`:
+编辑 `.claude/hooks/inject-subagent-context.py`：
 
 ```python
 # Add constant
@@ -380,16 +380,16 @@ elif subagent_type == AGENT_MY_AGENT:
     new_prompt = build_my_agent_prompt(original_prompt, context)
 ```
 
-### 3. Create JSONL
+### 3. 创建 JSONL
 
-In task directories, create `my-agent.jsonl`:
+在任务目录中创建 `my-agent.jsonl`：
 ```jsonl
 {"file": ".trellis/spec/my-spec.md", "reason": "My agent spec"}
 ```
 
-### 4. (Optional) Add to Dispatch
+### 4.（可选）添加到 Dispatch
 
-Update `task.json` default phases:
+更新 `task.json` 默认阶段：
 ```json
 "next_action": [
   {"phase": 1, "action": "my-agent"},
@@ -399,18 +399,18 @@ Update `task.json` default phases:
 
 ---
 
-## vs Multi-Session
+## 与多会话（Multi-Session）的对比
 
-| Aspect | Multi-Agent | Multi-Session |
+| 方面 | 多 Agent（Multi-Agent） | 多会话（Multi-Session） |
 |--------|-------------|---------------|
-| **What** | Multiple agents in sequence | Parallel isolated sessions |
-| **Where** | Current directory | Separate worktrees |
-| **Isolation** | Shared filesystem | Separate filesystems |
-| **Use case** | Normal development | Parallel tasks |
-| **Worktree** | Not needed | Required |
+| **是什么** | 多个 Agent 按顺序执行 | 并行隔离会话 |
+| **在哪里** | 当前目录 | 独立的 worktree |
+| **隔离性** | 共享文件系统 | 独立文件系统 |
+| **用例** | 常规开发 | 并行任务 |
+| **Worktree** | 不需要 | 必需 |
 
-Multi-Agent is the **agent system** - dispatch calling implement, check, etc.
+多 Agent（Multi-Agent）是 **Agent 系统**——dispatch 调用 implement、check 等。
 
-Multi-Session is **parallel execution** - multiple worktrees running simultaneously.
+多会话（Multi-Session）是**并行执行**——多个 worktree 同时运行。
 
-They can combine: Multi-Session runs Multi-Agent workflows in each worktree.
+它们可以组合使用：多会话（Multi-Session）在每个 worktree 中运行多 Agent（Multi-Agent）工作流。

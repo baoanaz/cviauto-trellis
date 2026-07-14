@@ -1,12 +1,11 @@
-# Workflows
+# 工作流（Workflows）
 
-Use these patterns by intent. Prefer durable channels for multi-round work and
-`channel run` for one-shot questions.
+按意图选择使用模式。多轮工作优先使用持久化频道（durable channel），一次性问题使用
+`channel run`。
 
-## Pattern A: Multi-round Brainstorm
+## 模式 A：多轮头脑风暴（Multi-round Brainstorm）
 
-Use when the user says "和 codex/claude 讨论一下", "brainstorm", or "拉一个 agent
-进来一起看".
+当用户说"和 codex/claude 讨论一下"、"brainstorm"或"拉一个 agent 进来一起看"时使用。
 
 ```bash
 trellis channel create brainstorm-storage-layer --by main \
@@ -25,30 +24,27 @@ trellis channel wait brainstorm-storage-layer \
   --as main --kind done --from cx-arch --timeout 10m
 ```
 
-Do not stop after one answer. Read the answer, identify vague areas, send a
-new probe, and repeat until the result is executable.
+不要一轮回答就停止。阅读回答，找出模糊之处，发起新的追问，反复迭代直到结果可执行。
 
-Minimum round structure:
+最低轮次结构：
 
-1. Direction split: should this live in an existing mechanism or a new one?
-2. MVP boundary: v1, v2, and what would force v2 back into v1.
-3. Data contract: events, schema, metadata, state source of truth, compatibility.
-4. CLI / UX contract: command names, flags, errors, defaults, ambiguity.
-5. Cross-layer risk and tests: shared helpers, drift points, release-blocking tests.
+1. 方向拆分（Direction split）：该功能应放在现有机制中还是新建机制？
+2. MVP 边界（MVP boundary）：v1、v2 范围，以及什么情况下需要将 v2 内容提前纳入 v1。
+3. 数据契约（Data contract）：事件（events）、schema、元数据（metadata）、状态真实来源（state source of truth）、兼容性。
+4. CLI / UX 契约（CLI / UX contract）：命令名称、flags、错误、默认值、歧义处理。
+5. 跨层风险与测试（Cross-layer risk and tests）：共享辅助模块、偏移点（drift points）、阻止发版的测试项。
 
-Optional rounds:
+可选轮次：
 
-- Operations: logs, debugging, stuck workers, kill/restart, recovery.
-- Migration/release: breaking status, manifest, changelog, docs-site.
-- Opposition review: ask the peer agent to argue against the current plan.
+- 运维（Operations）：日志、调试、卡住的 worker、kill/restart、恢复。
+- 迁移/发布（Migration/release）：breaking 状态、manifest、changelog、文档站点。
+- 反向审查（Opposition review）：让对端 agent 对当前方案提出反对意见。
 
-Every probe should request concrete file paths, commands, schema, rejected
-alternatives, and release-blocking issues. Reject hedging when a decision is
-needed.
+每次追问应要求给出具体的文件路径、命令、schema、被否决的替代方案以及阻止发版的问题。当需要决策时，拒绝含糊其辞。
 
-## Pattern B: Implement / Check Agent
+## 模式 B：实现 / 审查 Agent（Implement / Check Agent）
 
-Use when the user asks to dispatch implementation or review work.
+当用户要求派发实现或审查工作时使用。
 
 ```bash
 TASK=.trellis/tasks/05-12-foo
@@ -67,13 +63,11 @@ trellis channel wait cr-foo --as main --kind done --from check --timeout 15m
 trellis channel messages cr-foo --kind message --from check --tag final_answer
 ```
 
-For implement work, use `--agent implement` and send an implementation brief.
-For check work, include the exact diff scope, relevant specs, and validation
-already run.
+实现工作使用 `--agent implement` 并发送实现简报（implementation brief）。审查工作需包含确切的 diff 范围、相关规格说明以及已运行的验证。
 
-## Pattern C: Parallel Reviewers
+## 模式 C：并行审查者（Parallel Reviewers）
 
-Use one channel and distinct worker names.
+使用一个频道和不同的 worker 名称。
 
 ```bash
 trellis channel create cr-feature --by main --ephemeral
@@ -91,26 +85,24 @@ trellis channel send cr-feature --as main --to check-cx --text-file /tmp/cr-brie
 trellis channel wait cr-feature --as main --kind done --from check,check-cx --all --timeout 15m
 ```
 
-`--all` means every listed worker must emit a matching event.
+`--all` 表示每个列出的 worker 都必须发出匹配的事件。
 
-## Pattern D: One-shot Worker
+## 模式 D：一次性 Worker（One-shot Worker）
 
 ```bash
 trellis channel run --provider codex --message "say hi in 3 words" --timeout 1m
 trellis channel run --agent plan --message-file /tmp/plan-question.md --timeout 10m
 ```
 
-On success, `run` removes the ephemeral channel. On error/timeout/killed, it
-keeps the channel and prints the path for inspection.
+成功时，`run` 会删除临时频道。出错/超时/被 kill 时，会保留频道并打印路径以供检查。
 
-## Pattern E: Forum Channel
+## 模式 E：论坛频道（Forum Channel）
 
-Use for issue forums, topic-style feedback, release todos, agent findings, and
-internal changelogs. Read `forum.md` for the full model.
+用于问题论坛、主题式反馈、发布待办、agent 发现和内部 changelog。完整模型请阅读 `forum.md`。
 
-## Pattern F: Take Over Existing Thread
+## 模式 F：接管已有线程（Take Over Existing Thread）
 
-If the user gives a forum/thread name, restore context yourself:
+如果用户给出了论坛/线程名称，自行恢复上下文：
 
 ```bash
 trellis channel forum <board> --scope global
@@ -119,10 +111,10 @@ trellis channel context list <board> --scope global --thread <thread>
 trellis channel messages <board> --scope global --raw --thread <thread>
 ```
 
-Output a constraint summary, not a transcript dump:
+输出约束摘要，而非原文转储：
 
-- user-level problem
-- context files that affect this repo
-- current-version versus future-version requirements
-- whether current code/design satisfies it
-- next action or comment to append
+- 用户层面的问题
+- 影响此仓库的上下文文件
+- 当前版本 vs 未来版本的需求
+- 当前代码/设计是否满足
+- 下一步操作或待追加的评论

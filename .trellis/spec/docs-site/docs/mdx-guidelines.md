@@ -1,12 +1,12 @@
-# MDX Guidelines
+# MDX 指南（MDX Guidelines）
 
-> MDX syntax, frontmatter, and component usage patterns.
+> MDX 语法、frontmatter 和组件使用模式。
 
 ---
 
 ## Frontmatter
 
-Every MDX file must start with frontmatter:
+每个 MDX 文件必须以 frontmatter 开头：
 
 ```yaml
 ---
@@ -15,16 +15,16 @@ description: 'Brief description for SEO (150-160 characters)'
 ---
 ```
 
-### Optional Frontmatter Fields
+### 可选的 Frontmatter 字段
 
-| Field          | Purpose                   | Example         |
+| 字段（Field） | 用途（Purpose） | 示例（Example） |
 | -------------- | ------------------------- | --------------- |
-| `sidebarTitle` | Shorter title for sidebar | `"Quick Start"` |
-| `icon`         | Navigation icon           | `"rocket"`      |
-| `tag`          | Badge/label               | `"NEW"`         |
-| `mode`         | Page mode                 | `"wide"`        |
+| `sidebarTitle` | 侧边栏中较短的标题 | `"Quick Start"` |
+| `icon`         | 导航图标 | `"rocket"` |
+| `tag`          | 徽章/标签 | `"NEW"` |
+| `mode`         | 页面模式 | `"wide"` |
 
-### Example with All Fields
+### 包含所有字段的示例
 
 ```yaml
 ---
@@ -38,11 +38,11 @@ tag: 'Updated'
 
 ---
 
-## Components
+## 组件（Components）
 
 ### Card
 
-Use for navigation links and feature highlights:
+用于导航链接和功能亮点：
 
 ```mdx
 <Card title="Quick Start" icon="rocket" href="/quickstart">
@@ -50,7 +50,7 @@ Use for navigation links and feature highlights:
 </Card>
 ```
 
-**Horizontal variant:**
+**水平变体：**
 
 ```mdx
 <Card title="Start Here" icon="rocket" href="/quickstart" horizontal>
@@ -60,7 +60,7 @@ Use for navigation links and feature highlights:
 
 ### Columns
 
-Use for multi-column layouts:
+用于多列布局：
 
 ```mdx
 <Columns cols={2}>
@@ -75,7 +75,7 @@ Use for multi-column layouts:
 
 ### Tabs
 
-Use for alternative content views:
+用于替代内容视图：
 
 ````mdx
 <Tabs>
@@ -86,7 +86,7 @@ Use for alternative content views:
 
 ### Accordion
 
-Use for collapsible content:
+用于可折叠内容：
 
 ```mdx
 <AccordionGroup>
@@ -99,7 +99,7 @@ Use for collapsible content:
 
 ### CodeGroup
 
-Use for multi-language code examples:
+用于多语言代码示例：
 
 ````mdx
 <CodeGroup>
@@ -120,7 +120,7 @@ curl https://api.example.com/users
 
 ### Snippet
 
-Use for reusable content:
+用于可复用内容：
 
 ```mdx
 <Snippet file="api-key-setup.mdx" />
@@ -128,9 +128,9 @@ Use for reusable content:
 
 ---
 
-## Code Blocks
+## 代码块（Code Blocks）
 
-### Basic Syntax
+### 基本语法
 
 ````markdown
 ```language filename
@@ -138,7 +138,7 @@ code here
 ```
 ````
 
-### With Filename
+### 带文件名
 
 ````markdown
 ```javascript app.js
@@ -147,13 +147,13 @@ const app = express();
 ```
 ````
 
-### Supported Languages
+### 支持的语言
 
-Common: `javascript`, `typescript`, `python`, `bash`, `json`, `yaml`, `sql`, `go`, `rust`
+常见：`javascript`、`typescript`、`python`、`bash`、`json`、`yaml`、`sql`、`go`、`rust`
 
 ---
 
-## Callouts
+## 标注（Callouts）
 
 ### Note
 
@@ -181,33 +181,33 @@ Common: `javascript`, `typescript`, `python`, `bash`, `json`, `yaml`, `sql`, `go
 
 ---
 
-## Common Mistakes
+## 常见错误（Common Mistakes）
 
-### Nested Code Blocks in Templates
+### 模板中嵌套代码块
 
-**Problem**: Using escaped backticks to show code block syntax renders broken:
+**问题**：使用转义反引号显示代码块语法时渲染异常：
 
 ```mdx
-<!-- DON'T: This shows escaped backticks literally -->
+<!-- 不要这样做：这会字面显示转义的反引号 -->
 
 \`\`\`bash
 npm install
 \`\`\`
 ```
 
-**Solution**: Use `<CodeGroup>` component instead:
+**解决方案**：使用 `<CodeGroup>` 组件替代：
 
 ````mdx
-<!-- DO: Wrap in CodeGroup for proper rendering -->
+<!-- 应该这样做：包裹在 CodeGroup 中以正确渲染 -->
 
 <CodeGroup>```bash Install npm install ```</CodeGroup>
 ````
 
-### Duplicate Headings in Template Examples
+### 模板示例中的重复标题
 
-**Problem**: Showing multiple template examples with same headings triggers MD024 lint error.
+**问题**：展示多个模板示例时使用相同标题会触发 MD024 lint 错误。
 
-**Solution**: Add lint disable comment at file start:
+**解决方案**：在文件开头添加 lint 禁用注释：
 
 ```mdx
 ---
@@ -224,47 +224,47 @@ title: 'Templates'
 
 ## Template 2
 
-### Project structure <!-- Same heading, but lint ignored -->
+### Project structure <!-- 相同标题，但 lint 已忽略 -->
 
 ...
 ```
 
-### Mixed Block/Inline JSX Closing Tag
+### 混合内联/块级 JSX 闭合标签
 
-**Symptom**: Whole page renders as `A parsing error occurred. Please contact the owner of this website.` The title also falls back to the file slug (e.g. "Ch12 multi platform" instead of the frontmatter title), confirming MDX compilation failed for the entire file — not just the block.
+**症状**：整个页面渲染为 `A parsing error occurred. Please contact the owner of this website.`。标题也会回退为文件 slug（例如 "Ch12 multi platform" 而非 frontmatter 中的 title），这证实了 MDX 对整个文件（而非仅该块）编译失败。
 
-**Cause**: Callout components (`<Note>`, `<Warning>`, `<Info>`, `<Tip>`) accept either inline form (tag + content + close on one line) OR block form (tags on own lines). Mixing the two breaks the MDX parser.
+**原因**：标注组件（`<Note>`、`<Warning>`、`<Info>`、`<Tip>`）接受内联形式（标签 + 内容 + 闭合在同一行）或块级形式（标签独占一行）。混合使用会导致 MDX 解析器出错。
 
 ```mdx
-<!-- DON'T: opening on own line, closing glued to content -->
+<!-- 不要：开头独占一行，闭合标签紧贴内容 -->
 <Note>
   Don't pick **Full re-initialize** — it overwrites existing config.</Note>
 
-<!-- DON'T: opening glued to content, closing on own line -->
+<!-- 不要：开头紧贴内容，闭合标签独占一行 -->
 <Note>Don't pick **Full re-initialize** — it overwrites existing config.
 </Note>
 ```
 
 ```mdx
-<!-- DO: fully inline (short content) -->
+<!-- 正确：完全内联（内容较短时） -->
 <Note>Don't pick **Full re-initialize** — it overwrites existing config.</Note>
 
-<!-- DO: fully block (multi-line or markdown-heavy content) -->
+<!-- 正确：完全块级（多行或含较多 markdown 的内容时） -->
 <Note>
   Don't pick **Full re-initialize** — it overwrites existing config.
 </Note>
 ```
 
-**Prevention**: Pick one form per callout and keep both tags consistent. When the body contains backtick code spans, bolded text, or more than one sentence, default to the block form for readability.
+**预防**：每个标注选择一种形式并保持两个标签一致。当正文包含反引号代码段、加粗文本或超过一句话时，默认使用块级形式以提高可读性。
 
-### Bulleted List Inside `<Note>` / `<Warning>` / `<Info>` / `<Tip>`
+### `<Note>` / `<Warning>` / `<Info>` / `<Tip>` 内部的列表
 
-**Symptom**: Same as Mixed Block/Inline above — page renders as `A parsing error occurred`, title falls back to slug.
+**症状**：与上述混合内联/块级相同——页面渲染为 `A parsing error occurred`，标题回退为 slug。
 
-**Cause**: Prettier reformats Markdown inside JSX block bodies. Bulleted lists indented under the opening tag get pulled to column 0; the closing tag then gets indented 2 spaces. Mintlify sees the bullets as content outside the `<Note>` and the closing tag as misplaced. Parse fails.
+**原因**：Prettier 会重新格式化 JSX 块体内部的 Markdown。缩进在开标签下的列表会被拉到第 0 列；闭合标签则被缩进 2 个空格。Mintlify 将列表项视为 `<Note>` 外部的内容，闭合标签被视为错位。解析失败。
 
 ```mdx
-<!-- Authored as: -->
+<!-- 编写时： -->
 <Note>
   Hook support varies by platform:
 
@@ -272,7 +272,7 @@ title: 'Templates'
   - **PreToolUse** ships on a smaller subset...
 </Note>
 
-<!-- Prettier rewrites to (broken): -->
+<!-- Prettier 重写为（已损坏）： -->
 <Note>
   Hook support varies by platform:
 
@@ -281,34 +281,34 @@ title: 'Templates'
   </Note>
 ```
 
-**Prevention**: Don't put bulleted lists inside callouts. Keep the callout to a single inline summary line; place the list outside it.
+**预防**：不要在标注内部放置列表。将标注保持为单行内联摘要；将列表放在外部。
 
 ```mdx
-<!-- DO -->
+<!-- 正确做法 -->
 <Note>Hook support varies by platform and by event — see the per-event matrix below.</Note>
 
 - **SessionStart** ships on Claude Code, Cursor, OpenCode...
 - **PreToolUse** ships on a smaller subset...
 ```
 
-If the bullets really must be inside the callout (rare — usually the inline-summary + list-outside form reads better anyway), use raw HTML `<ul><li>` instead of Markdown bullets so Prettier won't reformat them.
+如果列表确实必须在标注内部（罕见——通常内联摘要 + 外部列表的形式读起来更好），使用原始 HTML `<ul><li>` 替代 Markdown 列表，这样 Prettier 不会重新格式化它们。
 
-**Why this isn't caught by `prettier --check` or `markdownlint-cli2`**: both pass on the broken output. Only `mintlify broken-links` (or rendering the page in a Mintlify dev server) surfaces the parse failure. Worth wiring into CI.
+**为什么 `prettier --check` 或 `markdownlint-cli2` 没有捕获到此问题**：两者在损坏的输出上均通过。只有 `mintlify broken-links`（或在 Mintlify 开发服务器中渲染页面）才能发现解析失败。值得将其接入 CI。
 
-### Table Column Alignment
+### 表格列对齐
 
-**Problem**: markdownlint MD060 requires consistent table pipe alignment.
+**问题**：markdownlint MD060 要求一致的表格管道符对齐。
 
-**Solution**: Ensure all columns align:
+**解决方案**：确保所有列对齐：
 
 ```markdown
-<!-- DON'T: Inconsistent spacing -->
+<!-- 不要：不一致的间距 -->
 
 | Command  | What it does                                      |
 | -------- | ------------------------------------------------- |
 | `/start` | Start session. Loads context, shows current task. |
 
-<!-- DO: Align all pipes -->
+<!-- 正确：所有管道符对齐 -->
 
 | Command  | What it does                                      |
 | -------- | ------------------------------------------------- |
@@ -317,22 +317,22 @@ If the bullets really must be inside the callout (rare — usually the inline-su
 
 ---
 
-## Best Practices
+## 最佳实践（Best Practices）
 
 ### DO
 
-- Always include `title` and `description` in frontmatter
-- Use components for visual structure (Cards, Tabs)
-- Keep descriptions under 160 characters for SEO
-- Use appropriate callout types (Note, Warning, Tip)
-- Include code examples with language identifiers
-- Use `<CodeGroup>` when showing code block syntax in examples
+- 始终在 frontmatter 中包含 `title` 和 `description`
+- 使用组件构建视觉结构（Cards、Tabs）
+- 将 description 保持在 160 字符以内以满足 SEO 要求
+- 使用适当的标注类型（Note、Warning、Tip）
+- 包含带有语言标识符的代码示例
+- 在示例中展示代码块语法时使用 `<CodeGroup>`
 
 ### DON'T
 
-- Skip frontmatter
-- Use raw HTML when components exist
-- Write overly long descriptions
-- Mix component styles inconsistently
-- Leave code blocks without language hints
-- Use escaped backticks to show nested code blocks
+- 跳过 frontmatter
+- 在有组件可用时使用原始 HTML
+- 编写过长的 description
+- 不一致地混合组件风格
+- 代码块不加语言提示
+- 使用转义反引号来展示嵌套代码块

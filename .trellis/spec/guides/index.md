@@ -1,109 +1,107 @@
-# Thinking Guides
+# 思维指南（Thinking Guides）
 
-> **Purpose**: Expand your thinking to catch things you might not have considered.
-
----
-
-## Why Thinking Guides?
-
-**Most bugs and tech debt come from "didn't think of that"**, not from lack of skill:
-
-- Didn't think about what happens at layer boundaries → cross-layer bugs
-- Didn't think about code patterns repeating → duplicated code everywhere
-- Didn't think about edge cases → runtime errors
-- Didn't think about future maintainers → unreadable code
-
-These guides help you **ask the right questions before coding**.
+> **用途**：扩展你的思维，以捕获你可能未曾考虑的内容。
 
 ---
 
-## Available Guides
+## 为什么需要思维指南？
 
-| Guide | Purpose | When to Use |
+**大多数 bug 和技术债务来自"没有想到"**，而非缺乏技能：
+
+- 没有考虑层边界会发生什么 → 跨层 bug
+- 没有考虑代码模式在重复 → 到处是重复代码
+- 没有考虑边界情况 → 运行时错误
+- 没有考虑未来的维护者 → 不可读的代码
+
+这些指南帮助你在**编码之前提出正确的问题**。
+
+---
+
+## 可用指南
+
+| 指南（Guide） | 用途（Purpose） | 何时使用 |
 |-------|---------|-------------|
-| [Code Reuse Thinking Guide](./code-reuse-thinking-guide.md) | Identify patterns and reduce duplication | When you notice repeated patterns |
-| [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md) | Think through data flow across layers | Features spanning multiple layers |
-| [Cross-Platform Thinking Guide](./cross-platform-thinking-guide.md) | Catch OS, shell, Python, path, and persistence assumptions | When commands, hooks, templates, scripts, or persisted JSON must work across platforms |
+| [代码复用思维指南](./code-reuse-thinking-guide.md) | 识别模式并减少重复 | 当你注意到重复模式时 |
+| [跨层思维指南](./cross-layer-thinking-guide.md) | 考虑跨层的数据流 | 跨越多个层的功能 |
+| [跨平台思维指南](./cross-platform-thinking-guide.md) | 捕获操作系统、shell、Python、路径和持久化方面的假设 | 当命令、hooks、模板、脚本或持久化 JSON 必须跨平台工作时 |
 
 ---
 
-## Quick Reference: Thinking Triggers
+## 快速参考：思维触发器
 
-### When to Think About Cross-Layer Issues
+### 何时思考跨层问题
 
-- [ ] Feature touches 3+ layers (API, Service, Component, Database)
-- [ ] Data format changes between layers
-- [ ] Multiple consumers need the same data
-- [ ] You're not sure where to put some logic
-- [ ] You are adding an event kind, JSONL record, RPC payload, or config field
-- [ ] UI / command code starts casting raw payload fields directly
+- [ ] 功能涉及 3 个以上层（API、Service、Component、Database）
+- [ ] 数据格式在层之间发生变化
+- [ ] 多个消费者需要相同的数据
+- [ ] 你不确定某些逻辑该放在哪里
+- [ ] 你正在添加事件类型、JSONL 记录、RPC 有效负载或配置字段
+- [ ] UI / 命令代码开始直接转换原始有效负载字段
 
-→ Read [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md)
+→ 阅读 [跨层思维指南](./cross-layer-thinking-guide.md)
 
-### When to Think About Code Reuse
+### 何时思考代码复用
 
-- [ ] You're writing similar code to something that exists
-- [ ] You see the same pattern repeated 3+ times
-- [ ] You're adding a new field to multiple places
-- [ ] **You're modifying any constant or config**
-- [ ] **You're creating a new utility/helper function** ← Search first!
-- [ ] Two files read the same untyped payload field with local casts
-- [ ] Multiple branches update the same derived state from `kind` / `action`
+- [ ] 你正在编写与已有代码相似的内容
+- [ ] 你看到相同的模式重复 3 次以上
+- [ ] 你正在向多个位置添加新字段
+- [ ] **你正在修改任何常量或配置**
+- [ ] **你正在创建新的工具/辅助函数** ← 先搜索！
+- [ ] 两个文件使用本地转换读取相同的非类型化有效负载字段
+- [ ] 多个分支从 `kind` / `action` 更新相同的派生状态
 
-→ Read [Code Reuse Thinking Guide](./code-reuse-thinking-guide.md)
+→ 阅读 [代码复用思维指南](./code-reuse-thinking-guide.md)
 
-### When to Think About Cross-Platform Issues
+### 何时思考跨平台问题
 
-- [ ] You are editing Python scripts, shell commands, hooks, or generated config
-- [ ] You are adding or documenting a command users copy into terminals
-- [ ] Code or docs assume `python3`, shebang execution, `/` path separators, or
-      POSIX-only shell behavior
-- [ ] You are changing persisted JSON or migrations that must work across
-      macOS, Linux, and Windows
+- [ ] 你正在编辑 Python 脚本、shell 命令、hooks 或生成的配置
+- [ ] 你正在添加或记录用户复制到终端的命令
+- [ ] 代码或文档假设 `python3`、shebang 执行、`/` 路径分隔符或仅 POSIX 的 shell 行为
+- [ ] 你正在更改必须跨 macOS、Linux 和 Windows 工作的持久化 JSON 或迁移
 
-→ Read [Cross-Platform Thinking Guide](./cross-platform-thinking-guide.md)
+→ 阅读 [跨平台思维指南](./cross-platform-thinking-guide.md)
 
-### When Verifying AI Cross-Review Results
+### 何时验证 AI 交叉审查结果
 
-- [ ] Reviewer claims "user input can be malicious" → Check the actual data source (internal manifest? user config? external API?)
-- [ ] Reviewer flags "missing validation" → Is the data from a trusted internal source?
-- [ ] Reviewer says "behavior change" → Read the code comments — is it intentional design?
-- [ ] Reviewer identifies a "bug" in test → Mentally delete the feature being tested — does the test still pass? If yes → tautological test
+- [ ] 审查者声称"用户输入可能具有恶意"→ 检查实际数据来源（内部清单？用户配置？外部 API？）
+- [ ] 审查者标记"缺少验证"→ 数据是否来自受信任的内部来源？
+- [ ] 审查者说"行为变更"→ 阅读代码注释——是否是故意设计？
+- [ ] 审查者在测试中发现"bug"→ 在脑内删除被测功能——测试是否仍然通过？如果是 → 同义反复测试
 
-**Common AI reviewer false-positive patterns**:
-1. **Trust boundary confusion**: Treating internal data (bundled JSON manifests) as untrusted external input
-2. **Ignoring design comments**: Flagging intentional behavior documented in code comments as bugs
-3. **Variable misreading**: Not tracing a variable to its actual definition (e.g., Map keyed by path vs name)
+**常见 AI 审查者误报模式**：
+1. **信任边界混淆**：将内部数据（捆绑的 JSON 清单）视为不受信任的外部输入
+2. **忽略设计注释**：将代码注释中记录的故意行为标记为 bug
+3. **变量误读**：未追溯到变量的实际定义（例如，Map 以 path 还是 name 为键）
 
-**Verification rule**: Every CRITICAL/WARNING finding must be verified against the actual code before prioritizing. Budget ~35% false-positive rate for AI reviews.
+**验证规则**：每个 CRITICAL/WARNING 发现必须在排优先级之前对照实际代码进行验证。AI 审查的误报率预计约 35%。
 
 ---
 
-## Pre-Modification Rule (CRITICAL)
+## 修改前规则（关键）
 
-> **Before changing ANY value, ALWAYS search first!**
+> **在更改任何值之前，始终先搜索！**
 
 ```bash
-# Search for the value you're about to change
+# 搜索你即将更改的值
 grep -r "value_to_change" .
 ```
 
-This single habit prevents most "forgot to update X" bugs.
+这一习惯可防止大多数"忘记更新 X"的 bug。
 
 ---
 
-## How to Use This Directory
+## 如何使用本目录
 
-1. **Before coding**: Skim the relevant thinking guide
-2. **During coding**: If something feels repetitive or complex, check the guides
-3. **After bugs**: Add new insights to the relevant guide (learn from mistakes)
-
----
-
-## Contributing
-
-Found a new "didn't think of that" moment? Add it to the relevant guide.
+1. **编码之前**：浏览相关的思维指南
+2. **编码期间**：如果感觉某事是重复的或复杂的，查阅指南
+3. **出现 bug 之后**：将新的见解添加到相关指南（从错误中学习）
 
 ---
 
-**Core Principle**: 30 minutes of thinking saves 3 hours of debugging.
+## 贡献
+
+发现了新的"没有想到"时刻？将其添加到相关指南中。
+
+---
+
+**核心原则**：30 分钟的思考可以节省 3 小时的调试时间。

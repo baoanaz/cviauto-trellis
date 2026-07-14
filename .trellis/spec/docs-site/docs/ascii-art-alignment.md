@@ -1,25 +1,25 @@
-# ASCII-Art Diagram Alignment in Mintlify
+# Mintlify 中的 ASCII 图表对齐（ASCII-Art Diagram Alignment）
 
-> How to make box-drawing diagrams render correctly in browser, especially with CJK text.
+> 如何使方框绘制图表在浏览器中正确渲染，尤其是在含有 CJK 文本时。
 
 ---
 
-## Problem Summary
+## 问题概述（Problem Summary）
 
-ASCII-art diagrams using box-drawing characters (`─│┌┐└┘┬┤├┼`) break in the browser for two reasons:
+使用方框绘制字符（`─│┌┐└┘┬┤├┼`）的 ASCII 图表在浏览器中会错位，有两个原因：
 
-| Problem                            | Root Cause                                                                               | Affected                |
+| 问题（Problem） | 根本原因（Root Cause） | 受影响对象 |
 | ---------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------- |
-| Box-drawing chars wider than ASCII | JetBrains Mono (Mintlify default) renders `─│┌` at ~1.8× ASCII width                     | All languages           |
-| CJK chars not exactly 2× ASCII     | Browser CJK fallback fonts render Chinese at ~1.7× ASCII instead of terminal-standard 2× | Chinese/Japanese/Korean |
+| 方框绘制字符比 ASCII 更宽 | JetBrains Mono（Mintlify 默认字体）将 `─│┌` 渲染为约 1.8 倍 ASCII 宽度 | 所有语言 |
+| CJK 字符并非恰好是 2 倍 ASCII 宽度 | 浏览器的 CJK 回退字体将中文渲染为约 1.7 倍 ASCII 宽度，而非终端标准的 2 倍 | 中文/日文/韩文 |
 
 ---
 
-## Solution 1: English-Only Diagrams (Font Override)
+## 方案 1：纯英文图表（字体覆盖）（Solution 1: English-Only Diagrams）
 
-For diagrams with only ASCII text, switching the code block font to Menlo fixes everything — Menlo renders box-drawing chars at exactly 1× ASCII width.
+对于仅含 ASCII 文本的图表，将代码块字体切换为 Menlo 即可解决所有问题——Menlo 将方框绘制字符渲染为恰好 1 倍 ASCII 宽度。
 
-**CSS in `styles.css`:**
+**`styles.css` 中的 CSS：**
 
 ```css
 pre code {
@@ -27,25 +27,25 @@ pre code {
 }
 ```
 
-Use standard markdown code blocks (` ``` `). No other changes needed.
+使用标准 markdown 代码块（` ``` `）。无需其他更改。
 
 ---
 
-## Solution 2: Chinese CJK Diagrams (2ch Inline-Block)
+## 方案 2：中文 CJK 图表（2ch inline-block）（Solution 2: Chinese CJK Diagrams）
 
-For diagrams mixing Chinese text with box-drawing borders, **no font** can guarantee CJK = 2× ASCII in browsers. The solution is CSS-forced widths.
+对于混合中文文本与方框绘制边框的图表，**没有任何字体**可以在浏览器中保证 CJK = 2 倍 ASCII。解决方案是使用 CSS 强制宽度。
 
-### Technique
+### 技术方案
 
-1. Wrap each CJK character in `<b>` tags
-2. CSS forces `<b>` to `display:inline-block;width:2ch` — exactly 2 monospace columns
-3. Use `dangerouslySetInnerHTML` to bypass MDX parsing issues
+1. 将每个 CJK 字符包裹在 `<b>` 标签中
+2. CSS 将 `<b>` 设置为 `display:inline-block;width:2ch` ——恰好 2 个等宽列
+3. 使用 `dangerouslySetInnerHTML` 绕过 MDX 解析问题
 
-**CSS in `styles.css`:**
+**`styles.css` 中的 CSS：**
 
 ```css
 pre.cjk-diagram {
-  display: block !important; /* Override Mintlify's display:flex on <pre> */
+  display: block !important; /* 覆盖 Mintlify 在 <pre> 上的 display:flex */
   padding: 14px 16px;
   border-radius: 16px;
   font-size: 14px;
@@ -71,7 +71,7 @@ pre.cjk-diagram b {
 }
 ```
 
-**MDX usage:**
+**MDX 用法：**
 
 ```mdx
 <pre
@@ -84,84 +84,84 @@ pre.cjk-diagram b {
 />
 ```
 
-### Generator Script
+### 生成器脚本
 
-Use `/tmp/gen_zh_html_diagrams.py` to automate CJK wrapping. Key functions:
+使用 `/tmp/gen_zh_html_diagrams.py` 自动化 CJK 包裹。关键函数：
 
-- `is_cjk(ch)` — detect CJK characters (U+4E00-9FFF etc.)
-- `display_width(s)` — calculate terminal-style display width (CJK=2, ASCII=1)
-- `cjk_pad(content, width)` — pad content to exact display width
-- `wrap_cjk(text)` — wrap each CJK char in `<b>` tags
+- `is_cjk(ch)`——检测 CJK 字符（U+4E00-9FFF 等）
+- `display_width(s)`——计算终端风格的显示宽度（CJK=2，ASCII=1）
+- `cjk_pad(content, width)`——将内容填充到精确的显示宽度
+- `wrap_cjk(text)`——将每个 CJK 字符包裹在 `<b>` 标签中
 
 ---
 
-## Gotchas (Learned the Hard Way)
+## 陷阱（Gotchas，从实际踩坑中学到的）
 
-### 1. Mintlify `<pre>` has `display:flex`
+### 1. Mintlify `<pre>` 具有 `display:flex`
 
-Mintlify's CSS sets `display:flex` on `<pre>` elements. This turns `<b>` children into flex items where `display:inline-block` becomes `display:block`. **Must** add `display:block !important` on `pre.cjk-diagram`.
+Mintlify 的 CSS 在 `<pre>` 元素上设置了 `display:flex`。这会将 `<b>` 子元素变为 flex 子元素，其中 `display:inline-block` 会变为 `display:block`。**必须**在 `pre.cjk-diagram` 上添加 `display:block !important`。
 
-### 2. MDX blank lines trigger markdown re-parsing
+### 2. MDX 空行会触发 markdown 重新解析
 
-In MDX v2+, a blank line inside a JSX element (like `<pre>`) causes the parser to re-enter markdown mode. Content like `# Heading` after a blank line becomes an `<h1>` tag, breaking everything. Solutions:
+在 MDX v2+ 中，JSX 元素（如 `<pre>`）内部出现空行会导致解析器重新进入 markdown 模式。空行后的内容（如 `# Heading`）会变为 `<h1>` 标签，破坏一切。解决方案：
 
-- Use `dangerouslySetInnerHTML` (completely bypasses MDX parsing) **[recommended]**
-- Or ensure no truly empty lines exist inside `<pre>` (replace with single space)
+- 使用 `dangerouslySetInnerHTML`（完全绕过 MDX 解析）**[推荐]**
+- 或者确保 `<pre>` 内部没有真正的空行（用单个空格替代）
 
-### 3. JSX special characters in `<pre>` children
+### 3. `<pre>` 子元素中的 JSX 特殊字符
 
-If using direct JSX children (not `dangerouslySetInnerHTML`):
+如果使用直接 JSX 子元素（而非 `dangerouslySetInnerHTML`）：
 
-- `{` and `}` must be escaped as `{"{"}` and `{"}"}`
-- `#` at line start after blank line becomes heading
-- `===` can become setext heading marker
+- `{` 和 `}` 必须转义为 `{"{"}` 和 `{"}"}`
+- 空行后的行首 `#` 会变为 heading
+- `===` 可能变为 setext 标题标记
 
-`dangerouslySetInnerHTML` avoids all of these.
+`dangerouslySetInnerHTML` 避免了所有这些问题。
 
-### 4. `size-adjust` in `@font-face` doesn't work for CJK
+### 4. `@font-face` 中的 `size-adjust` 不适用于 CJK
 
-Attempted using `@font-face { size-adjust: 118% }` to scale CJK font width to 2× ASCII. Failed because:
+尝试使用 `@font-face { size-adjust: 118% }` 将 CJK 字体宽度缩放到 2 倍 ASCII。失败原因：
 
-- `local()` in `@font-face` only matches system fonts, not web fonts
-- Browser applies CJK from fallback font, not from the `@font-face` declaration
-- Even when applied, it scales ALL metrics (height too), causing uneven line heights
+- `@font-face` 中的 `local()` 仅匹配系统字体，不匹配 web 字体
+- 浏览器从回退字体应用 CJK，而非从 `@font-face` 声明
+- 即使应用了，也会缩放所有度量（包括高度），导致行高不均匀
 
-### 5. Web font CJK subsets don't guarantee 2:1 ratio
+### 5. Web 字体 CJK 子集不保证 2:1 比例
 
-LXGW WenKai Mono web font (`@callmebill/lxgw-wenkai-web`):
+LXGW WenKai Mono web 字体（`@callmebill/lxgw-wenkai-web`）：
 
-- Loads 217+ subset files via `unicode-range`
-- ASCII glyphs fall through to Menlo (font doesn't include ASCII in web subset)
-- CJK/ASCII ratio = 1.84 (LXGW CJK + Menlo ASCII), not 2.0
+- 通过 `unicode-range` 加载 217+ 个子集文件
+- ASCII 字形回退到 Menlo（Web 子集中字体不包含 ASCII）
+- CJK/ASCII 比例 = 1.84（LXGW CJK + Menlo ASCII），而非 2.0
 
-### 6. Browser CJK width varies by OS
+### 6. 浏览器 CJK 宽度因操作系统而异
 
-| OS      | CJK Fallback Font      | CJK/ASCII Ratio |
+| 操作系统（OS） | CJK 回退字体 | CJK/ASCII 比例 |
 | ------- | ---------------------- | --------------- |
 | macOS   | PingFang SC / Hiragino | ~1.69           |
 | Windows | Microsoft YaHei        | ~1.67           |
-| Linux   | Noto Sans CJK          | varies          |
+| Linux   | Noto Sans CJK          | 各有不同       |
 
-Character-level padding CANNOT fix this because the ratio is font-dependent. The `2ch` CSS technique is the only cross-platform solution.
+字符级填充无法解决此问题，因为比例因字体而异。`2ch` CSS 技术是唯一的跨平台解决方案。
 
 ---
 
-## Measurement Reference
+## 测量参考（Measurement Reference）
 
-At `font-size: 14px` with Menlo:
+在 `font-size: 14px` 下使用 Menlo：
 
-| Character           | Width (px) | Ratio to ASCII |
+| 字符（Character） | 宽度 px | 与 ASCII 比例 |
 | ------------------- | ---------- | -------------- |
 | ASCII `a`           | 8.43       | 1.00           |
-| Space               | 8.43       | 1.00           |
-| Box `─`             | 8.43       | 1.00           |
-| Box `│`             | 8.43       | 1.00           |
-| CJK `中` (natural)  | 14.28      | 1.69           |
-| CJK `中` (with 2ch) | 16.86      | 2.00           |
+| 空格（Space）       | 8.43       | 1.00           |
+| 方框 `─`            | 8.43       | 1.00           |
+| 方框 `│`            | 8.43       | 1.00           |
+| CJK `中`（自然宽度）| 14.28      | 1.69           |
+| CJK `中`（使用 2ch）| 16.86      | 2.00           |
 
 ---
 
-## Quick Decision Tree
+## 快速决策树（Quick Decision Tree）
 
 ````
 Need ASCII-art diagram in docs?

@@ -1,29 +1,29 @@
-# Hooks System
+# Hooks 系统
 
-Claude Code hooks for automatic context injection and quality enforcement.
+Claude Code hooks 用于自动上下文注入和质量强制执行。
 
 ---
 
-## Overview
+## 概述
 
-Hooks intercept Claude Code lifecycle events to inject context and enforce quality.
+Hooks 拦截 Claude Code 生命周期事件，以注入上下文并强制执行质量。
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           HOOK LIFECYCLE                                 │
+│                           HOOK 生命周期                                  │
 │                                                                          │
-│  Session Start ──► SessionStart hook ──► Inject workflow context        │
+│  会话开始 ──► SessionStart hook ──► 注入工作流上下文                     │
 │                                                                          │
-│  Task() called ──► PreToolUse:Task hook ──► Inject specs from JSONL     │
+│  Task() 被调用 ──► PreToolUse:Task hook ──► 从 JSONL 注入规范           │
 │                                                                          │
-│  Agent stops ──► SubagentStop hook ──► Ralph Loop verification          │
+│  Agent 停止 ──► SubagentStop hook ──► Ralph Loop 验证                   │
 │                                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Configuration
+## 配置
 
 ### `.claude/settings.json`
 
@@ -74,21 +74,21 @@ Hooks intercept Claude Code lifecycle events to inject context and enforce quali
 
 ## SessionStart Hook
 
-### Purpose
+### 用途
 
-Inject initial context when a Claude Code session starts.
+在 Claude Code 会话开始时注入初始上下文。
 
-### Script: `session-start.py`
+### 脚本：`session-start.py`
 
-**Injects:**
-- Developer identity from `.trellis/.developer`
-- Git status and recent commits
-- Current task (if the session-scoped resolver finds one)
-- `workflow.md` content
-- All `spec/*/index.md` files
-- Start instructions
+**注入内容：**
+- 来自 `.trellis/.developer` 的开发者身份
+- Git 状态和最近的提交
+- 当前任务（如果会话作用域的解析器找到了）
+- `workflow.md` 内容
+- 所有 `spec/*/index.md` 文件
+- 启动指令
 
-**Output format:**
+**输出格式：**
 ```json
 {
   "result": "continue",
@@ -100,23 +100,23 @@ Inject initial context when a Claude Code session starts.
 
 ## PreToolUse:Task Hook
 
-### Purpose
+### 用途
 
-Inject relevant specs when a subagent is invoked.
+当调用 Subagent 时注入相关规范。
 
-### Script: `inject-subagent-context.py`
+### 脚本：`inject-subagent-context.py`
 
-**Trigger:** When `Task(subagent_type="...")` is called.
+**触发条件：** 当 `Task(subagent_type="...")` 被调用时。
 
-**Flow:**
-1. Read `subagent_type` from tool input
-2. Find active task through the session-scoped resolver
-3. Load `{subagent_type}.jsonl` from task directory
-4. Read each file listed in JSONL
-5. Build augmented prompt with context
-6. Update `task.json` with current phase
+**流程：**
+1. 从工具输入中读取 `subagent_type`
+2. 通过会话作用域解析器找到活动任务
+3. 从任务目录加载 `{subagent_type}.jsonl`
+4. 读取 JSONL 中列出的每个文件
+5. 构建带有上下文的增强提示词
+6. 用当前阶段更新 `task.json`
 
-**Output format:**
+**输出格式：**
 ```json
 {
   "result": "continue",
@@ -126,7 +126,7 @@ Inject relevant specs when a subagent is invoked.
 }
 ```
 
-### JSONL Format
+### JSONL 格式
 
 ```jsonl
 {"file": ".trellis/spec/cli/backend/index.md", "reason": "Backend guidelines"}
@@ -138,52 +138,52 @@ Inject relevant specs when a subagent is invoked.
 
 ## SubagentStop Hook
 
-### Purpose
+### 用途
 
-Quality enforcement via Ralph Loop.
+通过 Ralph Loop 进行质量强制执行。
 
-### Script: `ralph-loop.py`
+### 脚本：`ralph-loop.py`
 
-**Trigger:** When Check Agent tries to stop.
+**触发条件：** 当 Check Agent 尝试停止时。
 
-**Flow:**
-1. Read verify commands from `worktree.yaml`
-2. Execute each command (pnpm lint, pnpm typecheck, etc.)
-3. If all pass → allow stop
-4. If any fail → block stop, agent continues
+**流程：**
+1. 从 `worktree.yaml` 读取验证命令
+2. 执行每个命令（pnpm lint、pnpm typecheck 等）
+3. 如果全部通过 → 允许停止
+4. 如果有任何失败 → 阻止停止，Agent 继续运行
 
-→ See [ralph-loop.md](./ralph-loop.md) for details.
+→ 详见 [ralph-loop.md](./ralph-loop.md)。
 
 ---
 
-## Hook Scripts Location
+## Hook 脚本位置
 
 ```
 .claude/hooks/
-├── session-start.py           # SessionStart handler
-├── inject-subagent-context.py # PreToolUse:Task handler
-└── ralph-loop.py              # SubagentStop:check handler
+├── session-start.py           # SessionStart 处理器
+├── inject-subagent-context.py # PreToolUse:Task 处理器
+└── ralph-loop.py              # SubagentStop:check 处理器
 ```
 
 ---
 
-## Environment Variables
+## 环境变量
 
-Available in hook scripts:
+Hook 脚本中可用的变量：
 
-| Variable | Description |
+| 变量 | 描述 |
 |----------|-------------|
-| `CLAUDE_PROJECT_DIR` | Project root directory |
-| `HOOK_EVENT` | Event type (SessionStart, PreToolUse, etc.) |
-| `TOOL_NAME` | Tool being called (for PreToolUse) |
-| `TOOL_INPUT` | JSON string of tool input |
-| `SUBAGENT_TYPE` | Agent type (for SubagentStop) |
+| `CLAUDE_PROJECT_DIR` | 项目根目录 |
+| `HOOK_EVENT` | 事件类型（SessionStart、PreToolUse 等） |
+| `TOOL_NAME` | 被调用的工具（用于 PreToolUse） |
+| `TOOL_INPUT` | 工具输入的 JSON 字符串 |
+| `SUBAGENT_TYPE` | Agent 类型（用于 SubagentStop） |
 
 ---
 
-## Hook Response Format
+## Hook 响应格式
 
-### Continue (allow operation)
+### Continue（允许操作）
 
 ```json
 {
@@ -192,7 +192,7 @@ Available in hook scripts:
 }
 ```
 
-### Continue with modified input
+### Continue 并修改输入
 
 ```json
 {
@@ -203,7 +203,7 @@ Available in hook scripts:
 }
 ```
 
-### Block (prevent operation)
+### Block（阻止操作）
 
 ```json
 {
@@ -214,9 +214,9 @@ Available in hook scripts:
 
 ---
 
-## Debugging Hooks
+## 调试 Hooks
 
-### View hook output
+### 查看 Hook 输出
 
 ```bash
 # Check if hooks are configured
@@ -230,11 +230,11 @@ TOOL_INPUT='{"subagent_type":"implement","prompt":"test"}' \
   python3 .claude/hooks/inject-subagent-context.py
 ```
 
-### Common Issues
+### 常见问题
 
-| Issue | Cause | Solution |
+| 问题 | 原因 | 解决方案 |
 |-------|-------|----------|
-| Hook not running | Wrong matcher | Check settings.json matcher |
-| Timeout | Script too slow | Increase timeout or optimize |
-| No context injected | Missing session active task | Run `task.py start` with session identity |
-| JSONL not found | Wrong task directory | Check `task.py current --source` |
+| Hook 未运行 | 匹配器错误 | 检查 settings.json 中的 matcher |
+| 超时 | 脚本太慢 | 增加 timeout 或优化 |
+| 未注入上下文 | 缺少会话活动任务 | 使用会话身份运行 `task.py start` |
+| 未找到 JSONL | 错误的任务目录 | 检查 `task.py current --source` |

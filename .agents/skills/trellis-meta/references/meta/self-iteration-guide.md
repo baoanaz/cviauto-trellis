@@ -1,46 +1,46 @@
-# Trellis Self-Iteration Guide
+# Trellis 自我迭代指南
 
-How to maintain skill documentation when customizing Trellis.
-
----
-
-## Core Principle
-
-**Every Trellis modification MUST be documented in the appropriate skill.**
-
-```
-Modification to Trellis → Update trellis-local (project skill)
-Update to Trellis itself → Update trellis-meta (meta skill)
-```
+如何在自定义 Trellis 时维护技能文档。
 
 ---
 
-## Decision Tree
+## 核心原则
+
+**每次 Trellis 修改都必须在相应的技能中记录。**
 
 ```
-Is this a modification to Trellis?
+对 Trellis 的修改 → 更新 trellis-local（项目技能）
+对 Trellis 本身的更新 → 更新 trellis-meta（元技能）
+```
+
+---
+
+## 决策树
+
+```
+这是对 Trellis 的修改吗？
 │
-├── YES: What kind?
+├── 是：哪种类型？
 │   │
-│   ├── Project-specific customization
-│   │   └── Update .claude/skills/trellis-local/SKILL.md
+│   ├── 项目特定的自定义
+│   │   └── 更新 .claude/skills/trellis-local/SKILL.md
 │   │
-│   ├── Bug fix to core Trellis
-│   │   └── Update ~/.claude/skills/trellis-meta/
-│   │       (or project copy if reviewing first)
+│   ├── 核心 Trellis 的 Bug 修复
+│   │   └── 更新 ~/.claude/skills/trellis-meta/
+│   │       （或先审查时使用项目副本）
 │   │
-│   └── New feature to core Trellis
-│       └── Update trellis-meta after release
+│   └── 核心 Trellis 的新功能
+│       └── 发布后更新 trellis-meta
 │
-└── NO: Just using Trellis
-    └── No skill update needed
+└── 否：仅使用 Trellis
+    └── 无需更新技能
 ```
 
 ---
 
-## Self-Iteration Workflow
+## 自我迭代工作流
 
-### Step 1: Before Making Changes
+### 步骤 1：做出更改之前
 
 ```bash
 # Check if project skill exists
@@ -51,32 +51,32 @@ mkdir -p .claude/skills/trellis-local
 # Copy template from trellis-meta/references/trellis-local-template.md
 ```
 
-### Step 2: Make the Trellis Modification
+### 步骤 2：做出 Trellis 修改
 
-Do your work: add command, modify hook, etc.
+执行你的工作：添加命令、修改 hook 等。
 
-### Step 3: Document in Project Skill
+### 步骤 3：在项目技能中记录
 
-Open `.claude/skills/trellis-local/SKILL.md` and:
+打开 `.claude/skills/trellis-local/SKILL.md` 并：
 
-1. **Find the right section** (Commands/Agents/Hooks/Specs/Workflow)
-2. **Add entry using template**
-3. **Update changelog**
-4. **Update summary counts**
+1. **找到正确的部分**（Commands/Agents/Hooks/Specs/Workflow）
+2. **使用模板添加条目**
+3. **更新变更日志**
+4. **更新摘要计数**
 
-### Step 4: Verify Documentation
+### 步骤 4：验证文档
 
-Ask yourself:
-- [ ] Would another AI understand what was changed?
-- [ ] Is the "why" documented?
-- [ ] Are affected files listed?
-- [ ] Is the date recorded?
+问自己：
+- [ ] 另一个 AI 能理解什么被更改了吗？
+- [ ] "为什么"被记录了吗？
+- [ ] 受影响的文件被列出来了吗？
+- [ ] 日期被记录了吗？
 
 ---
 
-## Documentation Templates
+## 文档模板
 
-### New Command
+### 新命令
 
 ```markdown
 #### /trellis:my-command
@@ -94,7 +94,7 @@ Ask yourself:
 User asks "..." → Command does "..."
 ```
 
-### New Agent
+### 新 Agent
 
 ```markdown
 #### my-agent
@@ -115,7 +115,7 @@ Task(subagent_type="my-agent", prompt="...")
 ```
 ```
 
-### Hook Modification
+### Hook 修改
 
 ```markdown
 #### inject-subagent-context.py
@@ -140,7 +140,7 @@ def get_my_agent_context(repo_root, task_dir):
 ```
 ```
 
-### Spec Category Addition
+### 规范类别添加
 
 ```markdown
 #### security/
@@ -159,7 +159,7 @@ def get_my_agent_context(repo_root, task_dir):
 ```
 ```
 
-### Workflow Change
+### 工作流更改
 
 ```markdown
 #### Custom Phase Order
@@ -184,7 +184,7 @@ def get_my_agent_context(repo_root, task_dir):
 
 ---
 
-## Changelog Format
+## 变更日志格式
 
 ```markdown
 ### 2026-01-31 - Feature: Custom Research Phase
@@ -204,34 +204,34 @@ def get_my_agent_context(repo_root, task_dir):
 
 ---
 
-## Multi-Project Scenario
+## 多项目场景
 
-When working with multiple Trellis projects:
+当使用多个 Trellis 项目时：
 
 ```
 ~/projects/
 ├── project-a/
-│   └── .claude/skills/trellis-local/   # Project A customizations
+│   └── .claude/skills/trellis-local/   # 项目 A 自定义
 ├── project-b/
-│   └── .claude/skills/trellis-local/   # Project B customizations
+│   └── .claude/skills/trellis-local/   # 项目 B 自定义
 └── project-c/
-    └── .claude/skills/trellis-local/   # Project C customizations
+    └── .claude/skills/trellis-local/   # 项目 C 自定义
 
 ~/.claude/skills/
-└── trellis-meta/                        # Shared meta-skill (vanilla Trellis)
+└── trellis-meta/                        # 共享元技能（原始 Trellis）
 ```
 
-**Each project has its own `trellis-local`** documenting that project's specific customizations.
+**每个项目有自己的 `trellis-local`**，记录该项目特定的自定义。
 
-**The meta-skill is shared** and documents vanilla Trellis.
+**元技能是共享的**，记录原始 Trellis。
 
 ---
 
-## Upgrade Workflow
+## 升级工作流
 
-When upgrading Trellis to a new version:
+升级 Trellis 到新版本时：
 
-### 1. Review New Version Changes
+### 1. 审查新版本变更
 
 ```bash
 # Compare new meta-skill with current
@@ -239,14 +239,14 @@ diff -r ~/.claude/skills/trellis-meta/references/ \
         ./new-trellis-meta/references/
 ```
 
-### 2. Check for Conflicts
+### 2. 检查冲突
 
-Review each customization in `trellis-local`:
-- Does new version include this feature natively?
-- Does new version break this customization?
-- Can this customization be simplified?
+审查 `trellis-local` 中的每个自定义：
+- 新版本是否原生包含此功能？
+- 新版本是否会破坏此自定义？
+- 此自定义是否可以简化？
 
-### 3. Merge Carefully
+### 3. 谨慎合并
 
 ```bash
 # Backup current meta-skill
@@ -256,9 +256,9 @@ cp -r ~/.claude/skills/trellis-meta ~/.claude/skills/trellis-meta.backup
 cp -r ./new-trellis-meta/* ~/.claude/skills/trellis-meta/
 ```
 
-### 4. Update Project Skills
+### 4. 更新项目技能
 
-Add migration note to `trellis-local`:
+向 `trellis-local` 添加迁移说明：
 
 ```markdown
 ### 2026-02-01 - Upgraded to Trellis 0.4.0
@@ -270,19 +270,19 @@ Add migration note to `trellis-local`:
 
 ---
 
-## AI Instructions
+## AI 指令
 
-When an AI modifies Trellis, it MUST:
+当 AI 修改 Trellis 时，必须：
 
-1. **Check** if `trellis-local` exists in the project
-2. **Create** it from template if missing
-3. **Document** the change immediately after making it
-4. **Update** the changelog with date and description
-5. **Verify** the documentation is complete
+1. **检查**项目中是否存在 `trellis-local`
+2. 如果缺失，从模板**创建**
+3. 在做出更改后立即**记录**
+4. **更新**变更日志，包含日期和描述
+5. **验证**文档是否完整
 
-**Never** modify `trellis-meta` for project-specific changes.
+**绝不要**为项目特定的更改修改 `trellis-meta`。
 
-**Always** tell the user what was documented.
+**始终**告知用户记录了哪些内容。
 
-Example AI response:
-> "I've added the `/trellis:deploy` command and documented it in `.claude/skills/trellis-local/SKILL.md` under the Commands section."
+示例 AI 响应：
+> "我已添加 `/trellis:deploy` 命令，并在 `.claude/skills/trellis-local/SKILL.md` 的 Commands 部分中记录。"

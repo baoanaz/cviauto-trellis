@@ -3,62 +3,62 @@ name: python-design
 description: "Python design patterns for CLI scripts and utilities — type-first development, deep modules, complexity management, and red flags. Use when reading, writing, reviewing, or refactoring Python files, especially in .trellis/scripts/ or any CLI/scripting context. Also activate when planning module structure, deciding where to put new code, or doing code review."
 ---
 
-# Python Design for CLI Scripts
+# CLI 脚本的 Python 设计
 
-Design patterns and principles for writing maintainable Python CLI tools and utilities.
-Based on *A Philosophy of Software Design* (Ousterhout), adapted for scripting contexts.
+编写可维护 Python CLI 工具和实用程序的设计模式和原则。
+基于 *A Philosophy of Software Design*（Ousterhout），并根据脚本上下文进行了适配。
 
-## When to Activate
+## 何时激活
 
-- Writing or modifying Python files
-- Planning module decomposition
-- Code review of Python changes
-- Refactoring scripts that feel "messy"
-- Adding a new subcommand or utility function
+- 编写或修改 Python 文件
+- 规划模块分解
+- 代码审查 Python 变更
+- 重构感觉"混乱"的脚本
+- 添加新的子命令或工具函数
 
-## Core Thesis
+## 核心论点
 
-**The central challenge is managing complexity, not adding features.**
+**核心挑战是管理复杂性，而非添加功能。**
 
-Complexity is anything that makes code hard to understand or modify. It has three symptoms:
+复杂性是任何让代码难以理解或修改的东西。它有三个症状：
 
-1. **Change Amplification** — A small change requires edits in many places
-2. **Cognitive Load** — You must hold too much context to make a safe change
-3. **Unknown Unknowns** — You don't know what you don't know (the most dangerous)
+1. **变更放大** — 一个小改动需要在很多地方进行编辑
+2. **认知负荷** — 做安全修改必须在脑中持有太多上下文
+3. **未知的未知** — 你不知道自己不知道什么（最危险的一种）
 
-Complexity is incremental. It accumulates through hundreds of small decisions, not one catastrophic mistake. Therefore: **sweat the small stuff**.
+复杂性是渐进积累的。它通过数百个小决策累积而来，而非一个灾难性错误。因此：**关注小事**。
 
 ---
 
-## Principle 1: Deep Modules
+## 原则 1：深层模块
 
-A module's value is the ratio of functionality hidden vs. interface exposed.
+模块的价值是隐藏的功能量 vs 暴露的接口量的比率。
 
 ```
-Deep module (good):          Shallow module (bad):
+深层模块（好）：              浅层模块（坏）：
 ┌──────────┐                 ┌──────────────────────────┐
-│ simple   │                 │ complex interface        │
-│ interface│                 │ many params, many methods │
+│ 简洁的   │                 │ 复杂的接口               │
+│ 接口     │                 │ 很多参数、很多方法        │
 ├──────────┤                 ├──────────────────────────┤
 │          │                 │                          │
-│  rich    │                 │  thin implementation     │
-│  impl    │                 │                          │
+│  丰富的  │                 │  薄弱的实现              │
+│  实现    │                 │                          │
 │          │                 └──────────────────────────┘
 │          │
 └──────────┘
 ```
 
-**Practical test**: If a caller must understand how the module works internally to use it correctly, the module is too shallow.
+**实用检验**：如果调用者必须理解模块内部如何工作才能正确使用它，该模块就太浅了。
 
-### Example: Task Data Access
+### 示例：任务数据访问
 
 ```python
-# Shallow — caller must know JSON structure, file paths, error handling
+# 浅层 — 调用者必须知道 JSON 结构、文件路径、错误处理
 def _read_json_file(path: Path) -> dict:
     with open(path, encoding="utf-8") as f:
         return json.load(f)
 
-# Every caller does this independently:
+# 每个调用者独立执行这些操作：
 task_path = tasks_dir / name / "task.json"
 data = _read_json_file(task_path)
 title = data.get("title") or data.get("name", "")
@@ -67,7 +67,7 @@ assignee = data.get("assignee", "")
 ```
 
 ```python
-# Deep — caller gets what they need, module hides JSON/path/parsing
+# 深层 — 调用者获得所需，模块隐藏 JSON/路径/解析
 @dataclass(frozen=True)
 class TaskInfo:
     name: str
@@ -78,28 +78,28 @@ class TaskInfo:
     directory: Path
 
 def load_task(tasks_dir: Path, name: str) -> TaskInfo | None:
-    """Load task by directory name. Returns None if not found."""
+    """按目录名加载任务。未找到时返回 None。"""
     ...
 
 def list_active_tasks(tasks_dir: Path) -> list[TaskInfo]:
-    """List all non-archived tasks, sorted by priority."""
+    """列出所有未归档任务，按优先级排序。"""
     ...
 ```
 
-The deep version absorbs complexity: JSON parsing, field defaults, directory scanning, archive filtering. Callers just work with typed data.
+深层版本吸收了复杂性：JSON 解析、字段默认值、目录扫描、归档过滤。调用者只需处理类型化数据。
 
 ---
 
-## Principle 2: Type-First Development
+## 原则 2：类型优先开发
 
-Types define contracts before implementation. This workflow catches design problems early:
+类型在实现之前定义契约。此工作流能早期发现设计问题：
 
-1. **Define data shapes** — dataclass or TypedDict first
-2. **Define function signatures** — parameter and return types
-3. **Implement to satisfy types** — let the type checker guide completeness
-4. **Validate at boundaries** — runtime checks only where data enters the system
+1. **定义数据形状** — 先定义 dataclass 或 TypedDict
+2. **定义函数签名** — 参数和返回类型
+3. **按类型约束实现** — 让类型检查器指导完整性
+4. **在边界处验证** — 运行时检查仅在数据进入系统的地方进行
 
-### Frozen Dataclasses for Internal Data
+### 内部数据的 Frozen Dataclass
 
 ```python
 from dataclasses import dataclass
@@ -110,16 +110,16 @@ class AgentRecord:
     agent_id: str
     task_name: str
     worktree_path: Path
-    platform: Literal["claude", "codex", "cursor"]
+    platform: Literal["Codex", "codex", "cursor"]
     status: Literal["running", "done", "failed"]
     branch: str
 ```
 
-Frozen dataclasses are immutable — no accidental mutation, safe to pass around.
+Frozen dataclass 是不可变的——不会意外修改，可安全传递。
 
-### TypedDict for External JSON Shapes
+### 外部 JSON 形状的 TypedDict
 
-When the data comes from a file (task.json, config.yaml, registry.json), use TypedDict to document the expected shape:
+当数据来自文件（task.json、config.yaml、registry.json）时，使用 TypedDict 记录预期形状：
 
 ```python
 from typing import TypedDict, Required, NotRequired
@@ -133,25 +133,25 @@ class TaskData(TypedDict):
     children: NotRequired[list[str]]
 ```
 
-This eliminates scattered `.get("field", default)` calls — the shape is documented once.
+这消除了分散的 `.get("field", default)` 调用——形状被一次文档化。
 
-### NewType for Domain Primitives
+### 领域原语的 NewType
 
-When two strings mean different things, make the type system enforce it:
+当两个字符串表示不同的含义时，让类型系统强制执行：
 
 ```python
 from typing import NewType
 
-TaskName = NewType("TaskName", str)    # directory name like "03-10-v040"
-BranchName = NewType("BranchName", str)  # git branch like "feat/v0.4.0"
+TaskName = NewType("TaskName", str)    # 目录名，如 "03-10-v040"
+BranchName = NewType("BranchName", str)  # git 分支，如 "feat/v0.4.0"
 
 def create_branch(task: TaskName) -> BranchName:
     return BranchName(f"task/{task}")
 ```
 
-### Discriminated Unions for State
+### 状态的区分联合类型
 
-When an entity can be in distinct states with different data:
+当实体可以处于不同状态且具有不同数据时：
 
 ```python
 @dataclass(frozen=True)
@@ -182,19 +182,19 @@ def handle(state: AgentState) -> None:
             pass
 ```
 
-The type checker ensures every state is handled. No more `if data.get("status") == "running"` with forgotten branches.
+类型检查器确保每个状态都被处理。不再有 `if data.get("status") == "running"` 那种遗漏分支的情况。
 
 ---
 
-## Principle 3: Information Hiding
+## 原则 3：信息隐藏
 
-Each module should encapsulate design decisions. When the same knowledge appears in multiple modules, information has leaked.
+每个模块应封装设计决策。当相同的知识出现在多个模块中时，信息已泄漏。
 
-### Common Leakage Patterns in Scripts
+### 脚本中常见的泄漏模式
 
-**JSON schema knowledge scattered everywhere:**
+**JSON schema 知识散布在各处：**
 ```python
-# BAD — 9 files all know how to iterate tasks and parse task.json
+# 不好 — 9 个文件都知道如何遍历任务并解析 task.json
 for d in sorted(tasks_dir.iterdir()):
     if d.name == "archive" or not d.is_dir():
         continue
@@ -206,10 +206,10 @@ for d in sorted(tasks_dir.iterdir()):
 ```
 
 ```python
-# GOOD — one module owns task iteration
+# 好 — 一个模块拥有任务遍历逻辑
 # common/tasks.py
 def iter_active_tasks(tasks_dir: Path) -> Iterator[TaskInfo]:
-    """Yield all active (non-archived) tasks."""
+    """产出所有活动（未归档）任务。"""
     for d in sorted(tasks_dir.iterdir()):
         if d.name == "archive" or not d.is_dir():
             continue
@@ -218,36 +218,36 @@ def iter_active_tasks(tasks_dir: Path) -> Iterator[TaskInfo]:
             yield info
 ```
 
-**File format details leaking through layers:**
+**文件格式细节泄漏到各层：**
 ```python
-# BAD — caller knows it's JSON, knows the path convention
+# 不好 — 调用者知道它是 JSON，知道路径约定
 registry_path = trellis_dir / "registry.json"
 data = json.loads(registry_path.read_text())
 data["agents"][agent_id] = {...}
 registry_path.write_text(json.dumps(data, indent=2))
 
-# GOOD — module hides storage format
+# 好 — 模块隐藏存储格式
 registry = AgentRegistry(trellis_dir)
-registry.add(agent_id, task=task_name, platform="claude")
+registry.add(agent_id, task=task_name, platform="Codex")
 ```
 
 ---
 
-## Principle 4: Pull Complexity Downward
+## 原则 4：将复杂性向下推
 
-When complexity is unavoidable, the module should absorb it internally rather than pushing it to callers. A module has few developers but many users — it's better for the module author to handle complexity once than for every caller to handle it independently.
+当复杂性不可避免时，模块应在内部吸收它，而非将其推给调用者。模块有少数开发者但有很多用户——模块作者处理一次复杂性，好过每个调用者独立处理它。
 
 ```python
-# BAD — pushes complexity to every caller
+# 不好 — 将复杂性推给每个调用者
 def run_git(args: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(["git"] + args, capture_output=True, text=True)
 
-# Every caller must: check returncode, decode stderr, handle encoding,
-# strip whitespace, handle repo not found, etc.
+# 每个调用者必须：检查 returncode，解码 stderr，处理编码，
+# 去除空白，处理仓库未找到，等等。
 
-# GOOD — absorbs complexity
+# 好 — 吸收复杂性
 def run_git(args: list[str], *, cwd: Path | None = None) -> str:
-    """Run git command, return stdout. Raises GitError on failure."""
+    """运行 git 命令，返回 stdout。失败时引发 GitError。"""
     result = subprocess.run(
         ["git"] + args,
         capture_output=True, text=True, encoding="utf-8",
@@ -258,58 +258,58 @@ def run_git(args: list[str], *, cwd: Path | None = None) -> str:
     return result.stdout.strip()
 ```
 
-### Anti-patterns of Pushing Complexity Up
+### 向上推复杂性的反模式
 
-- Returning raw `subprocess.CompletedProcess` and letting callers check `.returncode`
-- Raising generic exceptions that callers must parse
-- Using configuration parameters to avoid making decisions
-- Returning `dict` when a typed object would let callers skip validation
+- 返回原始 `subprocess.CompletedProcess` 并让调用者检查 `.returncode`
+- 引发通用异常，调用者必须解析
+- 使用配置参数来避免做决策
+- 当类型化对象能让调用者跳过验证时，返回 `dict`
 
 ---
 
-## Principle 5: Define Errors Out of Existence
+## 原则 5：将错误定义出存在
 
-Exception handling is a major source of complexity. The best strategy is to design semantics so error conditions simply aren't errors.
+异常处理是复杂性的主要来源。最佳策略是设计语义，使错误条件根本不是错误。
 
 ```python
-# BAD — raises if key doesn't exist
+# 不好 — key 不存在时引发异常
 def remove_agent(registry: dict, agent_id: str) -> None:
     if agent_id not in registry["agents"]:
-        raise KeyError(f"Agent {agent_id} not found")
+        raise KeyError(f"Agent {agent_id} 未找到")
     del registry["agents"][agent_id]
 
-# GOOD — guarantees postcondition: agent is not in registry
+# 好 — 保证后置条件：agent 不在 registry 中
 def remove_agent(registry: dict, agent_id: str) -> None:
-    """Ensure agent_id is not in the registry after this call."""
+    """确保此调用后 agent_id 不在 registry 中。"""
     registry["agents"].pop(agent_id, None)
 ```
 
 ```python
-# BAD — raises if directory already exists
+# 不好 — 目录已存在时引发异常
 def init_workspace(path: Path) -> None:
     if path.exists():
-        raise FileExistsError(f"{path} already exists")
+        raise FileExistsError(f"{path} 已存在")
     path.mkdir()
 
-# GOOD — guarantees postcondition: directory exists
+# 好 — 保证后置条件：目录存在
 def ensure_workspace(path: Path) -> Path:
-    """Ensure workspace directory exists. Returns the path."""
+    """确保工作区目录存在。返回路径。"""
     path.mkdir(parents=True, exist_ok=True)
     return path
 ```
 
-The key insight: define the operation by its **postcondition** ("after this call, X is true") rather than its precondition ("X must be true before calling").
+关键洞察：按其**后置条件**（"此次调用后，X 为真"）而非前置条件（"调用前 X 必须为真"）来定义操作。
 
 ---
 
-## Principle 6: KISS and Rule of Three
+## 原则 6：KISS 和三次法则
 
-### KISS — Keep It Simple
+### KISS — 保持简单
 
-Choose the simplest solution that works. Complexity must be justified by concrete (not hypothetical) requirements.
+选择有效的最简单方案。复杂性必须由具体（而非假设的）需求来证明其合理性。
 
 ```python
-# Over-engineered — registry pattern for 3 formatters
+# 过度设计 — 为 3 个格式化器使用 registry 模式
 class FormatterRegistry:
     _registry: dict[str, type] = {}
     @classmethod
@@ -317,135 +317,135 @@ class FormatterRegistry:
     @classmethod
     def create(cls, name: str): ...
 
-# Simple — just a dictionary
+# 简单 — 就一个字典
 FORMATTERS = {"json": format_json, "text": format_text, "table": format_table}
 
 def format_output(fmt: str, data: Any) -> str:
     formatter = FORMATTERS.get(fmt)
     if not formatter:
-        raise ValueError(f"Unknown format: {fmt}")
+        raise ValueError(f"未知格式: {fmt}")
     return formatter(data)
 ```
 
-### Rule of Three
+### 三次法则
 
-Wait until you have **three** instances of a pattern before extracting an abstraction. Two is coincidence; three is a pattern. Premature abstraction is worse than duplication because:
+在提取抽象之前，等到有**三个**模式实例。两个是巧合；三个才是模式。过早抽象比重复更糟糕，因为：
 
-- It couples unrelated code through a shared abstraction
-- It makes each instance harder to understand independently
-- It creates pressure to fit future cases into the abstraction even when they don't fit
+- 它通过共享抽象将不相关的代码耦合在一起
+- 它使每个实例更难独立理解
+- 它产生将未来案例塞入抽象的压力，即使它们不适合
 
-**However**: when you do hit three, extract immediately. Don't let it reach nine.
+**但是**：当确实达到三个时，立即提取。不要让它达到九个。
 
 ---
 
-## Principle 7: Single Responsibility and Module Boundaries
+## 原则 7：单一职责和模块边界
 
-Each module should have **one reason to change**. When a module grows beyond ~300 lines, check if it has multiple responsibilities.
+每个模块应该有**一个变更的理由**。当模块增长到超过约 300 行时，检查它是否有多重职责。
 
-### Decomposition Signals
+### 分解信号
 
-Split when:
-- A file has multiple "sections" separated by comment headers
-- You need to import only one function from a large module
-- Tests for different parts of the module have no shared setup
-- Changes to one responsibility don't require understanding the other
+在以下情况下拆分：
+- 文件有多个由注释标题分隔的"部分"
+- 你只需要从一个大型模块中导入一个函数
+- 模块不同部分的测试没有共享的 setup
+- 对某一职责的变更不需要理解另一职责
 
-### How to Split
+### 如何拆分
 
-Split by **information hiding** (what knowledge is encapsulated), not by execution order (what runs when).
+按**信息隐藏**（封装了什么知识）拆分，而非按执行顺序（什么何时运行）。
 
 ```python
-# BAD — split by execution order (temporal decomposition)
+# 不好 — 按执行顺序拆分（时间分解）
 # step1_parse_args.py, step2_validate.py, step3_execute.py
-# All three must know the command structure
+# 所有三个都必须知道命令结构
 
-# GOOD — split by responsibility
-# task_store.py    — owns task.json read/write, schema, iteration
-# task_cli.py      — owns argparse, subcommand routing
-# task_display.py  — owns formatting, colors, table output
+# 好 — 按职责拆分
+# task_store.py    — 拥有 task.json 读/写、schema、遍历
+# task_cli.py      — 拥有 argparse、子命令路由
+# task_display.py  — 拥有格式化、颜色、表格输出
 ```
 
 ---
 
-## Principle 8: Consistent Shared Infrastructure
+## 原则 8：一致的共享基础设施
 
-When multiple scripts need the same capability, provide it once in `common/`.
+当多个脚本需要相同的能力时，在 `common/` 中一次性提供。
 
-| Capability | Should Live In | Not In |
+| 能力 | 应放在 | 不应在 |
 |-----------|---------------|--------|
-| JSON file read/write | `common/io.py` | Each script's `_read_json_file` |
-| Terminal colors + logging | `common/log.py` | Each script's `Colors` class |
-| Git command execution | `common/git.py` | `_run_git_command` prefixed private |
-| Task data access | `common/tasks.py` | Ad-hoc task.json parsing |
-| Path constants | `common/paths.py` (existing) | Hardcoded strings |
+| JSON 文件读/写 | `common/io.py` | 每个脚本的 `_read_json_file` |
+| 终端颜色 + 日志 | `common/log.py` | 每个脚本的 `Colors` 类 |
+| Git 命令执行 | `common/git.py` | 以 `_` 为前缀的私有 `_run_git_command` |
+| 任务数据访问 | `common/tasks.py` | 即兴的 task.json 解析 |
+| 路径常量 | `common/paths.py`（已有） | 硬编码字符串 |
 
-**Naming**: If a function is used by other modules, it's public API — don't prefix it with `_`.
+**命名**：如果函数被其他模块使用，它是公共 API——不要用 `_` 前缀。
 
 ---
 
-## Principle 9: Structured CLI Output Parsing
+## 原则 9：结构化 CLI 输出解析
 
-When parsing output from shell commands (git, grep, etc.), respect semantic whitespace:
+解析 shell 命令（git、grep 等）的输出时，尊重语义空白：
 
 ```python
-# BAD — .strip() destroys semantic whitespace
-# git submodule status prefix: ' ' = initialized, '-' = uninitialized, '+' = changed
-line = output_line.strip()  # Loses the prefix character!
+# 不好 — .strip() 破坏了语义空白
+# git submodule status 前缀：' ' = 已初始化，'-' = 未初始化，'+' = 已变更
+line = output_line.strip()  # 丢失了前缀字符！
 
-# GOOD — strip only trailing newlines
+# 好 — 仅去除尾部换行
 line = output_line.rstrip("\n\r")
 prefix = line[0] if line else " "
 ```
 
-Always document what each field position means when parsing structured command output.
+当解析结构化命令输出时，始终记录每个字段位置的含义。
 
 ---
 
-## Red Flags Quick Reference
+## 红旗信号快速参考
 
-Use during code review and self-review:
+在代码审查和自我审查中使用：
 
-| Signal | What It Means |
+| 信号 | 含义 |
 |--------|--------------|
-| **Shallow Module** | Interface is nearly as complex as implementation |
-| **Information Leakage** | Same JSON schema / file format knowledge in multiple modules |
-| **Duplicated Utility** | Same helper function copied to multiple files |
-| **God Module** | File > 500 lines with multiple unrelated responsibilities |
-| **Pass-Through Function** | Function just forwards args to another with similar signature |
-| **Magic `.get()` Chains** | `data.get("x") or data.get("y", "")` — missing type definition |
-| **sys.path Hacking** | `sys.path.insert(0, ...)` — fix package structure instead |
-| **Private-Named Public API** | `_function` imported by 3+ external modules |
-| **Raw Dict Threading** | Passing `dict` through 4+ function calls — use a dataclass |
-| **Repeated Iteration** | Same directory scan / file parse pattern in 3+ locations |
-| **Broad Exception Catch** | `except Exception:` without re-raising — hides bugs |
-| **Temporal Decomposition** | Modules split by "what runs when" instead of "what knows what" |
+| **浅层模块** | 接口几乎和实现一样复杂 |
+| **信息泄漏** | 相同的 JSON schema / 文件格式知识在多个模块中 |
+| **重复工具** | 相同的辅助函数被复制到多个文件 |
+| **上帝模块** | 文件 > 500 行，包含多个不相关的职责 |
+| **透传函数** | 函数仅将参数转发给具有相似签名的另一个函数 |
+| **魔法 `.get()` 链** | `data.get("x") or data.get("y", "")` — 缺少类型定义 |
+| **sys.path 黑客** | `sys.path.insert(0, ...)` — 改为修复包结构 |
+| **私有命名的公共 API** | `_function` 被 3+ 个外部模块导入 |
+| **原始 Dict 传递** | 通过 4+ 个函数调用传递 `dict` — 使用 dataclass |
+| **重复遍历** | 相同的目录扫描 / 文件解析模式在 3+ 处 |
+| **宽泛异常捕获** | `except Exception:` 而不重新引发 — 隐藏 bug |
+| **时间分解** | 模块按"什么何时运行"而非"什么知道什么"拆分 |
 
 ---
 
-## Design Checklist (Before Writing Code)
+## 设计检查清单（编写代码前）
 
-1. **Types first**: Define the data shape before writing logic
-2. **Module depth check**: Will the interface be simpler than the implementation?
-3. **Duplication scan**: `grep -r "pattern" .` before creating new utilities
-4. **Responsibility check**: Does this belong in an existing module?
-5. **Error design**: Can you define the error out of existence?
-6. **Naming precision**: Does the name convey meaning without reading the implementation?
+1. **类型优先**：在编写逻辑之前定义数据形状
+2. **模块深度检查**：接口会比实现更简单吗？
+3. **重复扫描**：在创建新的工具之前 `grep -r "pattern" .`
+4. **职责检查**：这属于已有模块吗？
+5. **错误设计**：你能将错误定义出存在吗？
+6. **命名精确性**：名称能否在不阅读实现的情况下传达含义？
 
-## Design Checklist (During Code Review)
+## 设计检查清单（代码审查期间）
 
-1. **Red flags scan**: Check the table above against the diff
-2. **Type safety**: Are new data shapes documented with types?
-3. **Information hiding**: Does the change leak implementation details?
-4. **Consistency**: Does it follow the existing patterns in the module?
-5. **Depth**: Is the common path simple for callers?
+1. **红旗信号扫描**：对照上表检查 diff
+2. **类型安全**：新数据形状是否用类型记录？
+3. **信息隐藏**：变更是否泄漏了实现细节？
+4. **一致性**：是否遵循模块中已有的模式？
+5. **深度**：通用路径对调用者是否简单？
 
 ---
 
-## Strategic Investment
+## 战略性投资
 
-Spend roughly **10-20% of each change** improving surrounding design.
+将每次变更的约 **10-20%** 花在改进周围设计上。
 
-Working code is necessary but not sufficient. The increments of software development should be **abstractions**, not just features. Each change should leave the codebase slightly better than you found it.
+能工作的代码是必要的但不充分的。软件开发的增量应该是**抽象**，而不仅仅是功能。每次变更应该让代码库比你发现它时稍微好一点。
 
-This is not perfectionism — it's compound interest. Small design improvements accumulate into a system that's dramatically easier to work with over time.
+这不是完美主义——它是复利。小的设计改进会累积成一个随时间推移显著更易于使用的系统。

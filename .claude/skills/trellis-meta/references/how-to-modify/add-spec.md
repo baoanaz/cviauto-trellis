@@ -1,23 +1,23 @@
-# How To: Add Spec Category
+# How To：添加 Spec 分类
 
-Add a new spec category like `mobile/`.
+添加新的 spec 分类，如 `mobile/`。
 
-**Platform**: All
+**平台**：All
 
 ---
 
-## Files to Modify
+## 需修改的文件
 
-| File | Action | Required |
+| 文件 | 操作 | 是否必需 |
 |------|--------|----------|
-| `.trellis/spec/mobile/index.md` | Create | Yes |
-| `.trellis/spec/mobile/*.md` | Create | Yes |
-| Task JSONL templates | Update | Yes |
-| `trellis-local/SKILL.md` | Update | Yes |
+| `.trellis/spec/mobile/index.md` | 创建 | 是 |
+| `.trellis/spec/mobile/*.md` | 创建 | 是 |
+| 任务 JSONL 模板 | 更新 | 是 |
+| `trellis-local/SKILL.md` | 更新 | 是 |
 
 ---
 
-## Step 1: Create Category Directory
+## 步骤 1：创建分类目录
 
 ```bash
 mkdir -p .trellis/spec/mobile
@@ -25,85 +25,85 @@ mkdir -p .trellis/spec/mobile
 
 ---
 
-## Step 2: Create Index File
+## 步骤 2：创建索引文件
 
-Create `.trellis/spec/mobile/index.md`:
+创建 `.trellis/spec/mobile/index.md`：
 
 ```markdown
 # Mobile Specifications
 
-Guidelines for mobile development.
+移动端开发指南。
 
-## Quick Reference
+## 快速参考
 
-| Topic | Guideline |
+| 主题 | 指南 |
 |-------|-----------|
-| Architecture | MVVM pattern |
-| State | Use StateFlow |
-| Navigation | Jetpack Navigation |
+| 架构 | MVVM 模式 |
+| 状态 | 使用 StateFlow |
+| 导航 | Jetpack Navigation |
 
-## Specifications
+## 规范
 
-1. [Architecture Guidelines](./architecture.md)
-2. [UI Guidelines](./ui-guidelines.md)
-3. [State Management](./state-management.md)
+1. [架构指南](./architecture.md)
+2. [UI 指南](./ui-guidelines.md)
+3. [状态管理](./state-management.md)
 
-## Key Principles
+## 核心原则
 
-- Principle 1
-- Principle 2
-- Principle 3
+- 原则 1
+- 原则 2
+- 原则 3
 ```
 
 ---
 
-## Step 3: Create Spec Files
+## 步骤 3：创建 Spec 文件
 
-Create individual spec files in the category:
+在分类目录中创建各个 spec 文件：
 
-### Example: `architecture.md`
+### 示例：`architecture.md`
 
 ```markdown
 # Mobile Architecture
 
-## Overview
+## 概述
 
-Description of architecture approach.
+架构方案说明。
 
-## Guidelines
+## 指南
 
-### 1. Use MVVM Pattern
+### 1. 使用 MVVM 模式
 
-Explanation...
+说明...
 
 **Do:**
 ```kotlin
-// Good example
+// 良好示例
 ```
 
 **Don't:**
 ```kotlin
-// Bad example
+// 不良示例
 ```
 
-### 2. Another Guideline
+### 2. 另一条指南
 
 ...
 
-## Related Specs
+## 相关 Spec
 
-- [UI Guidelines](./ui-guidelines.md)
+- [UI 指南](./ui-guidelines.md)
 ```
 
 ---
 
-## Step 4: Update JSONL Templates
+## 步骤 4：更新 JSONL 模板
 
-Add the new specs to relevant JSONL templates.
+将新 spec 添加到相关 JSONL 模板中。
 
-### Option A: Update task.py
+### 选项 A：更新 task.py
 
-Modify `init-context` to include mobile specs:
+修改 `init-context` 以包含 mobile spec：
 
 ```python
 def init_mobile_context(task_dir):
@@ -111,93 +111,93 @@ def init_mobile_context(task_dir):
     with open(jsonl_path, "a") as f:
         f.write(json.dumps({
             "file": ".trellis/spec/mobile/index.md",
-            "reason": "Mobile guidelines"
+            "reason": "移动端指南"
         }) + "\n")
 ```
 
-### Option B: Add to Existing Templates
+### 选项 B：添加到现有模板
 
-Edit existing JSONL files:
+编辑现有 JSONL 文件：
 
 ```jsonl
-{"file": ".trellis/spec/mobile/index.md", "reason": "Mobile guidelines"}
-{"file": ".trellis/spec/mobile/architecture.md", "reason": "Architecture patterns"}
+{"file": ".trellis/spec/mobile/index.md", "reason": "移动端指南"}
+{"file": ".trellis/spec/mobile/architecture.md", "reason": "架构模式"}
 ```
 
 ---
 
-## Step 5: Document in trellis-local
+## 步骤 5：在 trellis-local 中记录
 
-Update `.claude/skills/trellis-local/SKILL.md`:
+更新 `.claude/skills/trellis-local/SKILL.md`：
 
 ```markdown
-## Specs Customized
+## 已定制的 Spec
 
-### Added Categories
+### 已添加的分类
 
 #### mobile/
-- **Path**: `.trellis/spec/mobile/`
-- **Purpose**: Mobile development guidelines
-- **Added**: 2026-01-31
-- **Files**:
-  - `index.md` - Overview
-  - `architecture.md` - Architecture patterns
-  - `ui-guidelines.md` - UI patterns
+- **路径**: `.trellis/spec/mobile/`
+- **用途**: 移动端开发指南
+- **添加日期**: 2026-01-31
+- **文件**:
+  - `index.md` - 概述
+  - `architecture.md` - 架构模式
+  - `ui-guidelines.md` - UI 模式
 ```
 
 ---
 
-## Spec File Best Practices
+## Spec 文件最佳实践
 
-### Structure
+### 结构
 
 ```markdown
-# [Spec Title]
+# [Spec 标题]
 
-## Overview
-Brief description.
+## 概述
+简要描述。
 
-## Guidelines
+## 指南
 
-### 1. [Guideline Name]
-Explanation with examples.
+### 1. [指南名称]
+带示例的说明。
 
-### 2. [Another Guideline]
+### 2. [另一条指南]
 ...
 
-## Related Specs
-Links to related specs.
+## 相关 Spec
+到相关 spec 的链接。
 ```
 
-### Naming
+### 命名
 
-- Use kebab-case: `ui-guidelines.md`
-- Be descriptive: `state-management.md` not `state.md`
+- 使用 kebab-case：`ui-guidelines.md`
+- 描述性命名：`state-management.md` 而非 `state.md`
 
-### Cross-References
+### 交叉引用
 
-Link between specs:
+在 spec 之间建立链接：
 
 ```markdown
-See [State Management](./state-management.md) for more details.
+详见 [State Management](./state-management.md)。
 ```
 
 ---
 
-## Testing
+## 测试
 
-1. Verify index links work
-2. Create a task with the new specs in JSONL
-3. Verify specs are injected correctly (Claude Code)
-4. Verify specs are readable (Cursor)
+1. 验证索引链接正常工作
+2. 创建包含新 spec 的 JSONL 任务
+3. 验证 spec 注入正确（Claude Code）
+4. 验证 spec 可读（Cursor）
 
 ---
 
-## Checklist
+## 检查清单
 
-- [ ] Category directory created
-- [ ] Index file created with overview
-- [ ] Spec files created with proper format
-- [ ] JSONL templates updated
-- [ ] Documented in trellis-local
-- [ ] Cross-references verified
+- [ ] 分类目录已创建
+- [ ] 索引文件已创建，包含概述
+- [ ] Spec 文件已创建，格式正确
+- [ ] JSONL 模板已更新
+- [ ] 已在 trellis-local 中记录
+- [ ] 交叉引用已验证

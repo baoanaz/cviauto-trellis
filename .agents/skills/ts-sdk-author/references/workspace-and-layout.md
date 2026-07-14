@@ -1,14 +1,14 @@
-# Workspace and Layout
+# 工作区与目录布局
 
-## 1. Overview
+## 1. 概述
 
-This reference covers how to lay out a pnpm-based workspace for a TypeScript SDK project: which top-level directories to use (`apps/`, `packages/`, `tools/`), where the SDK itself lives, how to create internal workspace packages with `workspace:*` deps, and how to migrate from a multi-repo setup. Build orchestration (`turbo.json`), the `exports` field, and npm publishing are intentionally out of scope — see `turborepo-for-sdk.md` and the publishing references for those topics.
+本文档介绍如何为 TypeScript SDK 项目规划基于 pnpm 的工作区：应使用哪些顶层目录（`apps/`、`packages/`、`tools/`），SDK 本身放在哪里，如何使用 `workspace:*` 依赖创建内部工作区包，以及如何从多仓库（multi-repo）设置迁移到单仓库（monorepo）。构建编排（`turbo.json`）、`exports` 字段和 npm 发布不在本文讨论范围内——请分别参阅 `turborepo-for-sdk.md` 和发布相关的参考文档。
 
 ---
 
-## 2. Workspace Top-Level Layout
+## 2. 工作区顶层布局
 
-A pnpm workspace for an SDK project should converge on three top-level directories. Start here unless you have a strong reason not to:
+一个 SDK 项目的 pnpm 工作区应收敛为三个顶层目录。除非有充分理由，否则从这里开始：
 
 ```text
 repo/
@@ -27,28 +27,28 @@ repo/
 └── pnpm-lock.yaml
 ```
 
-### Core principles
+### 核心原则
 
-1. **`apps/` contains deployables or executables.** CLIs, web apps, desktop apps, services — anything you actually run — belong here.
-2. **`packages/` contains reusable logic.** Anything imported by another package belongs here. **This is where your SDK lives.**
-3. **`tools/` contains repo-local utilities.** Code generators, release helpers, migration scripts, local maintenance commands. Not runtime SDK code.
-4. **One purpose per package.** Each package answers one clear question.
-5. **No nested catch-all workspaces.** Avoid `packages/**`.
-6. **Root is orchestration only.** Repo tooling belongs in root; application logic does not.
+1. **`apps/` 包含可部署或可执行的应用。** CLI、Web 应用、桌面应用、服务——任何你实际运行的东西——都属于这里。
+2. **`packages/` 包含可复用的逻辑。** 任何被其他包导入的东西都属于这里。**你的 SDK 就放在这里。**
+3. **`tools/` 包含仓库内部工具。** 代码生成器、发布辅助脚本、迁移脚本、本地维护命令。不是运行时 SDK 代码。
+4. **每个包一个明确职责。** 每个包回答一个清晰的问题。
+5. **不要使用嵌套的通配工作区。** 避免 `packages/**`。
+6. **根目录仅用于编排。** 仓库工具放在根目录；应用逻辑不放这里。
 
-### When to use each
+### 何时使用各自目录
 
-| Directory   | Holds                                       | Examples                                       | Don't put here                          |
+| 目录   | 存放内容                                       | 示例                                       | 不应放入的内容                          |
 |-------------|---------------------------------------------|------------------------------------------------|-----------------------------------------|
-| `apps/`     | Executables, deployables, app shells        | `apps/cli`, `apps/web`, `apps/desktop`         | Anything imported by another package    |
-| `packages/` | Reusable libraries (SDK, types, adapters)   | `packages/sdk-core`, `packages/adapter-openai` | A bundle of unrelated utilities         |
-| `tools/`    | Repo-local scripts not consumed at runtime  | `tools/dev-scripts`, `tools/codegen`           | Anything the SDK imports                |
+| `apps/`     | 可执行文件、可部署应用、应用壳        | `apps/cli`、`apps/web`、`apps/desktop`         | 任何被其他包导入的内容    |
+| `packages/` | 可复用库（SDK、类型、适配器）   | `packages/sdk-core`、`packages/adapter-openai` | 一堆不相关的工具集         |
+| `tools/`    | 仓库内部脚本，不在运行时消费  | `tools/dev-scripts`、`tools/codegen`           | 任何 SDK 导入的内容                |
 
-**Rule of thumb:** If the published SDK or any app imports it at runtime, it belongs in `packages/`. If you only run it locally to maintain the repo, it belongs in `tools/`.
+**经验法则：** 如果已发布的 SDK 或任何应用在运行时导入它，它就属于 `packages/`。如果你只在本地运行它来维护仓库，它就属于 `tools/`。
 
 ### `pnpm-workspace.yaml`
 
-The minimum configuration:
+最小配置：
 
 ```yaml
 # pnpm-workspace.yaml
@@ -58,7 +58,7 @@ packages:
   - "tools/*"
 ```
 
-For npm/yarn/bun-style workspaces (if you must), put the same globs under the root `package.json`:
+对于 npm/yarn/bun 风格的工作区（如果必须使用），在根目录的 `package.json` 中放入相同的 glob 模式：
 
 ```json
 {
@@ -66,25 +66,25 @@ For npm/yarn/bun-style workspaces (if you must), put the same globs under the ro
 }
 ```
 
-Use extra globs only when you intentionally group packages by concern:
+仅当你刻意按关注点对包进行分组时，才使用额外的 glob 模式：
 
 ```yaml
 packages:
   - "apps/*"
   - "packages/*"
-  - "packages/config/*"      # grouped configs
-  - "packages/features/*"    # feature packages
+  - "packages/config/*"      # 分组的配置
+  - "packages/features/*"    # 功能包
 ```
 
-**Avoid** recursive globs:
+**避免** 递归 glob 模式：
 
 ```yaml
-# BAD: ambiguous discovery, encourages accidental nesting
+# 错误：模糊的发现方式，容易导致意外嵌套
 packages:
   - "packages/**"
 ```
 
-### Root `package.json`
+### 根目录 `package.json`
 
 ```json
 {
@@ -104,15 +104,15 @@ packages:
 }
 ```
 
-**Root rules:**
+**根目录规则：**
 
-- `private: true` is required (you never publish the root).
-- `packageManager` pins pnpm version across contributors.
-- Scripts only delegate to the orchestrator — no actual build logic.
-- Root dependencies are repo tools only (`turbo`, `husky`, `changesets`, etc.).
-- App/SDK dependencies stay in the packages that use them.
+- `private: true` 是必需的（永远不要发布根目录）。
+- `packageManager` 锁定 pnpm 版本，确保所有贡献者一致。
+- scripts 仅委托给编排器——不包含实际的构建逻辑。
+- 根目录依赖仅包含仓库工具（`turbo`、`husky`、`changesets` 等）。
+- 应用/SDK 依赖保留在使用它们的包中。
 
-**Bad** — runtime deps at the root:
+**错误**——运行时依赖放在根目录：
 
 ```json
 {
@@ -124,7 +124,7 @@ packages:
 }
 ```
 
-**Good** — only tooling at the root:
+**正确**——仅工具放在根目录：
 
 ```json
 {
@@ -137,38 +137,38 @@ packages:
 
 ---
 
-## 3. Where the SDK Package Lives
+## 3. SDK 包放在哪里
 
-**The SDK always lives under `packages/`.** It is, by definition, a thing other code imports.
+**SDK 始终放在 `packages/` 下。** 根据定义，它是其他代码导入的东西。
 
-### Naming patterns
+### 命名模式
 
-There is no single "right" name. Three common conventions:
+没有唯一的"正确"名称。三种常见约定：
 
-| Pattern                         | Example                  | When to use                                                                 |
+| 模式                         | 示例                  | 何时使用                                                                 |
 |---------------------------------|--------------------------|-----------------------------------------------------------------------------|
-| `packages/<name>` (the SDK name) | `packages/stripe`        | The repo is the SDK; one obvious package; matches the public scoped name.   |
-| `packages/core`                 | `packages/core`          | SDK is split into core + adapters; `core` is the entry point.               |
-| `packages/<name>-core`          | `packages/sdk-core`      | Multiple SDK-flavored packages share a prefix; disambiguates from adapters. |
-| `packages/sdk`                  | `packages/sdk`           | Repo hosts the SDK plus unrelated apps; `sdk` is the obvious folder.        |
+| `packages/<name>`（SDK 名称） | `packages/stripe`        | 仓库本身就是 SDK；一个明显的包；匹配公共作用域名称。   |
+| `packages/core`                 | `packages/core`          | SDK 拆分为 core + 适配器；`core` 是入口点。               |
+| `packages/<name>-core`          | `packages/sdk-core`      | 多个 SDK 风格的包共享前缀；与适配器区分开来。 |
+| `packages/sdk`                  | `packages/sdk`           | 仓库托管 SDK 加上不相关的应用；`sdk` 是明显的文件夹。        |
 
-Pick one and stay consistent. The folder name does **not** have to match the published name — the published name comes from `package.json#name` (e.g. `@acme/sdk`).
+选择一个并保持一致。文件夹名称**不必**与发布名称匹配——发布名称来自 `package.json#name`（例如 `@acme/sdk`）。
 
-### SDK + CLI co-existence (the wrangler pattern)
+### SDK + CLI 共存（wrangler 模式）
 
-Many SDKs ship a companion CLI for scaffolding, debugging, or invoking the SDK from a shell. Keep them as separate packages — the SDK in `packages/`, the CLI in `apps/`:
+许多 SDK 附带一个配套 CLI，用于脚手架搭建、调试或从 shell 调用 SDK。将它们作为独立的包——SDK 放在 `packages/`，CLI 放在 `apps/`：
 
 ```text
 repo/
 ├── apps/
-│   └── cli/                # @acme/cli — the executable, depends on the SDK
+│   └── cli/                # @acme/cli — 可执行文件，依赖 SDK
 ├── packages/
-│   ├── sdk-core/           # @acme/sdk — the library people import
-│   ├── adapter-node/       # @acme/adapter-node — runtime adapter
-│   └── shared-types/       # @acme/shared-types — type-only contracts
+│   ├── sdk-core/           # @acme/sdk — 用户导入的库
+│   ├── adapter-node/       # @acme/adapter-node — 运行时适配器
+│   └── shared-types/       # @acme/shared-types — 纯类型合约
 ```
 
-The CLI depends on the SDK via `workspace:*`:
+CLI 通过 `workspace:*` 依赖 SDK：
 
 ```json
 // apps/cli/package.json
@@ -185,33 +185,33 @@ The CLI depends on the SDK via `workspace:*`:
 }
 ```
 
-**Why split them:**
+**为什么拆分它们：**
 
-- The SDK can be consumed in environments where a CLI makes no sense (browsers, edge functions, other Node libraries).
-- The CLI can take heavyweight dependencies (`chalk`, `commander`, `prompts`) without polluting the SDK's install size.
-- Versioning, release cadence, and changelogs decouple naturally.
+- SDK 可以在 CLI 无意义的场景中消费（浏览器、边缘函数、其他 Node 库）。
+- CLI 可以引入重量级依赖（`chalk`、`commander`、`prompts`），而不会污染 SDK 的安装体积。
+- 版本控制、发布节奏和变更日志自然解耦。
 
-### Library packages, generally
+### 库包，一般情况
 
-Good shape of `packages/` for an SDK-centered repo:
+以 SDK 为中心的仓库中 `packages/` 的良好结构：
 
 ```text
 packages/
-├── sdk-core/             # main SDK surface
-├── adapter-openai/       # concrete adapter implementation
-├── adapter-node/         # runtime-specific adapter
-├── shared-types/         # types-only contracts
-├── eslint-config/        # shared lint config
-└── typescript-config/    # shared tsconfig presets
+├── sdk-core/             # 主 SDK 对外接口
+├── adapter-openai/       # 具体适配器实现
+├── adapter-node/         # 特定运行时适配器
+├── shared-types/         # 纯类型合约
+├── eslint-config/        # 共享 lint 配置
+└── typescript-config/    # 共享 tsconfig 预设
 ```
 
-**Bad** — vague catch-alls that become dumping grounds:
+**错误**——模糊的"万能"包，最终变成垃圾场：
 
 ```text
 packages/
 ├── shared/
-├── core/                 # contains everything
-└── utils/                # contains anything that didn't fit elsewhere
+├── core/                 # 包含所有内容
+└── utils/                # 包含任何无处安放的东西
 ```
 
 ```text
@@ -224,28 +224,28 @@ packages/
     └── session/
 ```
 
-A "shared" mega-package destroys ownership boundaries and forces every consumer to pull in unrelated transitive code.
+一个"shared"巨型包破坏了所有权边界，并强制每个使用者拉入不相关的传递代码。
 
 ---
 
-## 4. Internal Package Creation Pattern
+## 4. 内部包创建模式
 
-When you need a new internal workspace package, follow this checklist:
+当你需要一个新的内部工作区包时，遵循以下清单：
 
-1. **Create the directory** under `packages/<name>/`.
-2. **Add `package.json`** with a scoped name (`@<org>/<name>`), `version`, `private: true`, and an entry point.
-3. **Add source code** in `src/`.
-4. **Add `tsconfig.json`** (typically extending a shared config package).
-5. **Install it as a dependency** in consuming packages using `workspace:*`.
-6. **Run `pnpm install`** to update the lockfile.
+1. **创建目录** 在 `packages/<name>/` 下。
+2. **添加 `package.json`**，包含作用域名称（`@<org>/<name>`）、`version`、`private: true` 和入口点。
+3. **添加源代码** 在 `src/` 中。
+4. **添加 `tsconfig.json`**（通常扩展共享配置包）。
+5. **将其作为依赖安装** 在使用包中，使用 `workspace:*`。
+6. **运行 `pnpm install`** 更新锁文件。
 
-### Step-by-step
+### 逐步操作
 
 ```bash
-# 1. Create the directory
+# 1. 创建目录
 mkdir -p packages/sdk-core/src
 
-# 2. Initialize package.json (edit by hand or via pnpm init)
+# 2. 初始化 package.json（手动编辑或通过 pnpm init）
 cd packages/sdk-core
 cat > package.json <<'EOF'
 {
@@ -263,14 +263,14 @@ cat > package.json <<'EOF'
 }
 EOF
 
-# 3. Write your code
+# 3. 编写代码
 cat > src/index.ts <<'EOF'
 export function createClient(config: { apiKey: string }) {
   return { apiKey: config.apiKey };
 }
 EOF
 
-# 4. Extend a shared tsconfig
+# 4. 扩展共享 tsconfig
 cat > tsconfig.json <<'EOF'
 {
   "extends": "@acme/typescript-config/library.json",
@@ -283,73 +283,73 @@ cat > tsconfig.json <<'EOF'
 }
 EOF
 
-# 5. From a consuming app, declare the dep
+# 5. 从消费应用中声明依赖
 cd ../../apps/cli
 pnpm add @acme/sdk@workspace:*
 
-# 6. Install resolves the link
+# 6. 安装解析链接
 cd ../..
 pnpm install
 ```
 
-### `workspace:*` protocol
+### `workspace:*` 协议
 
-In pnpm and bun, internal workspace deps use the `workspace:` protocol:
+在 pnpm 和 bun 中，内部工作区依赖使用 `workspace:` 协议：
 
 ```json
 // apps/cli/package.json
 {
   "name": "@acme/cli",
   "dependencies": {
-    "@acme/sdk":         "workspace:*",   // always use whatever is in the workspace
-    "@acme/shared-types": "workspace:^",  // local; respect ^semver when published
-    "@acme/utils":        "workspace:~"   // local; respect ~semver when published
+    "@acme/sdk":         "workspace:*",   // 始终使用工作区中的版本
+    "@acme/shared-types": "workspace:^",  // 本地；发布时遵循 ^semver
+    "@acme/utils":        "workspace:~"   // 本地；发布时遵循 ~semver
   }
 }
 ```
 
-| Specifier      | Effect                                                                        |
+| 说明符      | 效果                                                                        |
 |----------------|-------------------------------------------------------------------------------|
-| `workspace:*`  | Always use the local version. Rewritten to the published version on release.  |
-| `workspace:^`  | Local in-tree. Published as `^X.Y.Z` matching the current local version.      |
-| `workspace:~`  | Local in-tree. Published as `~X.Y.Z`.                                         |
+| `workspace:*`  | 始终使用本地版本。发布时重写为已发布版本。  |
+| `workspace:^`  | 本地树内。发布为 `^X.Y.Z`，匹配当前本地版本。      |
+| `workspace:~`  | 本地树内。发布为 `~X.Y.Z`。                                         |
 
-For npm/yarn, the wire syntax is different — use `"*"` for internal deps:
+对于 npm/yarn，传递语法不同——对内部依赖使用 `"*"`：
 
 ```json
-// npm/yarn workspaces — DO NOT use workspace: prefix
+// npm/yarn 工作区——不要使用 workspace: 前缀
 { "@acme/sdk": "*" }
 ```
 
-**Wrong:** mixing the prefixes:
+**错误：** 混用前缀：
 
 ```json
-// BAD: npm/yarn workspaces don't understand "workspace:*"
+// 错误：npm/yarn 工作区不理解 "workspace:*"
 { "@acme/sdk": "workspace:*" }
 ```
 
-### Installing into a specific package
+### 安装到特定包
 
-Never install into the root for runtime deps. Filter installs by package:
+永远不要将运行时依赖安装到根目录。按包过滤安装：
 
 ```bash
-# Add a runtime dep to one package
+# 添加运行时依赖到某个包
 pnpm --filter @acme/adapter-openai add openai
 
-# Add a dev dep to one package
+# 添加开发依赖到某个包
 pnpm --filter @acme/sdk add -D vitest
 
-# Add a shared dev dep (turbo, husky) to the root only
+# 添加共享开发依赖（turbo、husky）仅到根目录
 pnpm add -D turbo -w
 ```
 
 ---
 
-## 5. `package.json` Skeleton for Internal Packages
+## 5. 内部包的 `package.json` 骨架
 
-This is the **pre-publish** skeleton — i.e. a workspace-internal package consumed only by other workspace packages. The published-package skeleton (with full `exports` conditions, `files`, `publishConfig`) is covered in a separate reference.
+这是**发布前**的骨架——即仅被其他工作区包消费的工作区内部包。已发布包的骨架（包含完整的 `exports` 条件、`files`、`publishConfig`）在单独的参考文档中介绍。
 
-### Minimal JIT package (TypeScript source as the entry point)
+### 最小 JIT 包（TypeScript 源码作为入口点）
 
 ```json
 {
@@ -366,9 +366,9 @@ This is the **pre-publish** skeleton — i.e. a workspace-internal package consu
 }
 ```
 
-Use this when the package is consumed only by modern bundlers or by a build step that handles TypeScript. No build is required for downstream usage inside the workspace.
+当包仅被现代打包器（bundler）或处理 TypeScript 的构建步骤消费时使用此方式。在工作区内供下游使用时无需构建。
 
-### Minimal compiled package (emits `dist/`)
+### 最小编译包（产出 `dist/`）
 
 ```json
 {
@@ -388,15 +388,15 @@ Use this when the package is consumed only by modern bundlers or by a build step
 }
 ```
 
-Use this when:
+在以下情况下使用此方式：
 
-- The package is consumed by Node directly.
-- You want build caching.
-- The package may be consumed by tests, bundlers, or other apps with different toolchains.
+- 包被 Node 直接消费。
+- 你想要构建缓存。
+- 包可能被测试、打包器或具有不同工具链的其他应用消费。
 
-### Minimum directory layout
+### 最小目录布局
 
-JIT:
+JIT：
 
 ```text
 packages/sdk-core/
@@ -406,7 +406,7 @@ packages/sdk-core/
 └── tsconfig.json
 ```
 
-Compiled:
+编译：
 
 ```text
 packages/sdk-core/
@@ -418,9 +418,9 @@ packages/sdk-core/
 └── tsconfig.json
 ```
 
-### Per-package scripts, not root scripts
+### 按包定义脚本，而非根目录脚本
 
-Each package defines its own lifecycle:
+每个包定义自己的生命周期：
 
 ```json
 // packages/adapter-openai/package.json
@@ -435,10 +435,10 @@ Each package defines its own lifecycle:
 }
 ```
 
-**Avoid** sequential root scripts that hard-code package order:
+**避免** 硬编码包顺序的顺序根目录脚本：
 
 ```json
-// BAD
+// 错误
 {
   "scripts": {
     "build": "cd packages/shared-types && tsc && cd ../sdk-core && tsc && cd ../../apps/cli && tsc"
@@ -447,7 +447,7 @@ Each package defines its own lifecycle:
 ```
 
 ```json
-// BAD: doesn't parallelize, can't be filtered
+// 错误：无法并行化，无法过滤
 {
   "scripts": {
     "lint": "eslint apps/cli && eslint packages/sdk-core && eslint packages/adapter-openai"
@@ -455,21 +455,21 @@ Each package defines its own lifecycle:
 }
 ```
 
-Per-package tasks let the orchestrator parallelize, cache, and filter precisely. See `turborepo-for-sdk.md` for the orchestration layer.
+按包定义任务让编排器可以并行化、缓存和精确过滤。编排层参见 `turborepo-for-sdk.md`。
 
 ---
 
-## 6. Type-Only vs Runtime Deps
+## 6. 纯类型依赖 vs 运行时依赖
 
-A workspace-internal package can appear in three different dependency fields depending on what the consumer needs from it. Get this right or you'll ship phantom deps to npm later.
+一个工作区内部包可以出现在三个不同的依赖字段中，具体取决于消费者需要从中获取什么。搞错这一点，你以后会向 npm 发布幽灵依赖（phantom deps）。
 
-| Field              | When to use for an internal package                                                                                  |
+| 字段              | 何时用于内部包                                                                                  |
 |--------------------|----------------------------------------------------------------------------------------------------------------------|
-| `dependencies`     | Consumer imports runtime values (functions, classes, constants) from the package and expects them at execution time. |
-| `devDependencies`  | Consumer needs the package at build/test/lint time only (e.g. a shared eslint config, test fixtures, codegen).        |
-| `peerDependencies` | Consumer uses the package's types but expects the host (the app embedding it) to provide the runtime instance.        |
+| `dependencies`     | 消费者从包中导入运行时值（函数、类、常量），并期望在执行时可用。 |
+| `devDependencies`  | 消费者仅在构建/测试/lint 时需要该包（例如共享 eslint 配置、测试夹具、代码生成）。        |
+| `peerDependencies` | 消费者使用包的类型，但期望宿主（嵌入它的应用）提供运行时实例。        |
 
-### `dependencies` — the default for SDK internals
+### `dependencies` — SDK 内部包的默认方式
 
 ```json
 // apps/cli/package.json
@@ -481,11 +481,11 @@ A workspace-internal package can appear in three different dependency fields dep
 }
 ```
 
-If the CLI's compiled output `require`s or `import`s anything from `@acme/sdk` at runtime, this is the correct field.
+如果 CLI 的编译输出在运行时从 `@acme/sdk` `require` 或 `import` 任何内容，这就是正确的字段。
 
-### `devDependencies` — config and tooling packages
+### `devDependencies` — 配置和工具包
 
-Shared config packages are consumed by the package manager and toolchain, not by runtime code:
+共享配置包由包管理器和工具链消费，而非运行时代码：
 
 ```json
 // packages/sdk-core/package.json
@@ -497,14 +497,14 @@ Shared config packages are consumed by the package manager and toolchain, not by
 }
 ```
 
-These never appear in the runtime bundle — they're only used by `eslint`, `tsc`, etc.
+这些永远不会出现在运行时包中——它们只被 `eslint`、`tsc` 等使用。
 
-### `peerDependencies` — type-only / host-provided
+### `peerDependencies` — 纯类型 / 宿主提供
 
-Use `peerDependencies` when:
+在以下情况下使用 `peerDependencies`：
 
-1. The internal package exports **types only**, and the runtime instance comes from somewhere else.
-2. The internal package is a plugin/adapter that requires a specific version of a core package the host already installed.
+1. 内部包仅导出**类型**，运行时实例来自其他地方。
+2. 内部包是一个插件/适配器，需要宿主已安装的特定版本的核心包。
 
 ```json
 // packages/adapter-openai/package.json
@@ -520,34 +520,34 @@ Use `peerDependencies` when:
 }
 ```
 
-Pattern: list as `peerDependencies` for the install contract, and as `devDependencies` so it resolves locally during dev/test.
+模式：将其列为 `peerDependencies` 作为安装合约，同时列为 `devDependencies` 以便在开发/测试期间本地解析。
 
-### Type-only deps
+### 纯类型依赖
 
-If a package is consumed **purely for its types** (no runtime imports), TypeScript 5+ lets you use `import type`:
+如果一个包**纯粹为了其类型**（无运行时导入）而被消费，TypeScript 5+ 允许你使用 `import type`：
 
 ```ts
 import type { ClientConfig } from "@acme/shared-types";
 ```
 
-In that case the dep can live in `devDependencies` (build-only) when the consumer is itself the final app, or `peerDependencies` when the consumer is a library that re-exports those types to its own callers.
+在这种情况下，当消费者本身就是最终应用时，依赖可以放在 `devDependencies`（仅构建时），或者当消费者是一个将这些类型重新导出给其自身调用者的库时，放在 `peerDependencies`。
 
-**Rule of thumb:**
+**经验法则：**
 
-- App imports a package's runtime ⇒ `dependencies`.
-- Library expects host to provide the runtime ⇒ `peerDependencies` (plus `devDependencies` for local resolution).
-- Build-time only (config, codegen, test fixtures) ⇒ `devDependencies`.
+- 应用导入包的运行时 ⇒ `dependencies`。
+- 库期望宿主提供运行时 ⇒ `peerDependencies`（加上 `devDependencies` 用于本地解析）。
+- 仅构建时（配置、代码生成、测试夹具）⇒ `devDependencies`。
 
 ---
 
-## 7. Multi-Repo → Monorepo Migration
+## 7. 多仓库 → 单仓库迁移
 
-Folding several existing repos into a single pnpm workspace is a one-time operation. Do it carefully — you only have one chance to preserve git history.
+将多个现有仓库折叠到一个 pnpm 工作区是一次性操作。请谨慎操作——你只有一次机会保留 git 历史。
 
-### Outline
+### 概要
 
 ```bash
-# Step 1 — Create the monorepo scaffold
+# 步骤 1 — 创建单仓库骨架
 mkdir my-monorepo && cd my-monorepo
 pnpm init
 cat > pnpm-workspace.yaml <<'EOF'
@@ -559,66 +559,66 @@ EOF
 mkdir -p apps packages tools
 git init && git add -A && git commit -m "chore: init monorepo scaffold"
 
-# Step 2 — For each repo, rewrite its history into the target subdirectory
-# Option A: git filter-repo (recommended, requires `pip install git-filter-repo`)
+# 步骤 2 — 对于每个仓库，将其历史重写目标子目录
+# 选项 A: git filter-repo（推荐，需要 `pip install git-filter-repo`）
 git clone https://github.com/acme/web-app /tmp/web-app
 cd /tmp/web-app
 git filter-repo --to-subdirectory-filter apps/web
 cd -
 
-# Bring the rewritten history into the monorepo
+# 将重写后的历史引入单仓库
 git remote add web-app /tmp/web-app
 git fetch web-app --tags
 git merge web-app/main --allow-unrelated-histories -m "chore: import web-app history"
 git remote remove web-app
 
-# Option B: git subtree (no extra tooling, but slower and noisier history)
+# 选项 B: git subtree（无需额外工具，但速度较慢且历史记录较杂乱）
 # git subtree add --prefix=apps/web https://github.com/acme/web-app main
 
-# Repeat for each repo you're importing (packages/sdk-core, packages/adapter-openai, etc.)
+# 对每个要导入的仓库重复此操作（packages/sdk-core、packages/adapter-openai 等）
 
-# Step 3 — Rename packages to scoped names
-# In each imported package.json:
+# 步骤 3 — 将包重命名为作用域名称
+# 在每个导入的 package.json 中：
 #   "name": "web"  ->  "name": "@acme/web"
 #   "name": "sdk"  ->  "name": "@acme/sdk"
 
-# Step 4 — Replace cross-repo registry deps with workspace:*
+# 步骤 4 — 将跨仓库的 registry 依赖替换为 workspace:*
 # apps/web/package.json:
 #   "@acme/sdk": "1.2.3"   ->   "@acme/sdk": "workspace:*"
 
-# Step 5 — Hoist shared configs
-# Move eslint, prettier, tsconfig presets into packages/eslint-config, packages/typescript-config
-# Update each package to extend the shared config:
+# 步骤 5 — 提升共享配置
+# 将 eslint、prettier、tsconfig 预设移动到 packages/eslint-config、packages/typescript-config
+# 更新每个包以扩展共享配置：
 #   { "extends": "@acme/typescript-config/library.json" }
 
-# Step 6 — Install the orchestrator (turbo, nx, etc.) — see turborepo-for-sdk.md
+# 步骤 6 — 安装编排器（turbo、nx 等）——参见 turborepo-for-sdk.md
 pnpm add -D turbo -w
 
-# Step 7 — Verify
+# 步骤 7 — 验证
 pnpm install
 pnpm -r run build
 pnpm -r run test
 pnpm -r run lint
 
-# Step 8 — Unified CI (see your CI reference)
+# 步骤 8 — 统一 CI（参见你的 CI 参考文档）
 ```
 
-### Lessons learned
+### 经验教训
 
-- **Use `git filter-repo`, not `git filter-branch`.** `filter-branch` is deprecated, slow, and has subtle correctness issues.
-- **Import history before touching content.** Resist the urge to "clean up" old repos before merging — every modification before import bloats the rewrite.
-- **Rename packages in one commit per package.** Makes the eventual `git log --follow` story readable.
-- **Lockfile churn is unavoidable.** Delete every per-repo lockfile during import and regenerate `pnpm-lock.yaml` at the monorepo root once.
-- **Tags collide.** Two repos with a `v1.0.0` tag will conflict. Prefix tags during import: `git filter-repo --tag-rename '':'web-'`.
-- **CI is not free.** You will need to re-evaluate every workflow, secret, and protected branch — old `.github/workflows/*.yml` files come along with the history, often unwanted.
+- **使用 `git filter-repo`，而非 `git filter-branch`。** `filter-branch` 已被弃用，速度慢，且存在细微的正确性问题。
+- **在修改内容之前先导入历史。** 抵制在合并前"清理"旧仓库的冲动——每次导入前的修改都会膨胀重写操作。
+- **每个包一次 commit 重命名。** 使最终的 `git log --follow` 记录可读。
+- **锁文件变动是不可避免的。** 在导入时删除每个仓库的锁文件，并在单仓库根目录重新生成一次 `pnpm-lock.yaml`。
+- **标签可能冲突。** 两个仓库都有 `v1.0.0` 标签会冲突。在导入时添加标签前缀：`git filter-repo --tag-rename '':'web-'`。
+- **CI 不是免费的。** 你需要重新评估每个工作流、密钥和受保护分支——旧的 `.github/workflows/*.yml` 文件会随历史一起被带入，通常是不需要的。
 
 ---
 
-## 8. Anti-Patterns
+## 8. 反模式
 
-### A. Root tasks pollution
+### A. 根目录任务污染
 
-Wrong — runtime deps and ad-hoc scripts at the root:
+错误——运行时依赖和临时脚本放在根目录：
 
 ```json
 {
@@ -634,7 +634,7 @@ Wrong — runtime deps and ad-hoc scripts at the root:
 }
 ```
 
-Right — root delegates only, deps live in the packages that import them:
+正确——根目录仅委托，依赖保留在导入它们的包中：
 
 ```json
 {
@@ -649,36 +649,36 @@ Right — root delegates only, deps live in the packages that import them:
 }
 ```
 
-### B. Deep `apps/foo/lib/` business code
+### B. 深层 `apps/foo/lib/` 业务代码
 
-Wrong — reusable logic buried inside an app:
+错误——可复用逻辑埋在应用内部：
 
 ```text
 apps/cli/src/
 ├── bin.ts
-├── shared/        # actually reused — should be a package
-├── providers/     # actually reused — should be a package
-└── runtime/       # the entire SDK lives here
+├── shared/        # 实际上被复用——应该是一个包
+├── providers/     # 实际上被复用——应该是一个包
+└── runtime/       # 整个 SDK 都放在这里
 ```
 
-Right — extract anything another package would import:
+正确——提取另一个包会导入的任何内容：
 
 ```text
 apps/cli/
 └── src/
-    └── bin.ts                # only the CLI shell
+    └── bin.ts                # 仅 CLI 外壳
 
 packages/
-├── sdk-core/                 # the runtime
-├── adapter-openai/           # the providers
-└── shared-types/             # the shared types
+├── sdk-core/                 # 运行时
+├── adapter-openai/           # 提供者
+└── shared-types/             # 共享类型
 ```
 
-**Heuristic:** if a second app would copy/paste a folder from the first app, that folder is a package.
+**启发式方法：** 如果第二个应用会从第一个应用复制/粘贴一个文件夹，那这个文件夹就是一个包。
 
-### C. Circular workspace dependencies
+### C. 循环工作区依赖
 
-Wrong — `@acme/sdk` depends on `@acme/adapter-openai`, which depends back on `@acme/sdk`:
+错误——`@acme/sdk` 依赖 `@acme/adapter-openai`，而后者又依赖回 `@acme/sdk`：
 
 ```json
 // packages/sdk-core/package.json
@@ -690,7 +690,7 @@ Wrong — `@acme/sdk` depends on `@acme/adapter-openai`, which depends back on `
 { "name": "@acme/adapter-openai", "dependencies": { "@acme/sdk": "workspace:*" } }
 ```
 
-Right — invert the dependency. Adapters depend on contracts; the core depends on contracts; neither depends on the other:
+正确——反转依赖。适配器依赖合约；核心依赖合约；两者互不依赖：
 
 ```json
 // packages/sdk-core/package.json
@@ -702,21 +702,21 @@ Right — invert the dependency. Adapters depend on contracts; the core depends 
 { "dependencies": { "@acme/shared-types": "workspace:*" } }
 ```
 
-If the SDK needs to instantiate adapters, accept them at runtime via dependency injection, not as build-time imports.
+如果 SDK 需要实例化适配器，在运行时通过依赖注入（dependency injection）接受它们，而不是作为构建时导入。
 
-### D. Mixing app and library concerns
+### D. 混合应用和库的关注点
 
-Wrong — `apps/` directory contains things nothing executes:
+错误——`apps/` 目录包含没有执行内容的东西：
 
 ```text
 apps/
-├── cli/         # actual app
-├── shared/      # not an app — a library
-├── providers/   # not an app — a library
-└── runtime/     # not an app — a library
+├── cli/         # 实际的应用
+├── shared/      # 不是应用——是一个库
+├── providers/   # 不是应用——是一个库
+└── runtime/     # 不是应用——是一个库
 ```
 
-Right — only executables go in `apps/`:
+正确——只有可执行文件放在 `apps/` 中：
 
 ```text
 apps/
@@ -730,32 +730,32 @@ packages/
 └── shared-types/
 ```
 
-### E. Cross-package file imports
+### E. 跨包文件导入
 
-Wrong — reaching into another package's internals:
+错误——访问另一个包的内部实现：
 
 ```ts
 import { runQuery } from "../../packages/sdk-core/src/internals/runner";
 ```
 
-Right — go through the package's public name:
+正确——通过包的公共名称导入：
 
 ```ts
 import { runQuery } from "@acme/sdk";
 ```
 
-This forces you to maintain a real public surface and keeps refactors local.
+这迫使你维护真正的公共对外接口，并保持重构的局部性。
 
-### F. Recursive workspace globs
+### F. 递归工作区 glob 模式
 
-Wrong:
+错误：
 
 ```yaml
 packages:
   - "packages/**"
 ```
 
-This silently picks up any future nested folder containing a `package.json`, including `node_modules` symlinks under exotic conditions. Be explicit:
+这会静默地拾取任何未来包含 `package.json` 的嵌套文件夹，包括在特殊条件下的 `node_modules` 符号链接。要明确指定：
 
 ```yaml
 packages:
@@ -764,9 +764,9 @@ packages:
   - "tools/*"
 ```
 
-### G. Mega-package "core"
+### G. 巨型包 "core"
 
-Wrong — one package owns everything:
+错误——一个包拥有所有内容：
 
 ```text
 packages/
@@ -778,9 +778,9 @@ packages/
     └── cli-helpers/
 ```
 
-This creates hidden internal coupling, prevents independent versioning, and forces every consumer to install everything.
+这创建了隐藏的内部耦合，阻止了独立版本控制，并迫使每个消费者安装所有内容。
 
-Right — split by concern:
+正确——按关注点拆分：
 
 ```text
 packages/
@@ -793,16 +793,16 @@ packages/
 
 ---
 
-## Decision Checklist
+## 决策清单
 
-Before you commit a layout, run through this list:
+在提交布局之前，逐项检查此清单：
 
-- Is every executable in `apps/`?
-- Is every reusable unit in `packages/`?
-- Does the root only delegate and pin tooling?
-- Does every package have one clear purpose?
-- Are internal dependencies declared with `workspace:*` (pnpm/bun) or `*` (npm/yarn)?
-- Can each package build, test, and lint independently?
-- Are there zero cross-package file imports (no `../../packages/...`)?
-- Are there zero circular workspace deps?
-- Is `pnpm-workspace.yaml` listing concrete globs, not `packages/**`?
+- 每个可执行文件都在 `apps/` 中吗？
+- 每个可复用单元都在 `packages/` 中吗？
+- 根目录仅委托和锁定工具吗？
+- 每个包都有明确的职责吗？
+- 内部依赖是否使用 `workspace:*`（pnpm/bun）或 `*`（npm/yarn）声明？
+- 每个包可以独立构建、测试和 lint 吗？
+- 是否存在零跨包文件导入（没有 `../../packages/...`）？
+- 是否存在零循环工作区依赖？
+- `pnpm-workspace.yaml` 是否列出了具体的 glob 模式，而非 `packages/**`？

@@ -1,233 +1,233 @@
-# Thinking Models Toolkit
+# 思维模型工具包
 
-Complementary mental models that work alongside first principles analysis. Sourced from the Reddit "4-Model Prompt" (112 upvotes) and think-better's mental model catalog.
-
----
-
-## 1. The Four-Quadrant Framework
-
-This framework combines four models into a unified problem-analysis cycle. Work through each quadrant sequentially. The output of each quadrant feeds the next.
-
-### Quadrant 1: First Principles Thinking (Strip to fundamentals)
-
-1. What do we know for sure is true about this problem? (List only objective facts.)
-2. What are the underlying assumptions I might be making? (Challenge what seems obvious.)
-3. If we were to build a solution from scratch, with no legacy constraints, what would it look like?
-4. How can we re-imagine this solution if we forgot how this is "usually done"?
-5. What is the absolute simplest, most direct version of solving this?
-
-### Quadrant 2: Second-Order Thinking (Consequences of consequences)
-
-1. If the proposed solution works, what else does it trigger? (Immediate secondary effects?)
-2. What does the situation look like in 6 months? 2 years? 5 years?
-3. Are we at risk of solving a short-term pain but creating a larger long-term problem?
-4. What are the most likely unintended consequences (positive or negative)?
-5. What would a detached, objective expert worry about here?
-
-### Quadrant 3: Root Cause Analysis (Fix the system, not the symptom)
-
-1. Describe precisely what goes wrong when this problem manifests. (Specific symptoms and triggers?)
-2. What is the first domino that falls? (Initial event or breakdown?)
-3. Apply the "5 Whys" — Ask "Why?" five times starting from the problem statement.
-4. Where have we tried to solve this before and failed? What can we learn?
-5. What systemic factors keep making this problem reappear?
-
-### Quadrant 4: OODA Loop (Bias toward intelligent action)
-
-1. **Observe**: What is the raw data? What is actually happening right now, removing all bias?
-2. **Orient**: What mental models or old beliefs do I need to unlearn to see clearly?
-3. **Decide**: Based on everything analyzed, what is the single smartest decision right now?
-4. **Act**: What is the smallest, fastest, lowest-risk test we can run immediately?
-5. **Urgency**: If we absolutely had to act in the next 10 minutes, what would we do?
-
-### Final Synthesis Template
-
-After analyzing through all four quadrants:
-
-1. **Integrated Insights** — Synthesize key findings from each quadrant into a coherent picture. Where do the quadrants agree? Where do they conflict? Conflicts reveal the most important tensions to resolve.
-
-2. **Strategic Action Plan** — Step-by-step plan that:
-   - Addresses root causes identified in Quadrant 3
-   - Accounts for second-order effects from Quadrant 2
-   - Stays grounded in first-principles truths from Quadrant 1
-   - Includes an immediate OODA-style test from Quadrant 4
+与第一性原理分析配合使用的补充性思维模型（Mental Models）。来源：Reddit「4-Model Prompt」（112 赞）和 think-better 的思维模型目录。
 
 ---
 
-## 2. Extended Mental Models Catalog
+## 1. 四象限框架
 
-Twelve models for structured thinking. Each one is a lens — no single model is complete on its own.
+此框架将四个模型组合成一个统一的问题分析循环。按顺序逐个象限进行。每个象限的输出为下一个象限提供输入。
 
-### 1. First Principles
+### 象限 1：第一性原理思维（First Principles Thinking）——剥离到基本原理
 
-Strip a problem down to its fundamental truths, then reason up from there.
+1. 关于这个问题，我们确定知道什么是真的？（仅列出客观事实。）
+2. 我可能在做哪些底层假设？（挑战看似显而易见的事。）
+3. 如果我们从零开始构建解决方案，不受任何遗留约束，它会是什么样子？
+4. 如果我们忘记这件事「通常怎么做」，我们如何重新构想这个解决方案？
+5. 解决这个问题的最简单、最直接的方式是什么？
 
-- **Key question:** "What do we know to be true?"
-- **When to use:** Starting a new initiative, challenging "how it's always been done," evaluating vendor claims.
-- **Example:** SpaceX didn't ask "how do we buy cheaper rockets?" They asked "what are rockets made of, and what do those raw materials cost?" The answer was 2% of the quoted rocket price.
+### 象限 2：二阶思维（Second-Order Thinking）——后果的后果
 
-### 2. Inversion
+1. 如果提出的解决方案有效，它还会触发什么？（直接的次要效应？）
+2. 6 个月后的情况是什么样？2 年？5 年？
+3. 我们是否面临解决短期痛苦却制造更大长期问题的风险？
+4. 最可能的意外后果是什么（正面或负面）？
+5. 一个超然的、客观的专家会在这里担心什么？
 
-Instead of asking "how do I succeed?", ask "what would guarantee failure?" and avoid those things.
+### 象限 3：根本原因分析（Root Cause Analysis）——修复系统，而非症状
 
-- **Key question:** "What would make this fail for certain?"
-- **When to use:** Risk assessment, strategy reviews, product design, hiring decisions.
-- **Example:** Instead of "how do we build a great culture?" ask "what would destroy our culture?" Answers: tolerance of toxic top performers, inconsistent values enforcement, no feedback mechanisms. Now prevent those.
+1. 精确描述当这个问题出现时出了什么问题。（具体症状和触发器？）
+2. 倒下的第一张多米诺骨牌是什么？（初始事件或故障？）
+3. 应用「5 个为什么（5 Whys）」——从问题陈述开始，连续问五次「为什么？」
+4. 我们之前在哪些地方尝试解决这个问题但失败了？我们能学到什么？
+5. 哪些系统性因素使这个问题反复出现？
 
-### 3. Second-Order Thinking
+### 象限 4：OODA 循环（OODA Loop）——偏向智能行动
 
-What happens after what happens? Trace consequences 2-3 steps out.
+1. **观察（Observe）**：原始数据是什么？现在实际发生了什么，去除所有偏差？
+2. **定向（Orient）**：我需要放下哪些思维模型或旧信念才能看清问题？
+3. **决策（Decide）**：基于所有分析，当下最聪明的一个决策是什么？
+4. **行动（Act）**：我们能立即运行的最小、最快、最低风险的测试是什么？
+5. **紧迫性（Urgency）**：如果我们绝对必须在接下来的 10 分钟内行动，我们会做什么？
 
-- **Key question:** "And then what?"
-- **When to use:** Policy changes, pricing decisions, org restructures, any decision with delayed feedback loops.
-- **Example:** Cutting prices 20% increases volume (first order). But it also attracts price-sensitive customers who churn more, lowers perceived value, and sets a discount expectation (second order). Net margin may drop (third order).
+### 最终综合模板
 
-### 4. Bayesian Updating
+在通过所有四个象限分析之后：
 
-Update your beliefs incrementally as new evidence arrives. Don't anchor on first data or ignore contradicting signals.
+1. **综合洞察**——将每个象限的关键发现综合成一个连贯的图景。各象限在哪些地方一致？在哪些地方冲突？冲突揭示了需要解决的最重要张力。
 
-- **Key question:** "Given this new evidence, how much should I shift my belief?"
-- **When to use:** Market sizing, evaluating product-market fit signals, hiring decisions after interviews.
-- **Example:** You believe churn is a pricing problem (80% confidence). Then three exit interviews cite onboarding complexity, not price. Bayesian update: pricing problem drops to 40%, onboarding rises to 60%. Adjust priorities.
-
-### 5. Occam's Razor
-
-The simplest explanation that fits all the facts is usually correct. Don't reach for complex explanations when simple ones suffice.
-
-- **Key question:** "What's the simplest explanation that fits?"
-- **When to use:** Debugging (systems and organizations), diagnosing revenue misses, understanding customer behavior.
-- **Example:** Revenue dropped 15% this month. Complex theory: market shift + competitor launch + seasonal effect. Simple check: the sales team had 3 people on vacation and 1 quit. Start there.
-
-### 6. Leverage Points
-
-Small changes in the right place create disproportionate impact. Most effort is spent on low-leverage activities.
-
-- **Key question:** "Where does a small input create the biggest output?"
-- **When to use:** Resource allocation, process improvement, deciding what to work on next.
-- **Example:** Improving onboarding completion from 60% to 85% may have more revenue impact than building five new features. The bottleneck is adoption, not capability.
-
-### 7. Pareto Principle (80/20)
-
-80% of effects come from 20% of causes. Find the vital few and focus there.
-
-- **Key question:** "Which 20% of inputs are driving 80% of results?"
-- **When to use:** Prioritization, customer segmentation, bug triage, feature planning.
-- **Example:** 4 of your 20 customers generate 80% of ARR. 3 of your 15 features drive 80% of engagement. Your strategy should be dominated by those, not spread evenly.
-
-### 8. Via Negativa
-
-Improve by removing, not adding. Subtraction is underrated and usually more effective than addition.
-
-- **Key question:** "What should we STOP doing?"
-- **When to use:** Process reviews, product simplification, meeting audits, strategy refinement.
-- **Example:** Instead of adding a new feature to reduce churn, remove the three confusing steps in onboarding that cause users to abandon. Fewer things, done well, beats more things done adequately.
-
-### 9. Reversibility Filter
-
-Two-way door decisions (reversible) deserve speed. One-way door decisions (irreversible) deserve deep analysis. Most decisions are two-way doors treated as one-way.
-
-- **Key question:** "Can we undo this easily if we're wrong?"
-- **When to use:** Any decision where the team is stuck in analysis paralysis.
-- **Example:** Choosing a new project management tool = two-way door (you can switch back). Signing a 3-year exclusive distribution deal = one-way door. Spend your analysis budget accordingly.
-
-### 10. Pre-Mortem
-
-Imagine the decision already failed spectacularly. Work backward to understand why.
-
-- **Key question:** "It's 12 months from now and this failed. What happened?"
-- **When to use:** Before major launches, strategic bets, large investments, key hires.
-- **Example:** "Our enterprise product launch failed." Reasons surfaced: no dedicated support team, pricing confused mid-market buyers, sales team wasn't trained. All preventable — but only if you look for them before launch.
-
-### 11. Regret Minimization
-
-Project yourself to age 80. Look back on this decision. Which choice minimizes lifetime regret?
-
-- **Key question:** "At 80 years old, which choice would I regret NOT making?"
-- **When to use:** Career-defining decisions, pivots, whether to take a risk, founder dilemmas.
-- **Example:** Bezos used this to quit his hedge fund job and start Amazon. The question wasn't "will Amazon succeed?" It was "will I regret not trying?" The answer was obviously yes.
-
-### 12. Antifragility
-
-Design systems that gain from disorder, not just survive it. Fragile systems break under stress. Robust systems endure. Antifragile systems get stronger.
-
-- **Key question:** "Does this system get stronger when stressed, or does it break?"
-- **When to use:** Organizational design, infrastructure decisions, team structure, business model evaluation.
-- **Example:** A startup that only sells to one customer segment is fragile. One that uses each customer loss to improve its ICP definition and product becomes antifragile. The stress of churn makes the business sharper.
+2. **战略行动计划**——逐步计划，需要：
+   - 解决象限 3 中识别出的根本原因
+   - 考虑象限 2 中的二阶效应
+   - 立足于象限 1 中的第一性原理真理
+   - 包含象限 4 中的即时 OODA 风格测试
 
 ---
 
-## 3. Model Selection Guide
+## 2. 扩展思维模型目录
 
-| Decision Type | Recommended Models | Why This Combination |
+十二个结构化思维模型。每一个都是一个透镜——没有任何单一模型本身是完整的。
+
+### 1. 第一性原理（First Principles）
+
+将问题剥离到其基本真理，然后从那里向上推理。
+
+- **关键问题：**「我们知道什么是真的？」
+- **何时使用：** 启动新举措、挑战「一直以来的做法」、评估供应商声称。
+- **示例：** SpaceX 没有问「我们如何买到更便宜的火箭？」他们问「火箭由什么制成，那些原材料成本是多少？」答案是被报价的火箭价格的 2%。
+
+### 2. 逆向思维（Inversion）
+
+不问「我如何成功？」，而是问「什么会保证失败？」并避免那些事。
+
+- **关键问题：**「什么会确保这件事失败？」
+- **何时使用：** 风险评估、战略审查、产品设计、招聘决策。
+- **示例：** 不问「如何建立伟大的文化？」，而是问「什么会摧毁我们的文化？」答案：容忍有毒的顶尖人才、不一致的价值观执行、无反馈机制。现在防止这些。
+
+### 3. 二阶思维（Second-Order Thinking）
+
+发生之后会发生什么？追踪 2-3 步的后果。
+
+- **关键问题：**「然后呢？」
+- **何时使用：** 政策变更、定价决策、组织重组、任何有延迟反馈回路的决策。
+- **示例：** 降价 20% 增加销量（一阶）。但它也吸引了更易流失的价格敏感客户，降低了感知价值，并设定了折扣预期（二阶）。净利润可能下降（三阶）。
+
+### 4. 贝叶斯更新（Bayesian Updating）
+
+随着新证据的到来，增量更新你的信念。不要锚定在第一条数据上，也不要忽视矛盾的信号。
+
+- **关键问题：**「鉴于这个新证据，我应该将我的信念调整多少？」
+- **何时使用：** 市场规模估算、评估产品-市场契合度信号、面试后的招聘决策。
+- **示例：** 你认为流失是定价问题（80% 置信度）。然后三次离职面谈都提到上手复杂度，而非价格。贝叶斯更新：定价问题降到 40%，上手问题升到 60%。调整优先级。
+
+### 5. 奥卡姆剃刀（Occam's Razor）
+
+符合所有事实的最简单解释通常是正确的。当简单解释足够时，不要寻求复杂解释。
+
+- **关键问题：**「符合事实的最简单解释是什么？」
+- **何时使用：** 调试（系统与组织）、诊断收入下降、理解客户行为。
+- **示例：** 本月收入下降 15%。复杂理论：市场转变 + 竞争对手发布 + 季节效应。简单检查：销售团队有 3 人休假、1 人离职。从这里开始。
+
+### 6. 杠杆点（Leverage Points）
+
+正确位置的小改变创造不成比例的巨大影响。大多数努力花在低杠杆活动上。
+
+- **关键问题：**「哪里的小输入能创造最大的输出？」
+- **何时使用：** 资源分配、流程改进、决定下一步做什么。
+- **示例：** 将上手完成率从 60% 提高到 85% 可能比构建五个新功能有更大的收入影响。瓶颈是采用，而非能力。
+
+### 7. 帕累托原则（Pareto Principle / 80/20）
+
+80% 的效果来自 20% 的原因。找到关键的少数并聚焦于此。
+
+- **关键问题：**「哪 20% 的输入在驱动 80% 的结果？」
+- **何时使用：** 优先级排序、客户细分、Bug 分类、功能规划。
+- **示例：** 20 个客户中的 4 个贡献了 80% 的 ARR。15 个功能中的 3 个驱动了 80% 的参与度。你的策略应由这些主导，而非均匀分布。
+
+### 8. 否定法（Via Negativa）
+
+通过移除而非添加来改进。减法被低估，通常比加法更有效。
+
+- **关键问题：**「我们应该停止做什么？」
+- **何时使用：** 流程审查、产品简化、会议审计、策略优化。
+- **示例：** 不添加新功能来减少流失，而是移除上手流程中导致用户放弃的三个令人困惑的步骤。更少的事情做好，胜过更多的事情做得凑合。
+
+### 9. 可逆性过滤器（Reversibility Filter）
+
+双向门决策（可逆）值得快速行动。单向门决策（不可逆）值得深入分析。大多数决策是被当作单向门的双向门。
+
+- **关键问题：**「如果我们错了，能轻松撤销吗？」
+- **何时使用：** 任何团队陷入分析瘫痪的决策。
+- **示例：** 选择新的项目管理工具 = 双向门（你可以切换回来）。签署 3 年独家分销协议 = 单向门。相应地分配你的分析预算。
+
+### 10. 事前验尸（Pre-Mortem）
+
+想象决策已经以惨烈的方式失败。反向推导以理解原因。
+
+- **关键问题：**「现在是 12 个月后，这失败了。发生了什么？」
+- **何时使用：** 重大发布、战略赌注、大额投资、关键招聘之前。
+- **示例：**「我们的企业产品发布失败了。」浮出的原因：没有专门的支持团队、定价让中端市场买家困惑、销售团队没有培训。全部可预防——但只有你在发布前寻找它们时才能预防。
+
+### 11. 遗憾最小化（Regret Minimization）
+
+将你自己投射到 80 岁。回望这个决策。哪个选择能最小化一生的遗憾？
+
+- **关键问题：**「在 80 岁时，哪个选择我会后悔没有做？」
+- **何时使用：** 定义职业生涯的决策、转型、是否冒险、创始人困境。
+- **示例：** Bezos 用这个辞去了对冲基金工作并创立了 Amazon。问题不是「Amazon 会成功吗？」而是「我会后悔没有尝试吗？」答案显然是会。
+
+### 12. 反脆弱性（Antifragility）
+
+设计从混乱中获益的系统，而非仅仅在混乱中生存。脆弱系统在压力下崩溃。鲁棒系统能承受。反脆弱系统变得更强。
+
+- **关键问题：**「这个系统在受压时是变强还是崩溃？」
+- **何时使用：** 组织设计、基础设施决策、团队结构、商业模式评估。
+- **示例：** 一个只卖给一个客户细分市场的初创公司是脆弱的。一个利用每次客户流失来改进其 ICP 定义和产品的初创公司变得反脆弱。流失的压力使业务更敏锐。
+
+---
+
+## 3. 模型选择指南
+
+| 决策类型 | 推荐模型 | 为什么这样组合 |
 |---|---|---|
-| What to build | First Principles + Inversion + Via Negativa | Strip to essence, avoid pitfalls, remove unnecessary |
-| How to prioritize | Pareto + Leverage Points + Reversibility | Find vital few, maximize impact, classify urgency |
-| Is this the right direction | Second-Order + Pre-Mortem + Regret Minimization | Trace consequences, stress-test, long-term perspective |
-| What are we missing | 5 Whys + Inversion + Bayesian | Dig deeper, flip perspective, update beliefs |
-| Which option to choose | First Principles + Reversibility + Occam's Razor | Ground truth basis, urgency classification, simplicity |
-| System is fragile | Antifragility + Via Negativa + Second-Order | Build resilience, remove fragility, trace cascades |
+| 构建什么 | 第一性原理 + 逆向思维 + 否定法 | 剥离本质，避开陷阱，移除不必要的 |
+| 如何排优先级 | 帕累托 + 杠杆点 + 可逆性 | 找到关键的少数，最大化影响，分类紧迫性 |
+| 这是否是正确的方向 | 二阶思维 + 事前验尸 + 遗憾最小化 | 追踪后果，压力测试，长期视角 |
+| 我们遗漏了什么 | 5 个为什么 + 逆向思维 + 贝叶斯 | 挖掘更深，翻转视角，更新信念 |
+| 选择哪个选项 | 第一性原理 + 可逆性 + 奥卡姆剃刀 | 基本事实基础，紧迫性分类，简洁性 |
+| 系统是脆弱的 | 反脆弱性 + 否定法 + 二阶思维 | 构建韧性，移除脆弱性，追踪级联效应 |
 
-**How to use this table:** Start with your decision type in the left column. Apply the recommended models in order, left to right. The first model frames the problem, the second stress-tests the frame, the third refines it.
+**如何使用此表：** 从左侧列中你的决策类型开始。按从左到右的顺序应用推荐的模型。第一个模型框定问题，第二个对框架进行压力测试，第三个完善它。
 
 ---
 
-## 4. 5 Whys Deep Dive
+## 4. 5 个为什么（5 Whys）深度解析
 
-The 5 Whys is the backbone of Quadrant 3 (Root Cause Analysis). Most teams do it badly. Here is how to do it well.
+5 个为什么是象限 3（根本原因分析）的支柱。大多数团队做得不好。以下是正确做法。
 
-### Bad 5 Whys (Common Failure)
+### 糟糕的 5 个为什么（常见失败）
 
-**Problem: Our deployment failed on Friday.**
+**问题：我们的部署在周五失败了。**
 
-1. Why? — Because the build broke.
-2. Why? — Because a test failed.
-3. Why? — Because the code had a bug.
-4. Why? — Because the developer made a mistake.
-5. Why? — Because people make mistakes.
+1. 为什么？——因为构建失败。
+2. 为什么？——因为测试失败。
+3. 为什么？——因为代码有 Bug。
+4. 为什么？——因为开发者犯了错误。
+5. 为什么？——因为人会犯错。
 
-**Result:** "People make mistakes" is not actionable. You've arrived at a philosophical truism, not a root cause. This happens when each "why" gets vaguer instead of more specific.
+**结果：**「人会犯错」不可执行。你得出了一个哲学上的老生常谈，而非根本原因。当每个「为什么」变得越来越模糊而非更具体时，就会发生这种情况。
 
-### Good 5 Whys
+### 好的 5 个为什么
 
-**Problem: Our deployment failed on Friday.**
+**问题：我们的部署在周五失败了。**
 
-1. Why did the deployment fail? — The integration test for the payments module failed, and the pipeline has a hard gate on that test suite.
-2. Why did the payments integration test fail? — It depends on a staging API endpoint that was returning 503 errors.
-3. Why was the staging API returning 503s? — The staging environment's database connection pool was exhausted.
-4. Why was the connection pool exhausted? — A load test was running against staging at the same time, and there's no isolation between load-test traffic and CI traffic.
-5. Why is there no isolation? — Staging was set up as a single shared environment 18 months ago and was never split as the team grew.
+1. 为什么部署失败？——支付模块的集成测试失败了，流水线对该测试套件有硬性门槛。
+2. 为什么支付集成测试失败？——它依赖一个返回 503 错误的预发布环境 API 端点。
+3. 为什么预发布环境 API 返回 503？——预发布环境的数据库连接池被耗尽。
+4. 为什么连接池被耗尽？——同时有一个负载测试在预发布环境上运行，负载测试流量和 CI 流量之间没有隔离。
+5. 为什么没有隔离？——预发布环境 18 个月前设置为单一共享环境，团队增长后从未拆分。
 
-**Root cause:** Shared staging environment with no traffic isolation.
-**Preventive action:** Create dedicated CI environment separate from load-testing environment. Estimated effort: 2 days. Prevents all future occurrences of this class of failure.
+**根本原因：** 共享的预发布环境没有流量隔离。
+**预防措施：** 创建专用于 CI 的环境，与负载测试环境分离。预计工作量：2 天。防止此类故障所有未来发生。
 
-### Rules for Effective 5 Whys
+### 有效 5 个为什么的规则
 
-- **Each "why" must be specific and falsifiable.** "Because the code had a bug" is not falsifiable. "Because the payments integration test called a staging endpoint that was returning 503" is specific and verifiable.
-- **If a "why" leads to "that's just how it is", you've stopped too early or gone sideways.** Back up one step and ask a different "why."
-- **Branch when multiple causes exist — don't force a single chain.** If Why #3 has two valid answers, follow both branches. Real systems have multiple contributing causes.
-- **Stop when you reach something you can actually change.** The root cause is the deepest cause within your control. "The internet is unreliable" is true but useless. "We have no retry logic on network calls" is actionable.
-- **The root cause should suggest a clear preventive action.** If your root cause doesn't point to a specific change you can make, keep digging.
+- **每个「为什么」必须是具体的和可证伪的。**「因为代码有 Bug」不可证伪。「因为支付集成测试调用了一个返回 503 的预发布环境端点」是具体且可验证的。
+- **如果一个「为什么」导向「这就是它的方式」，你停得太早或走偏了。** 退回一步，问一个不同的「为什么」。
+- **当存在多个原因时进行分支——不要强制单一链条。** 如果第 3 个为什么有两个有效答案，追踪两个分支。真实系统有多个贡献原因。
+- **当你到达一个你能实际改变的内容时停止。** 根本原因是你控制范围内最深层次的原因。「互联网不可靠」是真实的但无用。「我们在网络调用上没有重试逻辑」是可执行的。
+- **根本原因应该指向一个明确的预防措施。** 如果你的根本原因没有指向一个你能做的具体改变，继续挖掘。
 
-### 5 Whys Branching Example
+### 5 个为什么分支示例
 
 ```
-Problem: Customer onboarding takes 3 weeks instead of 3 days.
+问题：客户上手需要 3 周而非 3 天。
 
-Why? Two branches:
+为什么？两个分支：
 
-Branch A: Technical setup takes 10 days
-  Why? — SSO integration requires manual configuration
-  Why? — No self-serve SSO setup exists
-  Why? — Engineering deprioritized it (only 5 enterprise customers when decided)
-  Root cause: SSO self-serve was never re-prioritized as enterprise grew
-  Action: Build SSO self-serve wizard (2 sprints)
+分支 A：技术设置需要 10 天
+  为什么？——SSO 集成需要手动配置
+  为什么？——没有自助 SSO 设置
+  为什么？——工程团队将其优先级下调（当时只有 5 个企业客户）
+  根本原因：随着企业客户增长，SSO 自助服务从未被重新排优先级
+  行动：构建 SSO 自助设置向导（2 个迭代）
 
-Branch B: Legal/procurement takes 12 days
-  Why? — Custom contract review on every deal
-  Why? — No pre-approved contract template for standard tiers
-  Why? — Legal reviews each contract individually
-  Root cause: No standardized contract for standard-tier customers
-  Action: Create pre-approved template for deals under $50K ARR
+分支 B：法务/采购需要 12 天
+  为什么？——每笔交易都需要自定义合同审查
+  为什么？——标准层级没有预批准的合同模板
+  为什么？——法务逐份审查合同
+  根本原因：标准层级客户没有标准化合同
+  行动：为 $50K ARR 以下的交易创建预批准模板
 ```
 
-Both branches are real root causes. Both need separate fixes. Forcing them into one chain would have hidden one of them.
+两个分支都是真实的根本原因。两者都需要单独的修复。强制将它们放入一个链条会隐藏其中一个。

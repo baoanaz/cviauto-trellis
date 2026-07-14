@@ -1,206 +1,206 @@
-# Problem Decomposition Frameworks
+# 问题分解框架
 
-Before you can apply first principles to a problem, you often need to decompose it into manageable pieces. A complex, tangled problem resists first-principles reasoning because you cannot isolate the ground truths — everything feels interconnected and overwhelming. These 15 frameworks provide structured ways to break down complexity so that first-principles thinking has something concrete to work with.
+在将第一性原理应用于问题之前，你通常需要先将其分解为可管理的部分。一个复杂、纠缠的问题抵制第一性原理推理，因为你无法隔离基本事实——一切都感觉相互关联且令人不知所措。这 15 个框架提供了结构化方法来分解复杂性，使第一性原理思维有具体的工作对象。
 
-Pick the framework that matches your problem type, decompose first, then apply first-principles reasoning to each piece.
+选择与你的问题类型匹配的框架，先分解，然后将第一性原理推理应用于每个部分。
 
-Source: think-better project's problem-solving-pro skill.
+来源：think-better 项目的 problem-solving-pro 技能。
 
 ---
 
-### Issue Tree
-**What**: Break a broad question into a tree of sub-questions, where each level is MECE (Mutually Exclusive, Collectively Exhaustive).
-**When**: Diagnostic problems where you need to find the root cause or map a decision space.
-**Structure**:
+### 议题树（Issue Tree）
+**是什么**：将一个宽泛的问题分解为子问题的树状结构，每一层都是 MECE（Mutually Exclusive, Collectively Exhaustive，相互独立、完全穷尽）。
+**何时使用**：诊断性问题，需要找到根本原因或映射决策空间。
+**结构**：
 ```
-Why is revenue declining?
-├── Are we losing customers?
-│   ├── Is churn increasing?
-│   └── Are we acquiring fewer?
-└── Are customers spending less?
-    ├── Is average deal size shrinking?
-    └── Is expansion revenue declining?
+为什么收入在下降？
+├── 我们在失去客户吗？
+│   ├── 流失率在增加吗？
+│   └── 我们在获取更少客户吗？
+└── 客户在减少支出吗？
+    ├── 平均交易规模在缩小吗？
+    └── 扩展收入在下降吗？
 ```
-**Example**: "Why did NPS drop 15 points?" branches into product quality, support response time, onboarding experience, and pricing perception — each explored independently.
+**示例**：「为什么 NPS 下降了 15 分？」分支到产品质量、支持响应时间、上手体验和定价感知——每个独立探索。
 
-### Hypothesis Tree
-**What**: Start with a hypothesis and break it into the conditions that must all be true for the hypothesis to hold.
-**When**: Uncertain causes where you suspect an answer but need to validate it systematically.
-**Structure**:
+### 假设树（Hypothesis Tree）
+**是什么**：从一个假设开始，将其分解为假设成立所必须全部为真的条件。
+**何时使用**：原因不确定，你怀疑某个答案但需要系统性地验证它。
+**结构**：
 ```
-Hypothesis: We should enter the EU market
-├── Condition 1: Sufficient demand exists (>$50M TAM)
-├── Condition 2: We can comply with GDPR at reasonable cost
-├── Condition 3: We can hire or partner locally
-└── Condition 4: Unit economics work with EU pricing
+假设：我们应该进入欧盟市场
+├── 条件 1：存在足够需求（> $50M TAM）
+├── 条件 2：我们能以合理成本遵守 GDPR
+├── 条件 3：我们能在当地招聘或合作
+├── 条件 4：单位经济模型在欧盟定价下成立
 ```
-**Example**: "Our product-market fit is weakening" — decompose into retention, activation, referral, and willingness-to-pay conditions. Test each one independently.
+**示例**：「我们的产品-市场契合度正在减弱」——分解为留存、激活、推荐和付费意愿条件。独立测试每一项。
 
-### MECE Decomposition
-**What**: Divide any set into categories that do not overlap (Mutually Exclusive) and cover everything (Collectively Exhaustive).
-**When**: Universal structuring principle applicable to any problem where you need completeness without double-counting.
-**Structure**: Test every decomposition by asking: (1) Does anything fall into two categories? (2) Is anything left out? If yes to either, restructure.
-**Example**: Segmenting customers by contract size (SMB < $50K, Mid-Market $50K-$250K, Enterprise > $250K) — every customer falls into exactly one bucket.
+### MECE 分解（MECE Decomposition）
+**是什么**：将任何集合划分为不重叠（相互独立）且覆盖全面（完全穷尽）的类别。
+**何时使用**：适用于任何需要完整覆盖且不重复计算的问题的通用结构化原则。
+**结构**：通过问两个问题测试每个分解：(1) 是否有任何事物落入两个类别？(2) 是否有任何事物被遗漏？如果任一答案为是，重新结构化。
+**示例**：按合同规模对客户进行分段（SMB < $50K，中端市场 $50K-$250K，企业 > $250K）——每个客户恰好落入一个桶。
 
-### Profitability Tree
-**What**: Decompose profit into Revenue (Price x Volume) minus Costs (Fixed + Variable).
-**When**: Financial analysis, margin diagnosis, pricing decisions, or understanding why profitability changed.
-**Structure**:
+### 盈利树（Profitability Tree）
+**是什么**：将利润分解为收入（价格 x 数量）减去成本（固定 + 可变）。
+**何时使用**：财务分析、利润率诊断、定价决策，或理解盈利能力为何变化。
+**结构**：
 ```
-Profit
-├── Revenue
-│   ├── Price per unit
-│   └── Volume (units sold)
-│       ├── New customers
-│       └── Existing customers (expansion)
-└── Costs
-    ├── Fixed (rent, salaries, infrastructure)
-    └── Variable (COGS, commissions, hosting per user)
+利润
+├── 收入
+│   ├── 每单位价格
+│   └── 数量（售出单位数）
+│       ├── 新客户
+│       └── 现有客户（扩展）
+└── 成本
+    ├── 固定（租金、工资、基础设施）
+    └── 可变（COGS、佣金、每用户托管）
 ```
-**Example**: "Gross margin dropped 8 points" — the tree quickly isolates whether it is a pricing issue, a volume mix issue, or a cost increase.
+**示例**：「毛利率下降了 8 个点」——树状图快速隔离是定价问题、数量结构问题还是成本增加。
 
-### Process Flow Decomposition
-**What**: Map a process as sequential steps, measure each, and identify bottlenecks.
-**When**: Operational problems — anything where work flows through stages and something is slow, broken, or inconsistent.
-**Structure**: `Step 1 → Step 2 → Step 3 → ... → Output` with time, error rate, and throughput measured at each step.
-**Example**: Lead-to-close process: Inbound → Qualification (2 days) → Demo (5 days) → Proposal (3 days) → Negotiation (14 days) → Close. The 14-day negotiation step is the bottleneck.
+### 流程流分解（Process Flow Decomposition）
+**是什么**：将流程映射为顺序步骤，衡量每个步骤，并识别瓶颈。
+**何时使用**：运维问题——任何工作流经多个阶段、且某处缓慢、出错或不一致的情况。
+**结构**：`步骤 1 → 步骤 2 → 步骤 3 → ... → 输出`，每个步骤测量时间、错误率和吞吐量。
+**示例**：线索到成交流程：入库 → 资格确认（2 天）→ 演示（5 天）→ 提案（3 天）→ 谈判（14 天）→ 成交。14 天的谈判步骤是瓶颈。
 
-### Customer Journey Map
-**What**: Map every touchpoint a customer has with your product/company from first awareness through advocacy.
-**When**: Customer experience problems, activation issues, churn diagnosis, or onboarding redesign.
-**Structure**: `Awareness → Consideration → Trial → Purchase → Onboarding → Usage → Expansion → Advocacy` — at each stage, map: what the customer does, what they feel, and where they get stuck.
-**Example**: Mapping a SaaS trial journey reveals that 60% of users drop off between signup and first meaningful action because the onboarding wizard asks for data they do not have yet.
+### 客户旅程地图（Customer Journey Map）
+**是什么**：从首次认知到拥护，映射客户与你的产品/公司的每个接触点。
+**何时使用**：客户体验问题、激活问题、流失诊断或上手流程重新设计。
+**结构**：`认知 → 考虑 → 试用 → 购买 → 上手 → 使用 → 扩展 → 拥护`——在每个阶段映射：客户做什么、他们感受如何、以及他们在哪里卡住。
+**示例**：映射 SaaS 试用旅程发现 60% 的用户在注册和首次有意义操作之间流失，因为上手向导要求他们提供尚未拥有的数据。
 
-### Value Chain Analysis
-**What**: Decompose a business by its value-adding activities (inbound logistics, operations, outbound, marketing/sales, service) plus support activities (infrastructure, HR, technology, procurement).
-**When**: Competitive advantage analysis — understanding where you create unique value vs. where you are commoditized.
-**Structure**: Porter's value chain: primary activities (left to right) supported by infrastructure activities above.
-**Example**: A fintech discovers its competitive advantage is not in the product (commoditized) but in its compliance operations — faster regulatory approval is the real moat.
+### 价值链分析（Value Chain Analysis）
+**是什么**：按增值活动（进厂物流、运营、出厂、营销/销售、服务）加上支持活动（基础设施、人力资源、技术、采购）分解一个业务。
+**何时使用**：竞争优势分析——理解你在哪里创造独特价值 vs. 你在哪里被商品化。
+**结构**：Porter 的价值链：主要活动（从左到右），上方由基础设施活动支持。
+**示例**：一家金融科技公司发现其竞争优势不在产品（被商品化），而在其合规运营——更快的监管审批是真正的护城河。
 
-### Systems Map
-**What**: Map feedback loops, dependencies, and non-linear relationships between components.
-**When**: Complex adaptive systems — problems where interventions have unintended consequences and cause-effect is circular.
-**Structure**:
+### 系统地图（Systems Map）
+**是什么**：映射组件之间的反馈回路、依赖关系和非线性关系。
+**何时使用**：复杂自适应系统——干预会产生意外后果且因果是循环的问题。
+**结构**：
 ```
-Hiring more engineers → More features shipped → More customers
+招聘更多工程师 → 交付更多功能 → 更多客户
        ↑                                              ↓
-More revenue ← Higher retention ← Better product quality
+更多收入 ← 更高留存 ← 更好的产品质量
 ```
-Mark each arrow as reinforcing (+) or balancing (-). Identify the dominant loops.
-**Example**: Mapping a marketplace reveals that driver supply and rider demand form a reinforcing loop, but surge pricing creates a balancing loop that caps growth in certain geographies.
+将每个箭头标记为增强（+）或平衡（-）。识别主导回路。
+**示例**：映射一个市场平台发现司机供应和乘客需求形成增强回路，但动态定价创建了一个平衡回路，限制了某些地区的增长。
 
-### Stakeholder Map
-**What**: Identify who is affected, who has influence, and who makes the final decision.
-**When**: Organizational problems, change management, cross-functional initiatives, or any situation where human dynamics determine outcomes.
-**Structure**: 2x2 matrix — Influence (high/low) x Interest (high/low). High-influence + high-interest = manage closely. High-influence + low-interest = keep satisfied.
-**Example**: Rolling out a new CRM — Sales leadership (high influence, high interest), Finance (high influence, low interest), individual reps (low influence, high interest), Legal (low influence, low interest).
+### 利益相关者地图（Stakeholder Map）
+**是什么**：识别谁被影响、谁有影响力、谁做最终决策。
+**何时使用**：组织问题、变革管理、跨职能举措，或任何人员动态决定结果的场景。
+**结构**：2x2 矩阵——影响力（高/低）x 利益（高/低）。高影响力 + 高利益 = 密切管理。高影响力 + 低利益 = 保持满意。
+**示例**：推出新 CRM——销售领导层（高影响力，高利益），财务（高影响力，低利益），一线销售代表（低影响力，高利益），法务（低影响力，低利益）。
 
-### Scenario Tree
-**What**: Branch possible futures by key uncertainties, creating distinct scenarios to plan against.
-**When**: Planning under uncertainty — when the right strategy depends on which future materializes.
-**Structure**:
+### 场景树（Scenario Tree）
+**是什么**：按关键不确定性分支可能的未来，创建不同的场景来进行规划。
+**何时使用**：不确定性下的规划——当正确的策略取决于哪种未来会实现时。
+**结构**：
 ```
-Key uncertainty: Market grows fast vs. slow
-├── Fast growth
-│   ├── We execute well → "Blue Ocean"
-│   └── We stumble → "Missed Window"
-└── Slow growth
-    ├── We execute well → "Efficient Machine"
-    └── We stumble → "Survival Mode"
+关键不确定性：市场增长快 vs. 慢
+├── 快速增长
+│   ├── 我们执行得好 → 「蓝海」
+│   └── 我们跌倒 → 「错失窗口」
+└── 缓慢增长
+    ├── 我们执行得好 → 「高效机器」
+    └── 我们跌倒 → 「生存模式」
 ```
-**Example**: An AI startup models scenarios around regulation (strict vs. permissive) crossed with foundation model commoditization (fast vs. slow) to decide build-vs-buy strategy.
+**示例**：一家 AI 初创公司围绕监管（严格 vs. 宽松）与基础模型商品化（快 vs. 慢）交叉构建场景模型，以决定自建 vs. 购买策略。
 
-### Feature Tree
-**What**: Decompose a product into its features, capabilities, and sub-capabilities in a hierarchy.
-**When**: Product decisions — roadmap prioritization, build-vs-buy analysis, competitive gap analysis.
-**Structure**:
+### 功能树（Feature Tree）
+**是什么**：将产品分解为功能、能力和子能力的层次结构。
+**何时使用**：产品决策——路线图优先级排序、自建 vs. 购买分析、竞争差距分析。
+**结构**：
 ```
-Product
-├── Core capability A
-│   ├── Feature A1
-│   └── Feature A2
-├── Core capability B
-│   ├── Feature B1
-│   └── Feature B2
-└── Platform / Infrastructure
-    ├── Feature P1
-    └── Feature P2
+产品
+├── 核心能力 A
+│   ├── 功能 A1
+│   └── 功能 A2
+├── 核心能力 B
+│   ├── 功能 B1
+│   └── 功能 B2
+└── 平台 / 基础设施
+    ├── 功能 P1
+    └── 功能 P2
 ```
-**Example**: Decomposing a project management tool into task management, collaboration, reporting, and integrations — then scoring each against competitors to find gaps.
+**示例**：将项目管理工具分解为任务管理、协作、报告和集成——然后针对竞争对手对每个进行评分以找出差距。
 
-### Technology Stack Decomposition
-**What**: Layer a system by infrastructure, platform, application, and interface.
-**When**: Technical architecture decisions, migration planning, or diagnosing performance issues.
-**Structure**:
+### 技术栈分解（Technology Stack Decomposition）
+**是什么**：按基础设施、平台、应用和接口分层系统。
+**何时使用**：技术架构决策、迁移规划或诊断性能问题。
+**结构**：
 ```
-Interface Layer    (UI, API, CLI)
-Application Layer  (business logic, services)
-Platform Layer     (databases, queues, auth, storage)
-Infrastructure     (compute, network, CDN, DNS)
+接口层    （UI、API、CLI）
+应用层    （业务逻辑、服务）
+平台层    （数据库、队列、认证、存储）
+基础设施  （计算、网络、CDN、DNS）
 ```
-**Example**: Diagnosing API latency — decompose by layer and measure each. Discovery: the application layer is fast but the platform layer has a database query doing a full table scan.
+**示例**：诊断 API 延迟——按层分解并测量每一层。发现：应用层很快，但平台层有一个数据库查询在做全表扫描。
 
-### Fishbone (Ishikawa) Diagram
-**What**: Categorize potential causes of a problem into standard groups: People, Process, Technology, Environment, Materials, Measurement.
-**When**: Root cause analysis — when a problem has occurred and you need to systematically identify all possible causes.
-**Structure**:
+### 鱼骨图（Fishbone / Ishikawa Diagram）
+**是什么**：将问题的潜在原因归入标准组：人员、流程、技术、环境、材料、测量。
+**何时使用**：根本原因分析——当问题已发生且你需要系统性地识别所有可能原因时。
+**结构**：
 ```
-                People ──────┐
-               Process ──────┤
-            Technology ──────┼──→ [Problem]
-           Environment ──────┤
-           Measurement ──────┘
+                人员 ──────┐
+               流程 ──────┤
+            技术 ──────┼──→ [问题]
+           环境 ──────┤
+           测量 ──────┘
 ```
-**Example**: "Why are deployments failing?" — People (new engineer, no pairing), Process (no staging environment), Technology (flaky CI), Environment (third-party API rate limits).
+**示例**：「为什么部署失败？」——人员（新工程师，无结对编程），流程（无预发布环境），技术（CI 不稳定），环境（第三方 API 速率限制）。
 
-### Pyramid Principle
-**What**: Structure communication as answer first, then supporting arguments, then evidence beneath each argument.
-**When**: Communication and decision-making — when you need to present reasoning clearly to stakeholders.
-**Structure**:
+### 金字塔原理（Pyramid Principle）
+**是什么**：将沟通结构化为答案先行，然后是支持论点，每个论点下方是证据。
+**何时使用**：沟通和决策——当你需要向利益相关者清楚地呈现推理时。
+**结构**：
 ```
-Answer / Recommendation
-├── Argument 1
-│   ├── Evidence 1a
-│   └── Evidence 1b
-├── Argument 2
-│   ├── Evidence 2a
-│   └── Evidence 2b
-└── Argument 3
-    ├── Evidence 3a
-    └── Evidence 3b
+答案 / 建议
+├── 论点 1
+│   ├── 证据 1a
+│   └── 证据 1b
+├── 论点 2
+│   ├── 证据 2a
+│   └── 证据 2b
+└── 论点 3
+    ├── 证据 3a
+    └── 证据 3b
 ```
-**Example**: "We should acquire Company X" supported by (1) fills our product gap in analytics, (2) their team has expertise we cannot recruit, (3) cheaper than building — each backed by specific data.
+**示例**：「我们应该收购公司 X」支持自 (1) 填补我们在分析领域的产品缺口，(2) 他们团队拥有我们无法招聘的专业知识，(3) 比自建更便宜——每条都有具体数据支撑。
 
-### SWOT Matrix
-**What**: Map Strengths, Weaknesses, Opportunities, and Threats in a 2x2 (internal/external x positive/negative).
-**When**: Strategic assessment — quick orientation on a competitive position, new market, or major initiative.
-**Structure**:
+### SWOT 矩阵（SWOT Matrix）
+**是什么**：在 2x2（内部/外部 x 正面/负面）中映射优势（Strengths）、劣势（Weaknesses）、机会（Opportunities）和威胁（Threats）。
+**何时使用**：战略评估——快速定位竞争地位、新市场或重大举措。
+**结构**：
 
-|  | Positive | Negative |
+|  | 正面 | 负面 |
 |---|---|---|
-| **Internal** | Strengths | Weaknesses |
-| **External** | Opportunities | Threats |
+| **内部** | 优势 | 劣势 |
+| **外部** | 机会 | 威胁 |
 
-**Example**: Evaluating a new product line — Strength: existing customer base. Weakness: no domain expertise. Opportunity: competitors ignoring this segment. Threat: regulatory change could kill the market.
+**示例**：评估新产品线——优势：现有客户群。劣势：无领域专业知识。机会：竞争对手忽视此细分市场。威胁：监管变化可能扼杀市场。
 
 ---
 
-## Framework Selection Guide
+## 框架选择指南
 
-| Problem Type | Best Framework(s) |
+| 问题类型 | 最佳框架 |
 |---|---|
-| Why is something broken? | Issue Tree, Fishbone |
-| Validating a hypothesis | Hypothesis Tree |
-| Financial diagnosis | Profitability Tree |
-| Operational bottleneck | Process Flow Decomposition |
-| Customer experience issue | Customer Journey Map |
-| Competitive positioning | Value Chain Analysis, SWOT Matrix |
-| Complex system behavior | Systems Map |
-| Organizational / political | Stakeholder Map |
-| Planning under uncertainty | Scenario Tree |
-| Product roadmap decisions | Feature Tree |
-| Technical architecture | Technology Stack Decomposition |
-| Structuring any analysis | MECE Decomposition |
-| Presenting recommendations | Pyramid Principle |
-| Root cause analysis | Fishbone, Issue Tree |
-| Strategic assessment | SWOT Matrix, Scenario Tree |
+| 为什么某事物出问题了？ | 议题树、鱼骨图 |
+| 验证一个假设 | 假设树 |
+| 财务诊断 | 盈利树 |
+| 运维瓶颈 | 流程流分解 |
+| 客户体验问题 | 客户旅程地图 |
+| 竞争定位 | 价值链分析、SWOT 矩阵 |
+| 复杂系统行为 | 系统地图 |
+| 组织 / 政治 | 利益相关者地图 |
+| 不确定性下的规划 | 场景树 |
+| 产品路线图决策 | 功能树 |
+| 技术架构 | 技术栈分解 |
+| 结构化任何分析 | MECE 分解 |
+| 呈现建议 | 金字塔原理 |
+| 根本原因分析 | 鱼骨图、议题树 |
+| 战略评估 | SWOT 矩阵、场景树 |
