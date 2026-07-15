@@ -1,12 +1,12 @@
-# Triggering Patterns
+# 触发模式
 
-Verbatim user phrasings that should make an AI reach for `cviauto mem`. Calibrate instinct against these — if a user message hits one of these patterns and you do not reach for `mem`, you probably missed an obvious recall.
+用户的确切表述，这些表述应使 AI 主动使用 `cviauto mem`。根据这些模式校准直觉——如果用户消息匹配其中某个模式而你却没有使用 `mem`，那你很可能错过了一次明显的回忆检索。
 
-Patterns are grouped by the *intent* behind the phrasing, not the surface words. The same intent shows up in different languages and registers.
+模式按表述背后的**意图**分组，而非表面用词。同一意图会以不同语言和语域出现。
 
-## Past-solution recall
+## 过往解决方案回忆
 
-The user is asking "how did we (or I) solve this before". Past dialogue holds the answer; the codebase shows the result but not the reasoning.
+用户正在问"我们（或我）之前是怎么解决这个的"。过往对话中存有答案；代码库展示了结果而非推理过程。
 
 - "How did we solve this last time?"
 - "What did we end up doing about X?"
@@ -15,11 +15,11 @@ The user is asking "how did we (or I) solve this before". Past dialogue holds th
 - "之前是怎么搞定 X 的?"
 - "我记得以前修过类似的"
 
-Reach: `cviauto mem search "<symptom keyword>" --global --limit 10`, then `context` into the hit that looks closest.
+操作：`cviauto mem search "<症状关键词>" --global --limit 10`，然后对看起来最匹配的命中结果执行 `context`。
 
-## Decision retrieval
+## 决策检索
 
-The user is referencing a decision that lives in old dialogue, not in any committed file. Look in brainstorm windows.
+用户正在引用一个存在于旧对话中、而非任何已提交文件中的决策。请在头脑风暴窗口中查找。
 
 - "What was the decision on X?"
 - "Did we decide to use Postgres or SQLite?"
@@ -28,11 +28,11 @@ The user is referencing a decision that lives in old dialogue, not in any commit
 - "关于 X 我们之前是怎么定的?"
 - "之前讨论过 X 的方案吗?"
 
-Reach: `cviauto mem search "<decision keyword>"` to find the session, then `extract <id> --phase brainstorm` to recover the discussion.
+操作：`cviauto mem search "<决策关键词>"` 找到会话，然后 `extract <id> --phase brainstorm` 恢复讨论内容。
 
-## Cross-session continuation
+## 跨会话续接
 
-The user resumed work after a gap and the context is implicit.
+用户在间隔一段时间后恢复工作，上下文是隐式的。
 
 - "Where were we?"
 - "Continue from last time."
@@ -41,11 +41,11 @@ The user resumed work after a gap and the context is implicit.
 - "我们上次做到哪了"
 - "接着昨天那个任务"
 
-Reach: `cviauto mem list --task <current-task-dir>` to find the most recent sessions tied to the active task, then `extract` the last one.
+操作：`cviauto mem list --task <current-task-dir>` 找到与当前任务关联的最近会话，然后 `extract` 最后一个。
 
-## Familiar-bug debugging
+## 熟悉 bug 排查
 
-The current bug feels like one already seen. Past sessions probably hold the resolution path.
+当前的 bug 感觉像是之前遇到过的。过往会话中很可能保存了解决路径。
 
 - "I feel like I've hit this before."
 - "Doesn't this look like that bug from last month?"
@@ -54,11 +54,11 @@ The current bug feels like one already seen. Past sessions probably hold the res
 - "这个 bug 是不是上次那个?"
 - "怎么又是这个 error?"
 
-Reach: `cviauto mem search "<error message fragment>" --global`. Anchor on a short, distinctive token from the actual error string.
+操作：`cviauto mem search "<错误信息片段>" --global`。从实际错误字符串中锚定一个短小、有辨识度的 token。
 
-## Self-pattern spotting
+## 自我模式识别
 
-The user is asking whether they keep repeating the same kind of mistake or decision.
+用户正在问自己是否在反复犯同类错误或做同类决策。
 
 - "Do I always make this mistake?"
 - "How often have I run into X?"
@@ -67,11 +67,11 @@ The user is asking whether they keep repeating the same kind of mistake or decis
 - "我老犯这个错?"
 - "这类问题之前出现过几次?"
 
-Reach: `cviauto mem search "<topic>" --global --limit 50` and scan the dates / projects in the listing. Optionally `extract` two or three for comparison.
+操作：`cviauto mem search "<话题>" --global --limit 50` 并浏览列表中的日期/项目。可选地对两三个结果执行 `extract` 进行比较。
 
-## Finish-work retrospective (on demand)
+## 完成工作复盘（按需）
 
-The user explicitly wants to look back at this task — not as a forced step, only when they ask.
+用户明确希望回顾本次任务——不是强制步骤，仅在用户要求时执行。
 
 - "Summarize what we did in this task."
 - "What were the key decisions / surprises?"
@@ -80,14 +80,14 @@ The user explicitly wants to look back at this task — not as a forced step, on
 - "记一下这次踩的坑"
 - "复盘下这个任务"
 
-Reach: identify the current task's session id (from `.cviauto/.runtime/sessions/*.json` or `mem list --task <task-dir>`), then `extract <id> --phase brainstorm` and `--phase implement`. Present a summary — surface concrete file:line citations where possible. Whether to also write the summary somewhere (PRD, spec, notes file) is the user's call; offer, don't auto-write.
+操作：识别当前任务的会话 ID（从 `.cviauto/.runtime/sessions/*.json` 或 `mem list --task <task-dir>`），然后 `extract <id> --phase brainstorm` 和 `--phase implement`。给出摘要——尽可能提供具体的文件:行号引用。是否将摘要写入某处（PRD、spec、笔记文件）由用户决定；主动提议，不要自动写入。
 
-## Anti-patterns: do NOT reach for `mem` here
+## 反模式：不要在以下场景使用 `mem`
 
-- "What does this function do?" → read the file.
-- "Why is this test failing?" → read the test output and the file.
-- "What's the right pattern for X in our codebase?" → grep / read spec files.
-- "What's the latest npm version of Y?" → call `npm view`.
-- "Fix this bug." → debug. Reach for `mem` only if you suspect prior context exists; otherwise it is noise.
+- "这个函数是做什么的？" → 读取文件。
+- "这个测试为什么失败？" → 读取测试输出和文件。
+- "我们代码库中 X 的正确模式是什么？" → grep / 读取 spec 文件。
+- "Y 的最新 npm 版本是什么？" → 调用 `npm view`。
+- "修复这个 bug。" → 调试。只有在你怀疑存在先验上下文时才使用 `mem`；否则它只是噪音。
 
-The bar stays: would a senior teammate ask "didn't we already talk about this?" before answering? If yes, reach for `mem`. If no, don't.
+判断标准始终是：在回答之前，一个资深同事会问"我们之前不是讨论过这个吗？" 如果是，就使用 `mem`。如果不是，就不要用。

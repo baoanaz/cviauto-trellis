@@ -1,61 +1,61 @@
-# Spec Task Planning
+# Spec 任务规划
 
-Use a single agent as the default execution model. The agent may create Cviauto tasks for traceability, but the skill should not require a specific platform, CLI, or parallel worker model.
+使用单个 agent 作为默认执行模型。agent 可以创建 Cviauto 任务以便追踪，但此 skill 不应要求特定平台、CLI 或并行 worker 模型。
 
-## Decomposition
+## 分解
 
-Create spec work units around real ownership boundaries:
+围绕真实的归属边界创建 spec 工作单元：
 
-- One package when a package has its own conventions.
-- One layer when the same package has distinct frontend, backend, CLI, worker, or shared-library rules.
-- One cross-cutting guide when a pattern spans packages and is not owned by one layer.
+- 当一个包有自己的约定时，作为一个工作单元。
+- 当同一个包有独立的前端、后端、CLI、worker 或共享库规则时，每个层作为一个工作单元。
+- 当某个模式跨越多个包且不属于某个层时，作为一个跨领域指南。
 
-Avoid artificial decomposition. A small library usually needs one focused spec pass, not several tasks.
+避免人为分解。一个小型库通常只需要一次集中的 spec 编写，而不是多个任务。
 
-## Task Shape
+## 任务形态
 
-When a Cviauto task is useful, write a concise PRD with these sections:
+当 Cviauto 任务有用时，编写一份简洁的 PRD，包含以下章节：
 
 ```markdown
-# Fill <package-or-layer> Cviauto Specs
+# 填写 <包或层名称> Cviauto Specs
 
-## Goal
-Write project-specific `.cviauto/spec/` guidance for <scope>.
+## 目标（Goal）
+为 <范围> 编写项目特定的 `.cviauto/spec/` 指导。
 
-## Scope
-- Spec directory:
-- Source directories to inspect:
-- Tests to inspect:
-- Out of scope:
+## 范围（Scope）
+- Spec 目录：
+- 需要检查的源目录：
+- 需要检查的测试：
+- 超出范围：
 
-## Architecture Context
-Summarize the concrete findings from repository analysis.
+## 架构上下文（Architecture Context）
+汇总仓库分析中的具体发现。
 
-## Files To Create Or Update
+## 需要创建或更新的文件
 - `.cviauto/spec/.../index.md`
 - `.cviauto/spec/.../<topic>.md`
 
-## Rules
-- Adapt the spec file set to the real codebase.
-- Use real source examples with file paths.
-- Remove template-only sections that do not apply.
-- Do not modify product source code unless the task explicitly asks for it.
+## 规则
+- 让 spec 文件集适配真实代码库。
+- 使用带有文件路径的真实源码示例。
+- 删除不适用的纯模板章节。
+- 除非任务明确要求，否则不要修改产品源代码。
 
-## Acceptance Criteria
-- [ ] Specs contain concrete examples and anti-patterns from the repository.
-- [ ] No placeholder text remains.
-- [ ] Index files match the final spec files.
-- [ ] Claims are backed by source files, tests, or project docs.
+## 验收标准（Acceptance Criteria）
+- [ ] Spec 包含来自仓库的具体示例和反模式。
+- [ ] 没有残留的占位文本。
+- [ ] 索引文件与实际 spec 文件匹配。
+- [ ] 所有声明都有源文件、测试或项目文档作为支撑。
 ```
 
-## Optional Helper Agents
+## 可选的辅助 Agent
 
-If the host supports subagents, helpers can inspect independent packages or run verification. They are optional. The main agent still owns integration and final quality.
+如果宿主支持子 agent，辅助 agent 可以检查独立的包或运行验证。它们是可选的。主 agent 仍然负责集成和最终质量。
 
-Helper tasks must have clear ownership:
+辅助任务必须有明确的归属：
 
-- Read-only research tasks may inspect any source needed for the assigned scope.
-- Write tasks should own disjoint spec directories.
-- Verification tasks should check placeholder removal, broken links, and consistency.
+- 只读研究任务可以检查分配给其范围内的任何源文件。
+- 写入任务应拥有互不重叠的 spec 目录。
+- 验证任务应检查占位符残留、断链和一致性。
 
-Do not encode helper-agent names, vendor-specific commands, or platform-specific routing in the skill. Put only the required work and acceptance criteria in the task.
+不要在 skill 中硬编码辅助 agent 名称、供应商特定命令或平台特定路由。在任务中只放入所需的工作和验收标准。

@@ -1,51 +1,51 @@
-# Local Cviauto Architecture Overview
+# 本地 Cviauto 架构概述
 
-`cviauto-meta` is for user projects that have already run `cviauto init`. The user's machine usually has only the npm-installed `cviauto` command plus the Cviauto files generated inside the project; it may not have the Cviauto CLI source code.
+`cviauto-meta` 面向已运行过 `cviauto init` 的用户项目。用户机器通常只有通过 npm 安装的 `cviauto` 命令以及项目中生成的 Cviauto 文件；可能没有 Cviauto CLI 源码。
 
-Therefore, when an AI uses this skill, the default customization target is local files inside the user project:
+因此，当 AI 使用此技能时，默认的自定义目标是用户项目中的本地文件：
 
-- `.cviauto/`: workflow, tasks, specs, memory, scripts, and runtime state.
-- Platform directories: `.claude/`, `.codex/`, `.cursor/`, `.opencode/`, `.kiro/`, `.gemini/`, `.qoder/`, `.codebuddy/`, `.github/`, `.factory/`, `.pi/`, `.kilocode/`, `.agent/`, `.devin/`, `.reasonix/`, `.zcode/`, and similar directories.
-- Shared skill layer: `.agents/skills/`.
+- `.cviauto/`：工作流、任务、spec、记忆、脚本和运行时状态。
+- 平台目录：`.claude/`、`.codex/`、`.cursor/`、`.opencode/`、`.kiro/`、`.gemini/`、`.qoder/`、`.codebuddy/`、`.github/`、`.factory/`、`.pi/`、`.kilocode/`、`.agent/`、`.devin/`、`.reasonix/`、`.zcode/` 及类似目录。
+- 共享技能层：`.agents/skills/`。
 
-Do not default to guiding the user to fork the Cviauto CLI repository. Treat upstream source code as the operating target only when the user explicitly says they want to change Cviauto upstream source, publish an npm package, or contribute a PR.
+不要默认引导用户 fork Cviauto CLI 仓库。仅当用户明确说要更改 Cviauto 上游源码、发布 npm 包或提交 PR 时，才将上游源码视为操作目标。
 
-## Local System Model
+## 本地系统模型
 
-Cviauto provides three layers inside a user project:
+Cviauto 在用户项目内提供三层：
 
-1. **Workflow layer**: `.cviauto/workflow.md` defines phases, routing, next actions, and prompt blocks.
-2. **Persistence layer**: `.cviauto/tasks/`, `.cviauto/spec/`, and `.cviauto/workspace/` store tasks, specs, and session memory.
-3. **Platform integration layer**: hooks, settings, agents, skills, commands, prompts, and workflows in platform directories connect the Cviauto workflow to different AI tools.
+1. **工作流层**：`.cviauto/workflow.md` 定义阶段、路由、下一步操作和 prompt 块。
+2. **持久化层**：`.cviauto/tasks/`、`.cviauto/spec/` 和 `.cviauto/workspace/` 存储任务、spec 和会话记忆。
+3. **平台集成层**：平台目录中的 hooks、settings、agents、skills、commands、prompts 和 workflows 将 Cviauto 工作流连接到不同的 AI 工具。
 
-All three layers live inside the user project, so an AI can read and modify them directly.
+所有三层都位于用户项目内，因此 AI 可以直接读取和修改它们。
 
-## Core Paths
+## 核心路径
 
-| Path | Purpose |
+| 路径 | 用途 |
 | --- | --- |
-| `.cviauto/workflow.md` | Workflow phases, skill routing, and workflow-state prompt blocks. |
-| `.cviauto/config.yaml` | Project configuration, task lifecycle hooks, monorepo package configuration, and journal configuration. |
-| `.cviauto/spec/` | The user's project-specific coding conventions and thinking guides. |
-| `.cviauto/tasks/` | Each task's PRD, technical notes, research files, and JSONL context. |
-| `.cviauto/workspace/` | Per-developer journals and cross-session memory. |
-| `.cviauto/scripts/` | Local Python runtime used by commands, hooks, and context injection. |
-| `.cviauto/.runtime/` | Session-level runtime state, such as the current task pointer. |
-| `.cviauto/.template-hashes.json` | Template hashes for Cviauto-managed files, used by update to determine whether local files were modified by the user. |
+| `.cviauto/workflow.md` | 工作流阶段、技能路由和工作流状态 prompt 块。 |
+| `.cviauto/config.yaml` | 项目配置、任务生命周期 hooks、monorepo 包配置和日志配置。 |
+| `.cviauto/spec/` | 用户的项目特定编码规范和思维指南。 |
+| `.cviauto/tasks/` | 每个任务的 PRD、技术笔记、研究文件和 JSONL 上下文。 |
+| `.cviauto/workspace/` | 每个开发者的日志和跨会话记忆。 |
+| `.cviauto/scripts/` | 由命令、hooks 和上下文注入使用的本地 Python 运行时。 |
+| `.cviauto/.runtime/` | 会话级运行时状态，如当前任务指针。 |
+| `.cviauto/.template-hashes.json` | Cviauto 管理文件的模板哈希值，由 update 用于判断本地文件是否被用户修改。 |
 
-## AI Customization Principles
+## AI 自定义原则
 
-1. **Find the local source of truth first**: Do not edit from memory. Read `.cviauto/workflow.md`, `.cviauto/config.yaml`, the relevant platform directory, and related task files first.
-2. **Edit the user project, not the npm package cache**: Modify generated files inside the project, not `node_modules` or the global npm install directory.
-3. **Keep platform files aligned with `.cviauto/`**: If workflow routing changes, also check whether platform skills or commands still describe the same flow.
-4. **Put project-specific rules in `.cviauto/spec/` or a local skill**: Do not put team conventions into `cviauto-meta`.
-5. **Preserve user changes**: If a file was already modified locally, work from the current content instead of overwriting it with a default template.
+1. **首先找到本地唯一权威来源**：不要凭记忆编辑。先读取 `.cviauto/workflow.md`、`.cviauto/config.yaml`、相关的平台目录和相关任务文件。
+2. **编辑用户项目，而非 npm 包缓存**：修改项目内生成的文件，而非 `node_modules` 或全局 npm 安装目录。
+3. **保持平台文件与 `.cviauto/` 一致**：如果工作流路由发生变化，同时检查平台技能或命令是否仍描述相同的流程。
+4. **将项目特定规则放入 `.cviauto/spec/` 或本地技能**：不要将团队约定放入 `cviauto-meta`。
+5. **保留用户更改**：如果文件已在本地被修改，以当前内容为基准工作，而非用默认模板覆盖。
 
-## How To Use This Directory
+## 如何使用本目录
 
-- To understand which files exist after init, read `generated-files.md`.
-- To change phases, routing, or next actions, read `workflow.md`.
-- To change the task model, JSONL context, or active task behavior, read `task-system.md`.
-- To change coding convention injection, read `spec-system.md`.
-- To understand journals and cross-session memory, read `workspace-memory.md`.
-- To change hooks or sub-agent context loading, read `context-injection.md`.
+- 要了解 init 后存在哪些文件，阅读 `generated-files.md`。
+- 要更改阶段、路由或下一步操作，阅读 `workflow.md`。
+- 要更改任务模型、JSONL 上下文或活动任务行为，阅读 `task-system.md`。
+- 要更改编码规范注入，阅读 `spec-system.md`。
+- 要了解日志和跨会话记忆，阅读 `workspace-memory.md`。
+- 要更改 hooks 或 sub-agent 上下文加载，阅读 `context-injection.md`。

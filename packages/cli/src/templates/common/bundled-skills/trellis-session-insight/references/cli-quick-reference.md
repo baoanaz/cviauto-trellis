@@ -1,65 +1,64 @@
-# `cviauto mem` CLI Reference
+# `cviauto mem` CLI 参考
 
-Full flag reference for the five subcommands. Pin this as the authoritative source — `cviauto mem help` prints the same content at runtime, so anything here that drifts is a bug.
+五个子命令的完整标志参考。将此作为权威来源——`cviauto mem help` 在运行时会打印相同内容，因此此处任何与运行时不一致的内容都属于 bug。
 
-## Subcommands
+## 子命令
 
-| Command                | Purpose                                                                                                                |
+| 命令                    | 用途                                                                                                          |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `list`                 | List sessions. Default subcommand when none is given.                                                                  |
-| `search <keyword>`     | Find sessions whose contents match a keyword.                                                                          |
-| `context <session-id>` | Drill into one session: top-N hit turns + surrounding context. Pair with `--grep` for keyword anchoring.               |
-| `extract <session-id>` | Dump cleaned dialogue. Combine with `--phase` / `--grep` to slice.                                                     |
-| `projects`             | List active project `cwd` values with session counts. Use this to discover which `--cwd` to pass to other subcommands. |
+| `list`                 | 列出会话。未指定子命令时的默认行为。                                                                  |
+| `search <keyword>`     | 查找内容匹配关键词的会话。                                                                          |
+| `context <session-id>` | 深入查看某个会话：Top-N 命中轮次 + 周围上下文。配合 `--grep` 进行关键词锚定。               |
+| `extract <session-id>` | 导出清洗后的对话记录。结合 `--phase` / `--grep` 进行切片。                                                     |
+| `projects`             | 列出活跃项目的 `cwd` 值及其会话计数。用于发现应传递给其他子命令的 `--cwd`。 |
 
-## Flags (apply where meaningful)
+## 标志（酌情适用）
 
-| Flag                                          | Subcommands       | Meaning                                                                                                                                                    |
+| 标志                                           | 子命令               | 含义                                                                                                                                                    |
 | --------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--platform claude\|codex\|opencode\|pi\|all` | all               | Default `all`. OpenCode adapter is currently a stub on `0.6.0-beta.*` — see "Caveats" below.                                                               |
-| `--since YYYY-MM-DD`                          | list / search     | Inclusive lower date bound.                                                                                                                                |
-| `--until YYYY-MM-DD`                          | list / search     | Inclusive upper date bound.                                                                                                                                |
-| `--global`                                    | list / search     | Include sessions from every project on this machine. Default is the current project `cwd`.                                                                 |
-| `--cwd <path>`                                | list / search     | Force a specific project cwd instead of inferring from where you are.                                                                                      |
-| `--limit N`                                   | list / search     | Cap output rows. Default `50`.                                                                                                                             |
-| `--grep KW`                                   | extract / context | Filter turns by keyword. Multi-token AND when whitespace-separated.                                                                                        |
-| `--phase brainstorm\|implement\|all`          | extract           | Slice session by Cviauto task boundaries. `brainstorm` = `[task.py create, task.py start)`. `implement` = turns outside brainstorm windows. Default `all`. |
-| `--turns N`                                   | context           | Number of hit turns to return. Default `3`.                                                                                                                |
-| `--around N`                                  | context           | Surrounding turns to include per hit. Default `1`.                                                                                                         |
-| `--max-chars N`                               | context           | Total character budget. Default `6000` (~1500 tokens).                                                                                                     |
-| `--include-children`                          | search / context  | Merge OpenCode sub-agent sessions into their parent session.                                                                                               |
-| `--json`                                      | all               | Emit machine-parseable JSON instead of human-readable output.                                                                                              |
+| `--platform claude\|codex\|opencode\|pi\|all` | 全部               | 默认 `all`。OpenCode 适配器在 `0.6.0-beta.*` 上目前为桩实现——见下方"注意事项"。                                                               |
+| `--since YYYY-MM-DD`                          | list / search     | 包含下界日期。                                                                                                                                |
+| `--until YYYY-MM-DD`                          | list / search     | 包含上界日期。                                                                                                                                |
+| `--global`                                    | list / search     | 包含本机上所有项目的会话。默认仅当前项目 `cwd`。                                                                 |
+| `--cwd <path>`                                | list / search     | 强制使用指定项目 cwd，而非根据当前位置推断。                                                                                      |
+| `--limit N`                                   | list / search     | 输出行数上限。默认 `50`。                                                                                                                             |
+| `--grep KW`                                   | extract / context | 按关键词筛选轮次。空格分隔表示多词 AND。                                                                                        |
+| `--phase brainstorm\|implement\|all`          | extract           | 按 Cviauto 任务边界切片会话。`brainstorm` = `[task.py create, task.py start)`。`implement` = 头脑风暴窗口之外的轮次。默认 `all`。 |
+| `--turns N`                                   | context           | 返回的命中轮次数量。默认 `3`。                                                                                                                |
+| `--around N`                                  | context           | 每个命中轮次包含的周围轮次数。默认 `1`。                                                                                                         |
+| `--max-chars N`                               | context           | 总字符预算。默认 `6000`（约 1500 tokens）。                                                                                                     |
+| `--include-children`                          | search / context  | 将 OpenCode 子 agent 会话合并到其父会话中。                                                                                               |
+| `--json`                                      | 全部               | 输出机器可解析的 JSON，而非人类可读输出。                                                                                              |
 
-## Common one-liners
+## 常用一行命令
 
 ```bash
-# What past sessions discussed "deadlock" anywhere on this machine?
+# 本机上哪些过往会话讨论过 "deadlock"？
 cviauto mem search "deadlock" --global --limit 20
 
-# Inside a specific session, surface the top 5 turns that mention "lock contention"
-# plus 2 turns of surrounding context.
+# 在特定会话中，找出提及 "lock contention" 的前 5 轮，
+# 并附带每轮前后各 2 轮的上下文。
 cviauto mem context 5842592d --grep "lock contention" --turns 5 --around 2
 
-# Recover the brainstorm window for a session — useful when continuing a task
-# the user started a week ago.
+# 恢复某个会话的头脑风暴窗口——当需要继续用户一周前开始的任务时很有用。
 cviauto mem extract 5842592d --phase brainstorm
 
-# List every project this machine has Cviauto sessions for, with counts.
+# 列出本机所有有 Cviauto 会话的项目及其会话计数。
 cviauto mem projects
 ```
 
-## Output shapes
+## 输出形态
 
-- **Default human output** (no `--json`): wrapped to a terminal, with session ids highlighted and turn markers visible. Suitable to read inline but messy to paste into a markdown file.
-- **`--json`**: stable schema, safe to parse and process. When piping `mem` output into a follow-up step (e.g. summarizing for a Lessons section), prefer `--json`.
+- **默认人类可读输出**（无 `--json`）：适配终端宽度，会话 ID 高亮显示，轮次标记可见。适合内联阅读，但不适合粘贴到 markdown 文件中。
+- **`--json`**：稳定 schema，可安全解析和处理。当将 `mem` 输出通过管道传递给后续步骤（例如为经验教训章节做摘要）时，优先使用 `--json`。
 
-## Caveats
+## 注意事项
 
-- **OpenCode adapter is a stub on `0.6.0-beta.*`.** When `--platform` resolves to OpenCode (or `all` and OpenCode would be included), `mem` prints a one-line "reader unavailable" notice and continues with the other platforms. Don't promise OpenCode coverage in your reply until the adapter ships.
-- **`--phase` slicing depends on `task.py create` / `task.py start` invocations appearing in the recorded bash calls of the session.** Sessions where the user ran `task.py` from a different terminal — outside the recorded AI loop — will not have phase boundaries. `--phase all` is the safe fallback.
-- **`mem` indexes platform JSONL files directly.** If the user has cleared their Claude / Codex / Pi session storage, `mem` cannot recover what is no longer on disk.
-- **`mem` is read-only.** No remote sync, no edits to platform JSONL. Any write you do based on `mem` findings is your own follow-up call into the editing tools available to you.
+- **OpenCode 适配器在 `0.6.0-beta.*` 上为桩实现。** 当 `--platform` 解析为 OpenCode（或 `all` 且包含 OpenCode）时，`mem` 会打印一行"reader unavailable"通知并继续处理其他平台。在适配器正式发布之前，不要在回复中承诺 OpenCode 覆盖。
+- **`--phase` 切片依赖于会话记录的命令行调用中出现 `task.py create` / `task.py start`。** 如果用户在 AI 循环之外的其他终端中运行了 `task.py`，则这些会话不会有阶段边界。`--phase all` 是安全的回退方案。
+- **`mem` 直接索引平台的 JSONL 文件。** 如果用户清除了 Claude / Codex / Pi 的会话存储，`mem` 无法恢复磁盘上已不存在的数据。
+- **`mem` 是只读的。** 没有远程同步，不会编辑平台 JSONL。你基于 `mem` 发现所做的任何写入操作，都是你自己对可用编辑工具的后续调用。
 
-## When you need more than this reference
+## 当需要超出本参考的内容时
 
-Run `cviauto mem help` in the user's shell. The runtime help is authoritative and will be ahead of this reference during fast-moving beta releases.
+在用户的 shell 中运行 `cviauto mem help`。运行时帮助是权威的，在快速迭代的 beta 版本中会领先于本参考文档。

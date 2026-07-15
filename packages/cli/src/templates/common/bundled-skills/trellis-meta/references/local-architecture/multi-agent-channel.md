@@ -1,69 +1,69 @@
-# Local Multi-Agent Channel Runtime
+# 本地多代理通道运行时（Local Multi-Agent Channel Runtime）
 
-`cviauto channel` is the local multi-agent collaboration runtime shipped with the Cviauto CLI. It lets the main AI session spawn peer workers (Claude Code, Codex, or any agent definition under `.cviauto/agents/`), exchange durable messages through an event log, and coordinate review or brainstorm loops without hand-stitching shell pipelines.
+`cviauto channel` 是 Cviauto CLI 随附的本地多代理协作运行时。它让主 AI 会话可以派生出对等的工作者（peer workers）——Claude Code、Codex 或 `.cviauto/agents/` 下的任何代理定义——通过事件日志交换持久化消息，并协调审查或头脑风暴循环，无需手动拼接 shell 管道。
 
-This reference covers how channels are wired into the user project so an AI customizing the project knows what to edit. For runtime usage (commands, forum/thread patterns, worker spawn flags), defer to the bundled `cviauto-channel` capability skill.
+本文档涵盖通道如何在用户项目中接入，以便自定义项目的 AI 知道该编辑什么。关于运行时用法（命令、论坛/帖子模式、工作者派生标志），请参考随附的 `cviauto-channel` 能力技能（capability skill）。
 
-## Local System Model
+## 本地系统模型（Local System Model）
 
-The channel runtime spans three local surfaces:
+通道运行时横跨三个本地层面：
 
-1. **Storage layer** in the user's home directory: durable event logs and worker state files.
-2. **Agent definitions** inside the project at `.cviauto/agents/`: platform-agnostic role cards consumed by `cviauto channel spawn --agent <name>`.
-3. **Project configuration** in `.cviauto/config.yaml`: worker guard thresholds and other channel knobs.
+1. **存储层**位于用户主目录：持久化事件日志和工作者状态文件。
+2. **代理定义**位于项目内的 `.cviauto/agents/`：平台无关的角色卡，由 `cviauto channel spawn --agent <name>` 消费。
+3. **项目配置**位于 `.cviauto/config.yaml`：工作者守护阈值和其他通道参数。
 
-## Core Paths
+## 核心路径（Core Paths）
 
-| Path | Purpose |
+| 路径 | 用途 |
 | --- | --- |
-| `~/.cviauto/channels/<project>/<channel>/events.jsonl` | Per-channel append-only event log. Sequence-locked, replay-safe. |
-| `~/.cviauto/channels/<project>/<channel>/<channel>.lock` | Channel-level write lock. |
-| `~/.cviauto/channels/<project>/<channel>/<worker>.spawnlock` | Per-worker spawn lock used by the OOM guard. |
-| `~/.cviauto/channels/<project>/<channel>/.seq` | Sequence sidecar for ordered event assignment. |
-| `~/.cviauto/channels/_global/<channel>/...` | Channels created with `--scope global`. The project bucket is replaced by a shared key. |
-| `.cviauto/agents/check.md` | Default Check Agent role definition consumed by `--agent check`. |
-| `.cviauto/agents/implement.md` | Default Implement Agent role definition consumed by `--agent implement`. |
-| `.cviauto/config.yaml` (`channel.*` block) | Worker guard thresholds and channel defaults. |
+| `~/.cviauto/channels/<project>/<channel>/events.jsonl` | 每个通道的只追加事件日志。序列锁定，可安全重放。 |
+| `~/.cviauto/channels/<project>/<channel>/<channel>.lock` | 通道级写锁。 |
+| `~/.cviauto/channels/<project>/<channel>/<worker>.spawnlock` | 每个工作者的派生锁，供 OOM 守护使用。 |
+| `~/.cviauto/channels/<project>/<channel>/.seq` | 序列辅助文件，用于有序事件分配。 |
+| `~/.cviauto/channels/_global/<channel>/...` | 通过 `--scope global` 创建的通道。项目桶（project bucket）被共享键替换。 |
+| `.cviauto/agents/check.md` | 默认 Check Agent 角色定义，由 `--agent check` 消费。 |
+| `.cviauto/agents/implement.md` | 默认 Implement Agent 角色定义，由 `--agent implement` 消费。 |
+| `.cviauto/config.yaml`（`channel.*` 块） | 工作者守护阈值和通道默认值。 |
 
-The project bucket name is derived from the absolute project path (slashes flattened, non-alphanumerics replaced with `-`), matching Claude Code's `~/.claude/projects/<sanitized-cwd>/` convention. Override with `TRELLIS_CHANNEL_ROOT` (root directory) or `TRELLIS_CHANNEL_PROJECT` (bucket name) for testing or sandboxing.
+项目桶名称由绝对项目路径派生（斜杠展平，非字母数字字符替换为 `-`），与 Claude Code 的 `~/.claude/projects/<sanitized-cwd>/` 约定一致。可通过 `TRELLIS_CHANNEL_ROOT`（根目录）或 `TRELLIS_CHANNEL_PROJECT`（桶名称）覆盖，用于测试或沙箱环境。
 
-## When To Reach For The Channel Runtime
+## 何时使用通道运行时（When To Reach For The Channel Runtime）
 
-Channels are heavier than a single Bash call or a one-shot sub-agent dispatch. Use them only when at least one of these conditions holds:
+通道比单次 Bash 调用或一次性子代理派发更重。仅在满足以下至少一个条件时使用：
 
-- The work needs **two or more agents to converse** through more than one turn (cross-AI brainstorm, peer review, dispatcher + worker).
-- A worker should run as a **peer process** that the main session can interrupt, watch progress on, or wait for asynchronously.
-- The conversation must be **durable and inspectable** later (forum/thread channels, issue boards, decision trails).
-- Multiple workers must **share an event log** so each can see what the others reported.
+- 工作需要**两个或以上代理进行多轮对话**（跨 AI 头脑风暴、同行审查、调度器 + 工作者）。
+- 工作者应作为**对等进程**运行，主会话可以中断、观察进度或异步等待。
+- 对话必须是**持久化且事后可检查的**（论坛/帖子通道、问题看板、决策记录）。
+- 多个工作者必须**共享一个事件日志**，以便每个工作者都能看到其他工作者的报告。
 
-Prefer cheaper primitives when:
+在以下情况优先使用更轻量的原语：
 
-- A single-shot Bash command or single Agent tool call is enough -> do that directly.
-- The user just needs a static review against a file -> read the file and reply inline.
-- The need is "remember what we discussed last week" -> use `cviauto mem` instead of a channel.
+- 单次 Bash 命令或单次 Agent 工具调用就够用 -> 直接执行即可。
+- 用户只需要对文件进行静态审查 -> 读取文件并直接回复。
+- 需求是「记住我们上周讨论的内容」-> 使用 `cviauto mem` 而非通道。
 
-## Customization Points
+## 自定义点（Customization Points）
 
-| Need | Edit location |
+| 需求 | 编辑位置 |
 | --- | --- |
-| Change default channel worker idle timeout | `channel.worker_guard.idle_timeout` in `.cviauto/config.yaml`. Accepts `5m`, `30s`, etc. Set `0` to disable idle cleanup. |
-| Change live worker budget | `channel.worker_guard.max_live_workers` in `.cviauto/config.yaml`. Set `0` to disable the spawn-time budget check. |
-| Override worker guard per spawn | Pass `--idle-timeout` / `--max-live-workers` on `cviauto channel spawn`, or set `TRELLIS_CHANNEL_WORKER_IDLE_TIMEOUT` / `TRELLIS_CHANNEL_MAX_LIVE_WORKERS` in the environment. |
-| Change what the default Check or Implement worker does | Edit `.cviauto/agents/check.md` or `.cviauto/agents/implement.md`. These are platform-agnostic role cards; the channel runtime injects them when `--agent check|implement` is passed. |
-| Add a new role card | Drop `<name>.md` into `.cviauto/agents/`. `cviauto channel spawn --agent <name>` will pick it up. |
-| Relocate channel storage (CI sandbox, ephemeral runs) | Set `TRELLIS_CHANNEL_ROOT=/path/to/dir`. Channel events move with it; existing channels stay at the old root. |
-| Switch storage scope | Pass `--scope project` (default) or `--scope global` on every channel subcommand. The bucket directory changes; nothing else does. |
+| 更改默认通道工作者空闲超时 | `.cviauto/config.yaml` 中的 `channel.worker_guard.idle_timeout`。支持 `5m`、`30s` 等格式。设为 `0` 可禁用空闲清理。 |
+| 更改活跃工作者预算 | `.cviauto/config.yaml` 中的 `channel.worker_guard.max_live_workers`。设为 `0` 可禁用派生时的预算检查。 |
+| 单次派生时覆盖工作者守护参数 | 在 `cviauto channel spawn` 时传入 `--idle-timeout` / `--max-live-workers`，或设置环境变量 `TRELLIS_CHANNEL_WORKER_IDLE_TIMEOUT` / `TRELLIS_CHANNEL_MAX_LIVE_WORKERS`。 |
+| 更改默认 Check 或 Implement 工作者的行为 | 编辑 `.cviauto/agents/check.md` 或 `.cviauto/agents/implement.md`。这些是平台无关的角色卡；通道运行时在传入 `--agent check|implement` 时将其注入。 |
+| 添加新的角色卡 | 将 `<name>.md` 放入 `.cviauto/agents/`。`cviauto channel spawn --agent <name>` 会自动识别。 |
+| 迁移通道存储位置（CI 沙箱、临时运行） | 设置 `TRELLIS_CHANNEL_ROOT=/path/to/dir`。通道事件随之迁移；现有通道保留在原位置。 |
+| 切换存储作用域 | 在每个通道子命令中传入 `--scope project`（默认）或 `--scope global`。仅桶目录变化，其余不变。 |
 
-Precedence for the worker guard is: CLI flag > environment variable > `.cviauto/config.yaml` > built-in default. Built-in defaults are `idle_timeout: 5m` and `max_live_workers: 6`.
+工作者守护参数的优先级为：CLI 标志 > 环境变量 > `.cviauto/config.yaml` > 内置默认值。内置默认值为 `idle_timeout: 5m` 和 `max_live_workers: 6`。
 
-## Relationship To Other Local Layers
+## 与其他本地层的关系（Relationship To Other Local Layers）
 
-- **Workflow layer**: workflows that use channel dispatch (such as `channel-driven-subagent-dispatch`) instruct the main agent to call `cviauto channel spawn --agent check` or `--agent implement` instead of a platform sub-agent. If `.cviauto/agents/check.md` or `implement.md` is missing, `cviauto workflow --template <id>` prints a non-blocking warning at install time. Restore them with `cviauto update` if they are deleted by accident.
-- **Task layer**: channel workers do not own task state. The supervising main session passes the active task path through the worker inbox; the worker resolves task artifacts from disk.
-- **Spec layer**: workers read `.cviauto/spec/` the same way the main session does. Channel runtime does not bypass spec context loading.
-- **Platform integration layer**: channel runtime is platform-neutral. It does not depend on `.claude/`, `.codex/`, or any other platform directory. The adapters that normalize provider output (Claude `stream-json`, Codex `app-server`) live inside the Cviauto CLI binary, not in the project.
-- **Platform sub-agent files vs. channel workers**: editing `.claude/agents/cviauto-implement.md` (and its peers in other platform `.X/agents/` directories) does NOT change channel-runtime worker behavior — channel workers load `.cviauto/agents/<name>.md`. The platform-specific agent files are for direct sub-agent dispatch from the main AI session, not for channel-spawned workers. See `platform-files/agents.md` for the per-platform agent surface, and the `cviauto-meta/SKILL.md` rule that codifies this split.
+- **工作流层（Workflow layer）**：使用通道派发的工作流（如 `channel-driven-subagent-dispatch`）指示主代理调用 `cviauto channel spawn --agent check` 或 `--agent implement`，而非使用平台子代理。如果 `.cviauto/agents/check.md` 或 `implement.md` 缺失，`cviauto workflow --template <id>` 会在安装时打印非阻塞警告。如果意外删除，可通过 `cviauto update` 恢复。
+- **任务层（Task layer）**：通道工作者不拥有任务状态。监督主会话通过工作者收件箱传递活跃任务路径；工作者从磁盘解析任务产物。
+- **规范层（Spec layer）**：工作者与主会话以相同方式读取 `.cviauto/spec/`。通道运行时不绕过 spec 上下文加载。
+- **平台集成层（Platform integration layer）**：通道运行时是平台中立的。它不依赖 `.claude/`、`.codex/` 或任何其他平台目录。标准化不同提供商输出（Claude `stream-json`、Codex `app-server`）的适配器位于 Cviauto CLI 二进制文件内部，不在项目中。
+- **平台子代理文件 vs. 通道工作者**：编辑 `.claude/agents/cviauto-implement.md`（以及其他平台 `.X/agents/` 目录中的对应文件）**不会**改变通道运行时工作者的行为——通道工作者加载 `.cviauto/agents/<name>.md`。平台特定的代理文件用于主 AI 会话的直接子代理派发，而非通道派生的工作者。请参阅 `platform-files/agents.md` 了解各平台的代理表面，以及 `cviauto-meta/SKILL.md` 中编码此分离的规则。
 
-## Runtime Usage
+## 运行时用法（Runtime Usage）
 
-For command syntax, forum/thread patterns, worker handles, progress inspection, and the `--kind done` / `--kind turn_finished` dispatcher wait pattern, load the bundled `cviauto-channel` skill (auto-installed under each platform's skills directory after `cviauto init` / `cviauto update`). This reference only covers the local file layout and customization knobs; it does not duplicate command syntax that may change between releases.
+关于命令语法、论坛/帖子模式、工作者句柄、进度检查以及 `--kind done` / `--kind turn_finished` 调度器等待模式，请加载随附的 `cviauto-channel` 技能（在 `cviauto init` / `cviauto update` 后自动安装到各平台的技能目录下）。本文档仅涵盖本地文件布局和自定义参数；不重复可能在不同版本间变化的命令语法。

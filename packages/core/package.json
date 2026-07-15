@@ -1,6 +1,6 @@
 {
   "name": "@baoanaz/cviauto-core",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "description": "Cviauto core SDK — channel and task domain primitives consumed by the Cviauto CLI and downstream Node services",
   "type": "module",
   "main": "./dist/index.js",

@@ -1,45 +1,45 @@
-# Bundled Skills
+# 内置技能（Bundled Skills）
 
-"Bundled skills" are multi-file built-in skills shipped inside the Cviauto CLI npm package. Unlike marketplace skills (which a user installs separately into their own `.claude/skills/` or other platform skill root), bundled skills are written automatically into every supported platform's skill root by `cviauto init` and kept in sync by `cviauto update`. They are part of Cviauto itself, not third-party content.
+"内置技能（Bundled skills）"是随 Cviauto CLI npm 包发布的多文件内置技能。与市场技能（marketplace skills，用户单独安装到自己的 `.claude/skills/` 或其他平台技能根目录）不同，内置技能由 `cviauto init` 自动写入每个受支持平台的技能根目录，并由 `cviauto update` 保持同步。它们是 Cviauto 本身的一部分，而非第三方内容。
 
-A bundled skill is a directory under `packages/cli/src/templates/common/bundled-skills/<skill>/` that already contains its own `SKILL.md` (with YAML frontmatter) plus optional `references/`, assets, or other supporting files. Cviauto copies the whole directory tree as-is into each platform's skill root, so references stay lazy-loadable instead of being flattened into one oversized `SKILL.md`.
+一个内置技能是 `packages/cli/src/templates/common/bundled-skills/<skill>/` 下的一个目录，该目录已包含自己的 `SKILL.md`（带 YAML frontmatter）以及可选的 `references/`、资源文件或其他支持文件。Cviauto 将整个目录树原样复制到每个平台的技能根目录，因此 references 保持懒加载（lazy-loadable），而不会被展平为一个巨大的 `SKILL.md`。
 
-## What Counts As Bundled (vs. Adjacent Concepts)
+## 何为内置技能（vs. 邻近概念）
 
-| Source path | Type | How it ships |
+| 源路径 | 类型 | 分发方式 |
 | --- | --- | --- |
-| `templates/common/bundled-skills/<name>/` | Bundled skill (multi-file) | Whole directory copied to every platform skill root |
-| `templates/common/skills/<name>.md` | Single-file workflow skill | Wrapped with frontmatter, written as `<root>/<name>/SKILL.md` |
-| `templates/common/commands/<name>.md` | Slash command / prompt | Written to each platform's command directory (`.claude/commands/cviauto/`, `.cursor/commands/cviauto-*.md`, `.gemini/commands/cviauto/*.toml`, etc.) |
-| `templates/<platform>/skills/` | Platform-specific skill | Written only into that platform's directory (e.g. `.codex/skills/`) |
-| User skills under `.claude/skills/<my-skill>/` etc. | Marketplace or user-authored | Not managed by Cviauto at all |
+| `templates/common/bundled-skills/<name>/` | 内置技能（多文件） | 整个目录复制到每个平台的技能根目录 |
+| `templates/common/skills/<name>.md` | 单文件工作流技能 | 包裹 frontmatter，写入为 `<root>/<name>/SKILL.md` |
+| `templates/common/commands/<name>.md` | 斜杠命令 / 提示词 | 写入每个平台的命令目录（`.claude/commands/cviauto/`、`.cursor/commands/cviauto-*.md`、`.gemini/commands/cviauto/*.toml` 等） |
+| `templates/<platform>/skills/` | 平台特定技能 | 仅写入该平台的目录（例如 `.codex/skills/`） |
+| 用户技能，如 `.claude/skills/<my-skill>/` 等 | 市场或用户自创 | Cviauto 完全不管理 |
 
-The Cviauto CLI never touches anything that is not produced by one of its own template loaders. Anything a user drops into a platform skill root by hand is left alone.
+Cviauto CLI 绝不会触碰任何不由其自身模板加载器生成的文件。用户在平台技能根目录下手动放入的任何内容都会被保留。
 
-## Current Bundled Skills (v0.6.0)
+## 当前内置技能（v0.6.0）
 
-The set is discovered at runtime by listing directories under `templates/common/bundled-skills/`:
+技能集合在运行时通过列举 `templates/common/bundled-skills/` 下的目录来发现：
 
-| Skill | Purpose |
+| 技能 | 用途 |
 | --- | --- |
-| `cviauto-meta` | This skill. Explains the local Cviauto architecture and customization entry points to an AI working inside a user project. |
-| `cviauto-session-insight` | Wraps the `cviauto mem` CLI so an AI knows when and how to reach into past Claude Code / Codex / Pi Agent conversation logs. |
-| `cviauto-spec-bootstrap` | Platform-neutral workflow for creating or refreshing `.cviauto/spec/` from the real codebase (with optional GitNexus / ABCoder integration). |
-| `cviauto-channel` | Capability skill teaching an AI when to reach for `cviauto channel` for multi-agent collaboration, forum/thread persistent boards, and dispatcher-wait patterns. |
+| `cviauto-meta` | 本技能。向在用户项目中工作的 AI 解释本地 Cviauto 架构和自定义入口点。 |
+| `cviauto-session-insight` | 封装 `cviauto mem` CLI，让 AI 知道何时以及如何查阅过往的 Claude Code / Codex / Pi Agent 对话日志。 |
+| `cviauto-spec-bootstrap` | 用于从真实代码库创建或刷新 `.cviauto/spec/` 的平台中立工作流（可选集成 GitNexus / ABCoder）。 |
+| `cviauto-channel` | 能力技能，教导 AI 何时使用 `cviauto channel` 进行多代理协作、论坛/帖子持久化看板和调度器-等待模式。 |
 
-The list is discovered at runtime, so adding a new directory under `bundled-skills/` is the only step required to register a new skill (see "Adding a New Bundled Skill" below).
+列表在运行时发现，因此只需在 `bundled-skills/` 下添加新目录即可注册新技能（参见下文「添加新的内置技能」）。
 
-## Where Bundled Skills Land Per Platform
+## 内置技能在各平台的落位
 
-Each platform configurator calls `writeSkills(<root>, <workflowSkills>, resolveBundledSkills(ctx))` during `cviauto init`. `resolveBundledSkills` reads every directory under `templates/common/bundled-skills/`, resolves placeholders, and returns a flat list of `{relativePath, content}` entries. `writeSkills` then mirrors them under the platform's skill root.
+每个平台配置器在 `cviauto init` 期间调用 `writeSkills(<root>, <workflowSkills>, resolveBundledSkills(ctx))`。`resolveBundledSkills` 读取 `templates/common/bundled-skills/` 下的每个目录，解析占位符，并返回一个扁平的 `{relativePath, content}` 条目列表。`writeSkills` 然后将其映射到平台的技能根目录下。
 
-| Platform | Bundled skill root | Notes |
+| 平台 | 内置技能根目录 | 备注 |
 | --- | --- | --- |
 | Claude Code | `.claude/skills/<skill>/` | `configureClaude` |
 | Cursor | `.cursor/skills/<skill>/` | `configureCursor` |
-| Codex | `.agents/skills/<skill>/` | `configureCodex` writes the shared `.agents/skills/` root, which Gemini CLI 0.40+ also reads |
-| Gemini CLI | `.agents/skills/<skill>/` | Same shared root as Codex; the two configurators are required to produce byte-identical output |
-| Kiro | `.kiro/skills/<skill>/` | `configureKiro` (skills-based platform — no commands) |
+| Codex | `.agents/skills/<skill>/` | `configureCodex` 写入共享的 `.agents/skills/` 根目录，Gemini CLI 0.40+ 也会读取 |
+| Gemini CLI | `.agents/skills/<skill>/` | 与 Codex 共享同一根目录；两个配置器必须产生字节级相同的输出 |
+| Kiro | `.kiro/skills/<skill>/` | `configureKiro`（基于技能的平台——无命令） |
 | Qoder | `.qoder/skills/<skill>/` | `configureQoder` |
 | Codebuddy | `.codebuddy/skills/<skill>/` | `configureCodebuddy` |
 | Copilot | `.github/skills/<skill>/` | `configureCopilot` |
@@ -47,100 +47,100 @@ Each platform configurator calls `writeSkills(<root>, <workflowSkills>, resolveB
 | Antigravity | `.agent/skills/<skill>/` | `configureAntigravity` |
 | Devin | `.devin/skills/<skill>/` | `configureDevin` |
 | Kilo | `.kilocode/skills/<skill>/` | `configureKilo` |
-| OpenCode | (handled by `collectOpenCodeTemplates`) | Uses the same `resolveBundledSkills(ctx)` output |
-| Pi, Reasonix | (their own collectors) | Same `resolveBundledSkills(ctx)` output |
+| OpenCode | （由 `collectOpenCodeTemplates` 处理） | 使用相同的 `resolveBundledSkills(ctx)` 输出 |
+| Pi、Reasonix | （各自的收集器） | 相同的 `resolveBundledSkills(ctx)` 输出 |
 
-Two paths exercise the same data:
+两条路径使用相同的数据：
 
-1. `configureX(cwd)` writes files during `cviauto init`.
-2. `collectPlatformTemplates(platformId)` (in `configurators/index.ts`) returns a `Map<filePath, content>` that `cviauto update` uses to detect drift and to populate `.cviauto/.template-hashes.json`. Both must produce byte-identical output, so they both call `resolveBundledSkills(ctx)` and `collectSkillTemplates(root, …, resolveBundledSkills(ctx))`.
+1. `configureX(cwd)` 在 `cviauto init` 期间写入文件。
+2. `collectPlatformTemplates(platformId)`（在 `configurators/index.ts` 中）返回一个 `Map<filePath, content>`，`cviauto update` 用它来检测漂移并填充 `.cviauto/.template-hashes.json`。两者必须产生字节级相同的输出，因此它们都调用 `resolveBundledSkills(ctx)` 和 `collectSkillTemplates(root, …, resolveBundledSkills(ctx))`。
 
-## Dispatch Wiring (Code Path)
+## 分发接线（Dispatch Wiring，代码路径）
 
-The mechanism that auto-dispatches bundled skills to platform skill roots lives in two files:
+将内置技能自动分发到平台技能根目录的机制位于两个文件中：
 
 1. `packages/cli/src/templates/common/index.ts`
-   - `listDirectories("bundled-skills")` enumerates the on-disk skills.
-   - `listBundledSkillFiles(skillDir)` walks each skill's directory recursively and returns `{relativePath, content}` for every file.
-   - `getBundledSkillTemplates()` returns the cached `CommonBundledSkill[]`.
+   - `listDirectories("bundled-skills")` 枚举磁盘上的技能。
+   - `listBundledSkillFiles(skillDir)` 递归遍历每个技能目录，为每个文件返回 `{relativePath, content}`。
+   - `getBundledSkillTemplates()` 返回缓存的 `CommonBundledSkill[]`。
 
 2. `packages/cli/src/configurators/shared.ts`
-   - `resolveBundledSkills(ctx)` flattens that list into `ResolvedSkillFile[]` with `<skill>/<relativePath>` paths and resolved placeholders.
-   - `writeSkills(skillsRoot, workflowSkills, bundledSkills)` writes both workflow skills and bundled skill files under `skillsRoot`.
-   - `collectSkillTemplates(skillsRoot, workflowSkills, bundledSkills)` returns the same shape as a `Map<filePath, content>` for the update / hash pipeline.
+   - `resolveBundledSkills(ctx)` 将该列表展平为 `ResolvedSkillFile[]`，包含 `<skill>/<relativePath>` 路径和已解析的占位符。
+   - `writeSkills(skillsRoot, workflowSkills, bundledSkills)` 将工作流技能和内置技能文件写入 `skillsRoot` 下。
+   - `collectSkillTemplates(skillsRoot, workflowSkills, bundledSkills)` 以 `Map<filePath, content>` 的相同形式返回，供 update / hash 管线使用。
 
-Every platform configurator that supports skills imports both helpers (see `claude.ts`, `cursor.ts`, `codex.ts`, `gemini.ts`, `kiro.ts`, `qoder.ts`, `codebuddy.ts`, `copilot.ts`, `droid.ts`, `antigravity.ts`, `devin.ts`, `kilo.ts`). The `index.ts` `PLATFORM_FUNCTIONS` registry also calls `resolveBundledSkills(ctx)` inside each `collectTemplates` closure so `cviauto update` tracking stays consistent.
+每个支持技能的平台配置器都导入这两个辅助函数（参见 `claude.ts`、`cursor.ts`、`codex.ts`、`gemini.ts`、`kiro.ts`、`qoder.ts`、`codebuddy.ts`、`copilot.ts`、`droid.ts`、`antigravity.ts`、`devin.ts`、`kilo.ts`）。`index.ts` 中的 `PLATFORM_FUNCTIONS` 注册表也在每个 `collectTemplates` 闭包内调用 `resolveBundledSkills(ctx)`，以确保 `cviauto update` 跟踪保持一致。
 
-## Adding a New Bundled Skill
+## 添加新的内置技能
 
-The shape and dispatch wiring are already generic, so adding a skill requires only file changes plus distribution verification.
+分发结构和接线已经是通用的，因此添加技能只需要文件变更和分发验证。
 
-1. **Create the directory tree.**
+1. **创建目录树。**
 
    ```
    packages/cli/src/templates/common/bundled-skills/<my-skill>/
-     SKILL.md                     # YAML frontmatter + body
-     references/                  # optional
+     SKILL.md                     # YAML frontmatter + 正文
+     references/                  # 可选
        <topic>.md
-     assets/                      # optional (anything readable as utf-8)
+     assets/                      # 可选（任何可读作 utf-8 的内容）
    ```
 
-2. **Write a valid `SKILL.md` header.** The frontmatter must include at minimum:
+2. **编写合法的 `SKILL.md` 头部。** frontmatter 至少需要包含：
 
    ```yaml
    ---
    name: <my-skill>
-   description: "When the AI should reach for this skill. Triggering phrases go here."
+   description: "AI 何时应使用此技能。触发短语放在此处。"
    ---
    ```
 
-   The `description` is what each platform's auto-trigger mechanism matches against, so it should describe the user-intent triggers, not the skill's internals.
+   `description` 是每个平台的自动触发机制匹配的依据，因此应描述用户意图的触发条件，而非技能的内部实现。
 
-3. **Use placeholders where appropriate.** Bundled skill content runs through `resolvePlaceholders(file.content, ctx)`. Any `{{platform_name}}`, `{{python_cmd}}`, etc. token supported by `resolvePlaceholders` will be substituted per platform.
+3. **在适当位置使用占位符。** 内置技能内容经过 `resolvePlaceholders(file.content, ctx)` 处理。任何 `{{platform_name}}`、`{{python_cmd}}` 等由 `resolvePlaceholders` 支持的 token 都会按平台被替换。
 
-4. **No dispatch wiring is required.** `listDirectories("bundled-skills")` discovers the new directory automatically, so all platforms receive it on the next `cviauto init` or `cviauto update`.
+4. **无需分发接线。** `listDirectories("bundled-skills")` 自动发现新目录，因此在下次 `cviauto init` 或 `cviauto update` 时所有平台都会收到。
 
-5. **Verify the distribution path** before shipping. Skipping any of these steps has historically caused features to be documented as bundled while the published npm tarball was missing the files:
+5. **在发布前验证分发路径。** 跳过以下任一步骤都曾导致功能被文档记录为内置，但发布的 npm tarball 中缺少文件：
 
-   - Source files exist on the branch being tagged.
-   - `pnpm --filter @baoanaz/cviauto build` copies the asset into `dist/templates/common/bundled-skills/<skill>/`.
-   - `npm pack --dry-run --json` includes the expected `dist/**` paths.
-   - In a fresh temp project, `cviauto init` writes `.claude/skills/<skill>/SKILL.md`, `.agents/skills/<skill>/SKILL.md`, etc.
-   - `.cviauto/.template-hashes.json` lists the generated files.
-   - `cviauto update --dry-run` in that temp project reports "Already up to date!".
+   - 源文件存在于要打标签的分支上。
+   - `pnpm --filter @mindfoldhq/cviauto build` 将资源复制到 `dist/templates/common/bundled-skills/<skill>/`。
+   - `npm pack --dry-run --json` 包含预期的 `dist/**` 路径。
+   - 在全新的临时项目中，`cviauto init` 写入 `.claude/skills/<skill>/SKILL.md`、`.agents/skills/<skill>/SKILL.md` 等。
+   - `.cviauto/.template-hashes.json` 列出了生成的文件。
+   - 在该临时项目中运行 `cviauto update --dry-run` 报告 "Already up to date!"。
 
-6. **Add a migration manifest entry** if the skill is added in a release that other projects will upgrade into. Without an explicit manifest entry the file will land via the standard "missing file" branch of `cviauto update`, but a manifest makes the change visible in the changelog.
+6. **添加迁移清单条目**，如果该技能是在其他项目将升级到的新版本中添加的。没有显式清单条目时，文件会通过 `cviauto update` 的「缺失文件」标准分支落地，但清单能让变更在 changelog 中可见。
 
-## Overriding a Bundled Skill Locally
+## 本地覆盖内置技能
 
-There is no formal "project-local skill" mechanism (e.g. `.cviauto/skills/`). Bundled skills are platform-rooted, so any override is platform-rooted too.
+不存在正式的「项目本地技能」机制（例如 `.cviauto/skills/`）。内置技能以平台根目录为锚点，因此任何覆盖也以平台根目录为锚点。
 
-The supported pattern relies on the existing template-hash diff in `cviauto update`:
+受支持的覆盖模式依赖于 `cviauto update` 中现有的模板哈希差异（template-hash diff）：
 
-1. Edit the local file directly. Example: `.claude/skills/cviauto-meta/SKILL.md`.
-2. The file's hash now diverges from the entry in `.cviauto/.template-hashes.json`.
-3. The next `cviauto update` detects the user modification and leaves the file untouched (Cviauto never overwrites user-modified files without an explicit `--force`).
+1. 直接编辑本地文件。例如：`.claude/skills/cviauto-meta/SKILL.md`。
+2. 该文件的哈希现在与 `.cviauto/.template-hashes.json` 中的条目不一致。
+3. 下次 `cviauto update` 会检测到用户修改，并保持该文件不变（Cviauto 绝不会在未经显式 `--force` 的情况下覆盖用户修改的文件）。
 
-Caveats:
+注意事项：
 
-- The override only applies to the one platform whose directory you edited. To override the same skill across, for example, Claude Code and Codex, you must edit both `.claude/skills/<name>/` and `.agents/skills/<name>/`.
-- A future `cviauto update --force` will overwrite local edits. Keep the override under version control so it can be reapplied if needed.
-- Marketplace skills installed under the same platform skill root with a different folder name (e.g. `.claude/skills/my-custom-meta/`) are untouched by Cviauto and are the cleaner option when the goal is to add behavior, not to mutate the bundled skill.
-- Team-private conventions belong in `.cviauto/spec/` or in a separate marketplace-style local skill, not in modifications to `cviauto-meta` itself. See `customize-local/add-project-local-conventions.md`.
+- 覆盖仅对您编辑的那个平台生效。要跨平台覆盖同一技能（例如同时覆盖 Claude Code 和 Codex），您必须编辑 `.claude/skills/<name>/` 和 `.agents/skills/<name>/` 两者。
+- 未来的 `cviauto update --force` 会覆盖本地编辑。请将覆盖内容纳入版本控制，以便需要时重新应用。
+- 在同一平台技能根目录下以不同文件夹名称安装的市场技能（例如 `.claude/skills/my-custom-meta/`）不会被 Cviauto 触及，当目标是添加行为而非修改内置技能时，这是更干净的选择。
+- 团队私有约定应放在 `.cviauto/spec/` 或独立的市场风格本地技能中，而非修改 `cviauto-meta` 本身。请参阅 `customize-local/add-project-local-conventions.md`。
 
-## Removing a Bundled Skill From a Project
+## 从项目中移除内置技能
 
-There is no per-project opt-out flag for bundled skills. Two options:
+没有按项目排除内置技能的标志。有两个选项：
 
-1. **Delete the directory in each platform skill root.** `cviauto update` will see the file missing, compare against `.template-hashes.json`, and treat the deletion the same as any other user modification — it will not silently re-create the directory unless `--force` is passed.
+1. **删除每个平台技能根目录中的目录。** `cviauto update` 会发现文件缺失，与 `.template-hashes.json` 对比，并将删除操作视为与其他用户修改相同——除非传入 `--force`，否则不会静默重新创建目录。
 
-2. **Pin a Cviauto version that did not ship the skill.** The bundled-skill set is determined at build time, so installing an older release of the CLI is the only way to permanently exclude a skill that the current release ships.
+2. **固定一个不包含该技能的 Cviauto 版本。** 内置技能集合在构建时确定，因此安装旧版 CLI 是永久排除当前版本所包含技能的唯一方式。
 
-A third option — globally disabling all bundled skills — is not supported. The dispatch is unconditional in every configurator. Adding such a flag would require changing `PLATFORM_FUNCTIONS` in `configurators/index.ts` and every `configureX` function.
+第三种选项——全局禁用所有内置技能——不受支持。分发在每个配置器中是无条件的。添加这样的标志需要修改 `configurators/index.ts` 中的 `PLATFORM_FUNCTIONS` 和每个 `configureX` 函数。
 
-## Operating Rules
+## 操作规则（Operating Rules）
 
-- Treat `templates/common/bundled-skills/` as the single source of truth for what bundled skills exist. Do not hand-maintain platform-by-platform skill lists.
-- Do not add platform-specific logic inside a bundled `SKILL.md`. If a behavior is platform-specific, put it in `templates/<platform>/skills/` instead.
-- Do not couple bundled skills to a specific CLI binary (e.g. `cviauto mem`) without surfacing the dependency in the skill's description and references — users on older releases may not have the command.
-- Do not store project-private content in a bundled skill. Bundled skills are public, shipped to every user; project rules belong in `.cviauto/spec/` or a local skill.
+- 将 `templates/common/bundled-skills/` 视为内置技能存在的唯一事实来源。不要手动维护按平台划分的技能列表。
+- 不要在内置的 `SKILL.md` 中添加平台特定逻辑。如果某个行为是平台特定的，请将其放入 `templates/<platform>/skills/` 中。
+- 不要将内置技能与特定 CLI 二进制文件（例如 `cviauto mem`）耦合，除非在技能的描述和 references 中明确说明该依赖——使用旧版本的用户可能没有该命令。
+- 不要在内置技能中存储项目私有内容。内置技能是公开的，会分发给所有用户；项目规则应放在 `.cviauto/spec/` 或本地技能中。

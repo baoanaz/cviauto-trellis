@@ -1,31 +1,31 @@
-# Add Project-Local Conventions
+# 添加项目本地约定
 
-Often the user does not need to change Cviauto mechanics; they need local AI to understand their team's conventions. In that case, prefer `.cviauto/spec/` or a project-local skill instead of editing `cviauto-meta`.
+用户通常不需要更改 Cviauto 机制本身；他们需要让本地 AI 理解其团队的约定。在这种情况下，优先使用 `.cviauto/spec/` 或项目本地 skill，而非编辑 `cviauto-meta`。
 
-## Where To Put Things
+## 各类内容放置位置
 
-| Content type | Location |
+| 内容类型 | 位置 |
 | --- | --- |
-| Rules code must follow | `.cviauto/spec/<layer>/` |
-| Cross-layer thinking methods | `.cviauto/spec/guides/` |
-| AI capability for a project-specific flow | Platform-local skill |
-| One-off task material | `.cviauto/tasks/<task>/` |
-| Session summary | `.cviauto/workspace/<developer>/journal-N.md` |
+| 代码必须遵循的规则 | `.cviauto/spec/<layer>/` |
+| 跨层思维方法 | `.cviauto/spec/guides/` |
+| 项目特定流程的 AI 能力 | 平台本地 skill |
+| 一次性任务材料 | `.cviauto/tasks/<task>/` |
+| 会话摘要 | `.cviauto/workspace/<developer>/journal-N.md` |
 
-## Create A Project-Local Skill
+## 创建项目本地 Skill
 
-If the user wants AI to know "how this project customizes Cviauto," create a local skill:
+如果用户希望 AI 了解「本项目如何自定义 Cviauto」，创建一个本地 skill：
 
 ```text
 .claude/skills/cviauto-local/
 └── SKILL.md
 ```
 
-Example:
+示例：
 
 ```md
 ---
-name: trellis-local
+name: cviauto-local
 description: "Project-local Cviauto customizations for this repository. Use when changing this project's Cviauto workflow, hooks, local agents, or team-specific conventions."
 ---
 
@@ -48,11 +48,11 @@ This skill documents this repository's Cviauto customizations only.
 - ...
 ```
 
-For multi-platform projects, place equivalent versions in other platform skill directories, or use `.agents/skills/` for platforms that support the shared layer.
+对于多平台项目，在其他平台 skill 目录中放置等效版本，或在支持共享层的平台上使用 `.agents/skills/`。
 
-## Write To `.cviauto/spec/`
+## 写入 `.cviauto/spec/`
 
-If the content is a coding convention, write it to spec. Examples:
+如果内容是编码约定，将其写入 spec。示例：
 
 ```text
 .cviauto/spec/backend/error-handling.md
@@ -60,24 +60,24 @@ If the content is a coding convention, write it to spec. Examples:
 .cviauto/spec/guides/cross-platform-thinking-guide.md
 ```
 
-After writing it, update the corresponding `index.md` so AI can find the new rule from the entry point.
+写入后，更新对应的 `index.md`，以便 AI 能从入口点找到新规则。
 
-## Make The Current Task Use New Conventions
+## 让当前 Task 使用新约定
 
-After writing a spec, add it to the current task context:
+写入 spec 后，将其添加到当前 task 上下文中：
 
 ```bash
 python3 ./.cviauto/scripts/task.py add-context <task> implement ".cviauto/spec/backend/error-handling.md" "Error handling conventions"
 python3 ./.cviauto/scripts/task.py add-context <task> check ".cviauto/spec/backend/error-handling.md" "Review error handling"
 ```
 
-## Do Not Store Project-Private Rules In `cviauto-meta`
+## 不要将项目私有规则存储在 `cviauto-meta` 中
 
-`cviauto-meta` is a public skill for understanding Cviauto architecture and local customization entry points. Put project-private content in:
+`cviauto-meta` 是一个用于理解 Cviauto 架构和本地自定义入口点的公共 skill。将项目私有内容放在：
 
 - `.cviauto/spec/`
-- a project-local skill
-- the current task
+- 项目本地 skill
+- 当前 task
 - workspace journal
 
-This prevents future updates to Cviauto's built-in `cviauto-meta` from overwriting the team's own conventions.
+这可以防止未来 Cviauto 内置的 `cviauto-meta` 更新覆盖团队自己的约定。
