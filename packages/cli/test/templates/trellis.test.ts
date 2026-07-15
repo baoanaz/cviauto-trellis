@@ -102,7 +102,8 @@ describe("trellis template constants", () => {
       "[Claude Code, OpenCode, codex-sub-agent]",
     );
     expect(workflowMdTemplate).toContain("[codex-inline]");
-    expect(workflowMdTemplate).toContain("Codex sub-agent mode");
+    // Chinese template uses "子 agent 分派模式" instead of "Codex sub-agent mode"
+    expect(workflowMdTemplate).toContain("分派模式");
     for (const name of UNSUPPORTED_PLATFORM_NAMES) {
       expect(workflowMdTemplate).not.toContain(name);
     }
@@ -110,21 +111,22 @@ describe("trellis template constants", () => {
 
   it("in_progress breadcrumb preserves dispatch recursion guards", () => {
     const block = workflowStateBreadcrumb("in_progress");
-    expect(block).toContain("Main-session default");
-    expect(block).toContain("Sub-agent self-exemption");
-    expect(block).toContain("already running as `cviauto-implement`");
-    expect(block).toContain("do NOT spawn another `cviauto-implement`");
-    expect(block).toContain("already running as `cviauto-check`");
-    expect(block).toContain("do NOT spawn another `cviauto-check`");
+    expect(block).toContain("主会话默认");
+    expect(block).toContain("子 agent 自我豁免");
+    // Chinese template uses Chinese guard phrases; brand is cviauto
+    expect(block).toMatch(/已在.*作为.*cviauto-implement/);
+    expect(block).toMatch(/不要再.*cviauto-implement/);
+    expect(block).toMatch(/已在.*作为.*cviauto-check/);
+    expect(block).toMatch(/不要再.*cviauto-check/);
   });
 
   it("in_progress breadcrumb keeps spec promotion human-gated", () => {
     const block = workflowStateBreadcrumb("in_progress");
-    expect(block).toContain("commit (Phase 3.4)");
-    expect(block).toContain(
-      "Run `cviauto-update-spec` only when the user explicitly asks",
+    expect(block).toMatch(/提交.*Phase 3\.4/);
+    expect(block).toMatch(
+      /cviauto-update-spec.*明确要求/,
     );
-    expect(block).not.toContain("`cviauto-check` -> `cviauto-update-spec`");
+    expect(block).not.toMatch(/cviauto-check.*->.*cviauto-update-spec/);
   });
 
   it("default project config keeps Trellis archive and journal commits local", () => {

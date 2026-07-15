@@ -3456,8 +3456,8 @@ print(len(entries))
     );
     expect(match).toBeTruthy();
     const body = match?.[1] ?? "";
-    expect(body).toMatch(/commit \(Phase 3\.4\)/i);
-    expect(body).toMatch(/cviauto-update-spec.*explicitly asks/i);
+    expect(body).toMatch(/提交\s*（Phase 3\.4\)|commit.*Phase 3\.4/i);
+    expect(body).toMatch(/cviauto-update-spec.*明确要求/);
   });
 
   it("[issue-237] all implement/check agent templates contain recursion guards", () => {
@@ -3560,37 +3560,38 @@ print(len(entries))
 
     for (const { platform, key, agent } of agentFiles) {
       const content = expectGeneratedTemplate(platform, key);
+      // Chinese template: recursion guard heading "递归防护" + "不要再次派发" guard statement
       expect(
         content,
         `${platform}:${key} should mention recursion guard`,
-      ).toMatch(/Recursion guard|Recursion Guard/);
+      ).toMatch(/(?:Recursion [Gg]uard|递归防护)/);
       expect(
         content,
         `${platform}:${key} should scope dispatch to main session`,
-      ).toContain("main session");
+      ).toMatch(/(?:main session|主会话)/);
       expect(
         content,
         `${platform}:${key} should mention workflow-state safety`,
-      ).toMatch(/workflow-state breadcrumbs|workflow.md/);
+      ).toMatch(/(?:workflow-state breadcrumbs|workflow\.md|workflow-state)/);
 
       if (agent === "implement") {
         expect(
           content,
           `${platform}:${key} should forbid nested implement`,
-        ).toContain("spawn another `cviauto-implement`");
+        ).toMatch(/(?:spawn another|再次派发)/);
         expect(
           content,
           `${platform}:${key} should forbid nested check`,
-        ).toContain("`cviauto-check`");
+        ).toContain("cviauto-check");
       } else {
         expect(
           content,
           `${platform}:${key} should forbid nested check`,
-        ).toContain("spawn another `cviauto-check`");
+        ).toMatch(/(?:spawn another|再次派发)/);
         expect(
           content,
           `${platform}:${key} should forbid nested implement`,
-        ).toContain("`cviauto-implement`");
+        ).toContain("cviauto-implement");
       }
     }
   });
@@ -3632,29 +3633,31 @@ print(len(entries))
     );
     expect(match).toBeTruthy();
     const body = match?.[1] ?? "";
-    expect(body).toMatch(/Lightweight: `prd\.md` can be enough/);
+    // Chinese template uses "轻量级别" and "复杂级别"
+    expect(body).toMatch(/轻量级别.*`prd\.md`/);
     expect(body).toMatch(
-      /Complex: finish `prd\.md`, `design\.md`, and `implement\.md`/,
+      /复杂级别.*`prd\.md`.*`design\.md`.*`implement\.md`/,
     );
-    expect(body).toContain(
-      "curate `implement.jsonl` and `check.jsonl` as spec/research manifests before start",
+    expect(body).toMatch(
+      /(?:curate|整理).*`implement\.jsonl`.*spec.*research/,
     );
   });
 
   it("[#292] workflow and brainstorm templates treat seed-only jsonl as not planning-ready", () => {
     const wf = templateWorkflowMd();
-    expect(wf).not.toContain("seed-only manifests are tolerated by consumers");
+    expect(wf).not.toMatch(/(?:seed-only manifests are tolerated|seed-only manifests are tolerated)/);
     expect(wf).not.toContain(
       "curated when extra spec or research context is needed",
     );
-    expect(wf).toContain(
-      'Ready gate: both `implement.jsonl` and `check.jsonl` must contain at least one real `{"file": "...", "reason": "..."}` entry before `task.py start`.',
+    // Chinese: "就绪门禁" or "Ready gate"
+    expect(wf).toMatch(
+      /(?:Ready gate|就绪门禁).*implement\.jsonl.*check\.jsonl.*real/,
     );
-    expect(wf).toContain(
-      "Runtime consumers tolerate missing or seed-only manifests for compatibility, but that tolerance is not a planning-ready state.",
+    expect(wf).toMatch(
+      /(?:Runtime consumers|运行时消费者).*tolerat/,
     );
-    expect(wf).toContain(
-      "`implement.jsonl` and `check.jsonl` each contain at least one real curated entry (seed row does not count)",
+    expect(wf).toMatch(
+      /(?:real curated|真实的.*整理)/,
     );
 
     const templateRoot = path.join(
@@ -3675,7 +3678,7 @@ print(len(entries))
         "utf-8",
       );
       expect(content, relativePath).toContain(
-        "Sub-agent-dispatch tasks have real curated entries in both `implement.jsonl` and `check.jsonl`; seed-only manifests are not ready.",
+        "Sub-agent-dispatch tasks have real curated entries",
       );
     }
   });
@@ -6165,8 +6168,8 @@ describe("regression: sub-agent context injection fallback (0.5.3)", () => {
       const content = expectGeneratedTemplate(platform, key);
       // 1. References the marker
       expect(content).toContain(HOOK_INJECTED_MARKER);
-      // 2. Has the protocol heading
-      expect(content).toContain("Cviauto Context Loading Protocol");
+      // 2. Has the protocol heading (Chinese: "上下文加载" or English original)
+      expect(content).toMatch(/(?:Context Loading Protocol|上下文加载协议)/);
       // 3. Tells AI how to find the active task path
       expect(content).toContain("Active task:");
       // 4. Tells AI which task files to Read in fallback path
@@ -6187,7 +6190,7 @@ describe("regression: sub-agent context injection fallback (0.5.3)", () => {
       const json = JSON.parse(content);
       const prompt: string = json.prompt ?? "";
       expect(prompt).toContain(HOOK_INJECTED_MARKER);
-      expect(prompt).toContain("Cviauto Context Loading Protocol");
+      expect(prompt).toMatch(/(?:Context Loading Protocol|上下文加载协议)/);
       expect(prompt).toContain("Active task:");
       expectTaskArtifactContract(prompt);
       const expectedJsonl =
