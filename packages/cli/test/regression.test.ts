@@ -3803,12 +3803,12 @@ print(len(entries))
     );
 
     expect(output).toContain("## Phase Index");
-    expect(output).toContain("### Request Triage");
-    expect(output).toContain("### Planning Artifacts");
-    expect(output).toContain("### Loading Step Detail");
+    expect(output).toContain("### 请求分类（Request Triage）");
+    expect(output).toContain("### 规划产物（Planning Artifacts）");
+    expect(output).toContain("### 加载步骤详情（Loading Step Detail）");
     expect(output).not.toMatch(/^## Phase 1: Plan/m);
-    expect(output).not.toContain("#### 1.1 Requirement exploration");
-    expect(output).not.toContain("#### 2.1 Implement");
+    expect(output).not.toContain("#### 1.1 需求探索（Requirement exploration）");
+    expect(output).not.toContain("#### 2.1 实施（Implement）");
   });
 
   it("[workflow-v2] --mode phase --platform codex (sub-agent mode) filters out generic before-dev routing", () => {
@@ -3890,13 +3890,13 @@ print(len(entries))
     );
 
     expect(output).toContain(
-      "The pull-based sub-agent definition auto-handles",
+      "Codex 子 agent 定义自动处理",
     );
     expect(output).toContain(
-      "Resolves the active task with `task.py current --source`",
+      "使用 `task.py current --source` 解析活跃任务",
     );
-    expect(output).not.toContain("The platform hook/plugin auto-handles");
-    expect(output).not.toContain("Load the `cviauto-before-dev` skill");
+    expect(output).not.toContain("平台 hook/plugin 自动处理");
+    expect(output).not.toContain("加载 `cviauto-before-dev` skill");
   });
 
   it("[pi] step 2.1 describes extension-backed sub-agent context path", () => {
@@ -3918,10 +3918,10 @@ print(len(entries))
       { cwd: tmpDir, encoding: "utf-8" },
     );
 
-    expect(output).toContain("The platform hook/plugin auto-handles");
-    expect(output).toContain("Reads `implement.jsonl`");
-    expect(output).not.toContain("The Codex sub-agent definition auto-handles");
-    expect(output).not.toContain("Load the `cviauto-before-dev` skill");
+    expect(output).toContain("平台 hook/plugin 自动处理");
+    expect(output).toContain("读取 `implement.jsonl`");
+    expect(output).not.toContain("Codex 子 agent 定义自动处理");
+    expect(output).not.toContain("加载 `cviauto-before-dev` skill");
   });
 
   it("[workflow-v2] --mode phase --platform kilo keeps cviauto-before-dev routing (agent-less path)", () => {
@@ -3979,11 +3979,11 @@ print(len(entries))
     const workflowBlock = workflowMatch[1];
 
     expect(workflowBlock).toContain("## Phase Index");
-    expect(workflowBlock).toContain("### Request Triage");
-    expect(workflowBlock).toContain("### Planning Artifacts");
-    expect(workflowBlock).toContain("### Loading Step Detail");
+    expect(workflowBlock).toContain("### 请求分类（Request Triage）");
+    expect(workflowBlock).toContain("### 规划产物（Planning Artifacts）");
+    expect(workflowBlock).toContain("### 加载步骤详情（Loading Step Detail）");
     expect(workflowBlock).not.toMatch(/^## Phase 1: Plan/m);
-    expect(workflowBlock).not.toContain("#### 1.1 Requirement exploration");
+    expect(workflowBlock).not.toContain("#### 1.1 需求探索（Requirement exploration）");
     // Breadcrumb tag BLOCKS (matched opening + closing pair) excluded — they're
     // consumed by inject-workflow-state.py. Inline `[workflow-state:planning]`
     // mentions in narrative prose are fine; only complete blocks are stripped.
@@ -4280,7 +4280,7 @@ print(len(entries))
     // The [Kilo, Antigravity, Devin] inline block content surfaces:
     // it tells the main session to load cviauto-before-dev directly.
     expect(output).toContain("cviauto-before-dev");
-    expect(output).toContain("Read `{TASK_DIR}/prd.md`");
+    expect(output).toContain("读取 `{TASK_DIR}/prd.md`");
     // The Codex sub-agent dispatch text must NOT surface in inline mode.
     expect(output).not.toMatch(/Active task: <task path>/);
   });

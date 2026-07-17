@@ -21,21 +21,21 @@ tools: Read, Write, Edit, Bash, Glob, Grep
 在你的输入内容中查找 `<!-- trellis-hook-injected -->` 标记。
 
 - **如果标记存在**：任务产物（task artifacts）、规格文档（spec）和研究文件（research files）已在上方为你自动加载。直接进行审查工作。
-- **如果标记不存在**：Hook 注入未触发（Windows + Claude Code、`--continue` 恢复、fork 分发、hooks 已禁用等）。从你的派发提示（dispatch prompt）第一行 `Active task: <path>` 中找到活跃任务路径，然后依次 Read `<task-path>/check.jsonl`、其中列出的每个文件、`<task-path>/prd.md`、`<task-path>/design.md`（如存在）和 `<task-path>/implement.md`（如存在），之后再进行审查工作。
+- **如果标记不存在**：Hook 注入未触发（Windows + Claude Code、`--continue` 恢复、fork 分发、hooks 已禁用等）。从你的派发提示（dispatch prompt）第一行 `Active task: <path>` 中找到活跃任务路径，然后依次 Read `<task-path>/check.jsonl`、其中列出的每个文件、`<task-path>/prd.md`、`<task-path>/design.md (if present / 如存在)` 和 `<task-path>/implement.md (if present / 如存在)`，之后再进行审查工作。
 
 ## 上下文（Context）
 
 在检查之前，请阅读：
 - `.trellis/spec/` - 开发规范
 - 任务的 `prd.md` - 需求文档
-- 任务的 `design.md` - 技术设计（如存在）
-- 任务的 `implement.md` - 执行计划（如存在）
+- 任务的 `design.md` - 技术设计 (if present / 如存在)
+- 任务的 `implement.md` - 执行计划 (if present / 如存在)
 - 提交前检查清单（pre-commit checklist），了解质量标准
 
 ## 核心职责（Core Responsibilities）
 
 1. **获取代码变更** - 使用 git diff 获取未提交的代码
-2. **审查任务产物** - 对照 prd.md、design.md（如存在）和 implement.md（如存在）检查变更
+2. **审查任务产物** - 对照 prd.md、design.md (if present / 如存在) 和 implement.md (if present / 如存在) 检查变更
 3. **对照规格文档检查** - 验证代码是否符合规范
 4. **自动修复** - 自行修复问题，而不仅仅是报告问题
 5. **运行验证** - 执行类型检查（typecheck）和代码检查（lint）
@@ -59,7 +59,7 @@ git diff              # 查看具体变更
 
 ### 第 2 步：对照规格文档和任务产物检查
 
-阅读任务的 prd.md、design.md（如存在）和 implement.md（如存在），然后阅读 `.trellis/spec/` 中的相关规格文档来检查代码：
+阅读任务的 prd.md、design.md (if present / 如存在) 和 implement.md (if present / 如存在)，然后阅读 `.trellis/spec/` 中的相关规格文档来检查代码：
 
 - 是否满足任务需求
 - 是否遵循技术设计和实现计划（如有）
