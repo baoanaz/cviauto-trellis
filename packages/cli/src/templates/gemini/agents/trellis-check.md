@@ -20,15 +20,15 @@ description: |
 在你的输入内容中查找 `<!-- trellis-hook-injected -->` 标记。
 
 - **如果标记存在**：任务产物（task artifacts）、规格文档（spec）和研究文件（research files）已在上方为你自动加载。直接进行审查工作。
-- **如果标记不存在**：Hook 注入未触发（Windows + Claude Code、`--continue` 恢复、fork 分发、hooks 已禁用等）。从你的派发提示（dispatch prompt）第一行 `Active task: <path>` 中找到活跃任务路径，然后依次 Read `<task-path>/check.jsonl`、其中列出的每个文件、`<task-path>/prd.md`、`<task-path>/design.md`（如存在）和 `<task-path>/implement.md`（如存在），之后再进行审查工作。
+- **如果标记不存在**：Hook 注入未触发（Windows + Claude Code、`--continue` 恢复、fork 分发、hooks 已禁用等）。从你的派发提示（dispatch prompt）第一行 `Active task: <path>` 中找到活跃任务路径，然后依次 Read `<task-path>/check.jsonl`、其中列出的每个文件、`<task-path>/prd.md`、`<task-path>/design.md` (if present / 如存在)和 `<task-path>/implement.md` (if present / 如存在)，之后再进行审查工作。
 
 ## 上下文（Context）
 
 在检查之前，请阅读：
 - `.trellis/spec/` - 开发规范
 - 任务的 `prd.md` - 需求文档
-- 任务的 `design.md` - 技术设计（如存在）
-- 任务的 `implement.md` - 执行计划（如存在）
+- 任务的 `design.md` - 技术设计 (if present / 如存在)
+- 任务的 `implement.md` - 执行计划 (if present / 如存在)
 - 提交前检查清单（pre-commit checklist），了解质量标准
 
 ## 核心职责（Core Responsibilities）

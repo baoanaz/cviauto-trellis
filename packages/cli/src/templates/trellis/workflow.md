@@ -99,7 +99,7 @@ python3 ./.cviauto/scripts/get_context.py --mode phase --step <X.Y>  # 工作流
 <!--
   WORKFLOW-STATE BREADCRUMB CONTRACT（在编辑下面的标记块之前阅读此注释）
 
-  嵌入在下方 ## Phase Index 章节中的 [workflow-state:STATUS] 块是每个
+  嵌入在下方 ## Phase Index 章节中的 workflow-state:STATUS 块是每个
   支持 AI 平台的 UserPromptSubmit hook 读取的每轮 `<workflow-state>`
   面包屑的**唯一**真实来源。inject-workflow-state.py（Python 平台）和
   inject-workflow-state.js（OpenCode 插件）仅解析它们——在 v0.5.0-rc.0
@@ -111,19 +111,19 @@ python3 ./.cviauto/scripts/get_context.py --mode phase --step <X.Y>  # 工作流
 
   约束条件（test/regression.test.ts）：
     每个标记为 `[required · once]` 的工作流演练步骤必须在其阶段的
-    [workflow-state:*] 块中有匹配的执行提示行。面包屑是唯一的每轮通道；
+    workflow-state:* 块中有匹配的执行提示行。面包屑是唯一的每轮通道；
     如果一个强制性步骤在那里没有被提及，AI 将静默地跳过它（Phase 1 规划门禁跳过
     和 Phase 3.4 提交跳过均由此类缺口导致）。
 
   标记 ↔ 阶段范围：
-    [workflow-state:no_task]      → 没有活跃任务；Phase 1 之前
-    [workflow-state:planning]     → 整个 Phase 1（status='planning'）
-    [workflow-state:planning-inline] → Codex inline 变体，Phase 1
-    [workflow-state:in_progress]  → Phase 2 + Phase 3.2-3.4
+    ~workflow-state:no_task~      → 没有活跃任务；Phase 1 之前
+    ~workflow-state:planning~     → 整个 Phase 1（status='planning'）
+    ~workflow-state:planning-inline~ → Codex inline 变体，Phase 1
+    ~workflow-state:in_progress~  → Phase 2 + Phase 3.2-3.4
                                     （status 保持 'in_progress'，从
                                     task.py start 直到 task.py archive）
-    [workflow-state:in_progress-inline] → Codex inline 变体，Phase 2/3
-    [workflow-state:completed]    → 当前为 DEAD：cmd_archive 在同一个
+    ~workflow-state:in_progress-inline~ → Codex inline 变体，Phase 2/3
+    ~workflow-state:completed~    → 当前为 DEAD：cmd_archive 在同一个
                                     调用中翻转 status 并移动目录，因此
                                     解析器丢失了指针（保留此块用于未来的
                                     显式 in_progress→completed 转换）
@@ -137,7 +137,7 @@ python3 ./.cviauto/scripts/get_context.py --mode phase --step <X.Y>  # 工作流
       .cviauto/spec/cli/backend/workflow-state-contract.md
 -->
 
-## 阶段索引（Phase Index）
+## Phase Index
 
 ```
 Phase 1: Plan    → 分类、获取任务创建同意、然后编写规划产物
@@ -216,7 +216,7 @@ Inline 模式：跳过 jsonl 整理；Phase 2 通过 `cviauto-before-dev` 读取
      因此正文必须覆盖从实现到提交的每个必需步骤，包括可选的
      Phase 3.3 spec 回写和必需的 Phase 3.4 提交。-->
 
-子 agent 分派协议适用于所有分派子 agent 的平台和所有子 agent，包括 Codex 子 agent 模式和 `cviauto-research`：每个分派 prompt 以 `Active task: <task path from task.py current>` 开头，然后是角色特定的指令。实现分派使用 `cviauto-implement` 和 `implement.jsonl` 上下文。
+子 agent 分派协议（Sub-agent dispatch protocol）适用于所有分派子 agent 的平台和所有子 agent，包括 Codex 子 agent 模式和 `cviauto-research`：每个分派 prompt 以 `Active task: <task path from task.py current>` 开头，然后是角色特定的指令。实现分派使用 `cviauto-implement` 和 `implement.jsonl` 上下文。
 
 [workflow-state:in_progress]
 工具说明：`cviauto-implement` / `cviauto-research` 仅为子 agent 类型（Task/Agent 工具，而非 Skill；不存在同名的 skill）。`cviauto-update-spec` 是一个 skill。`cviauto-check` 两者都存在；在代码变更后验证时优先使用 Agent 形式。

@@ -19,7 +19,7 @@ developer_instructions = """
 
 1. **内部搜索（Internal Search）** — 定位文件/组件，理解代码逻辑，发现代码模式（使用 Glob、Grep、Read）
 2. **外部搜索（External Search）** — 库文档、API 参考、最佳实践（使用网络搜索）
-3. **持久化（Persist）** — 将每个调研主题写入 `{TASK_DIR}/research/<topic>.md`
+3. **持久化（PERSIST / Persist）** — 将每个调研主题写入 `{TASK_DIR}/research/<topic>.md`
 4. **报告（Report）** — 向主代理（main agent）返回文件路径 + 一行摘要（而非完整内容）
 
 ---

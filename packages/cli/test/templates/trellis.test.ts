@@ -114,9 +114,9 @@ describe("trellis template constants", () => {
     expect(block).toContain("主会话默认");
     expect(block).toContain("子 agent 自我豁免");
     // Chinese template uses Chinese guard phrases; brand is cviauto
-    expect(block).toMatch(/已在.*作为.*cviauto-implement/);
+    expect(block).toMatch(/已经.*作为.*cviauto-implement/);
     expect(block).toMatch(/不要再.*cviauto-implement/);
-    expect(block).toMatch(/已在.*作为.*cviauto-check/);
+    expect(block).toMatch(/已经.*作为.*cviauto-check/);
     expect(block).toMatch(/不要再.*cviauto-check/);
   });
 
@@ -124,9 +124,9 @@ describe("trellis template constants", () => {
     const block = workflowStateBreadcrumb("in_progress");
     expect(block).toMatch(/提交.*Phase 3\.4/);
     expect(block).toMatch(
-      /cviauto-update-spec.*明确要求/,
+      /明确要求.*cviauto-update-spec/,
     );
-    expect(block).not.toMatch(/cviauto-check.*->.*cviauto-update-spec/);
+    expect(block).not.toMatch(/cviauto-check\b[^。]*cviauto-update-spec/);
   });
 
   it("default project config keeps Trellis archive and journal commits local", () => {

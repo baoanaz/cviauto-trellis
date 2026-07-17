@@ -70,7 +70,7 @@ describe("trae getAllAgents", () => {
   it("each agent is a Markdown file with YAML frontmatter", () => {
     for (const agent of getAllAgents()) {
       expect(agent.content.length).toBeGreaterThan(0);
-      expect(agent.content).toMatch(/^---\n/);
+      expect(agent.content).toMatch(/^---\r?\n/);
       expect(agent.content).toContain("name: ");
       expect(agent.content).toContain("description:");
     }

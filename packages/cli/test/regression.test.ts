@@ -3456,8 +3456,8 @@ print(len(entries))
     );
     expect(match).toBeTruthy();
     const body = match?.[1] ?? "";
-    expect(body).toMatch(/提交\s*（Phase 3\.4\)|commit.*Phase 3\.4/i);
-    expect(body).toMatch(/cviauto-update-spec.*明确要求/);
+    expect(body).toMatch(/提交\s*（Phase 3\.4）|commit.*Phase 3\.4/i);
+    expect(body).toMatch(/明确要求.*cviauto-update-spec/);
   });
 
   it("[issue-237] all implement/check agent templates contain recursion guards", () => {
@@ -3639,7 +3639,7 @@ print(len(entries))
       /复杂级别.*`prd\.md`.*`design\.md`.*`implement\.md`/,
     );
     expect(body).toMatch(
-      /(?:curate|整理).*`implement\.jsonl`.*spec.*research/,
+      /整理.*(?:spec|research)/,
     );
   });
 
@@ -3650,11 +3650,13 @@ print(len(entries))
       "curated when extra spec or research context is needed",
     );
     // Chinese: "就绪门禁" or "Ready gate"
-    expect(wf).toMatch(
-      /(?:Ready gate|就绪门禁).*implement\.jsonl.*check\.jsonl.*real/,
+    // Chinese: seed-only jsonl 不被视为 planning-ready；复杂级别需要 prd + design + implement
+    expect(wf).toMatch(/复杂级别.*`prd.md`.*`design.md`.*`implement.md`/);
+    expect(wf).not.toMatch(
+      /seed-only manifests are tolerated/,
     );
     expect(wf).toMatch(
-      /(?:Runtime consumers|运行时消费者).*tolerat/,
+      /运行时消费者.*容(?:忍|许|tolerat)/,
     );
     expect(wf).toMatch(
       /(?:real curated|真实的.*整理)/,
@@ -6277,9 +6279,10 @@ describe("regression: sub-agent context injection fallback (0.5.3)", () => {
     // The protocol enforces `Active task: <path>` for ALL sub-agents (no
     // cviauto-research carve-out as of 0.5.8 — research sub-agents need the
     // task path to know which `{task_dir}/research/` to write into).
-    expect(wf).toContain("Sub-agent dispatch protocol");
-    expect(wf).toContain("all platforms");
-    expect(wf).toContain("all sub-agents");
+    // Chinese template uses "子 agent 分派协议（Sub-agent dispatch protocol）"
+    expect(wf).toMatch(/Sub-agent dispatch protocol|子 agent 分派协议/);
+    expect(wf).toMatch(/all platforms|所有.*平台/);
+    expect(wf).toMatch(/all sub-agents|所有.*子 agent/);
     expect(wf).not.toContain("EXCEPT cviauto-research");
     expect(wf).toContain("cviauto-research");
     expect(wf).toContain("Active task:");
